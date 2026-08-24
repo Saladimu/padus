@@ -18,7 +18,7 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Cara Kerja
 
-1. Siswa memasukkan Student ID (NIS) dan PIN di `index.html`.
+1. Siswa memasukkan Student ID atau Nama dan PIN di `index.html`.
 2. Frontend memanggil backend Apps Script (POST) dengan action `verify`.
 3. Jika valid, siswa memilih jenis latihan dan submit (action `submit`).
 4. Backend menulis baris absensi ke sheet `ATTENDANCE`, mencegah duplikat per hari per siswa.

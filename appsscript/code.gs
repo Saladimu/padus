@@ -144,26 +144,27 @@ function getTodayRecord(studentId) {
 }
 
 function verifyStudent(id, pin) {
-  if (!id || !pin) return { success: false, message: 'ID dan PIN wajib diisi.' };
+  if (!id || !pin) return { success: false, message: 'Student ID/Nama dan PIN wajib diisi.' };
   if (id.toString().length > 50 || pin.toString().length > 20) {
-    return { success: false, message: 'ID atau PIN terlalu panjang.' };
+    return { success: false, message: 'Student ID/Nama atau PIN terlalu panjang.' };
   }
 
   const sheet = getSheet(SHEET_NAME_STUDENTS);
   if (!sheet) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
   const data = sheet.getDataRange().getValues();
-  const inputId = id.toString().trim().toUpperCase();
+  const input = id.toString().trim().toUpperCase();
 
   for (let i = 1; i < data.length; i++) {
     if (!data[i] || data[i][0] === '') continue;
 
     const rowId = data[i][0] ? data[i][0].toString().trim().toUpperCase() : '';
-    const rowName = data[i][1] || '';
+    const rowName = data[i][1] ? data[i][1].toString().trim().toUpperCase() : '';
     const rowClass = data[i][2] || '';
     const rowPin = data[i][3] || '';
     const rowStatus = data[i][4] ? data[i][4].toString().trim().toUpperCase() : '';
 
-    if (rowId !== inputId) continue;
+    // Cocokkan dengan Student ID ATAU Nama (case-insensitive)
+    if (rowId !== input && rowName !== input) continue;
 
     if (rowStatus !== 'ACTIVE') {
       return { success: false, message: 'Akun Anda tidak memiliki akses untuk melakukan absensi.' };
@@ -174,10 +175,10 @@ function verifyStudent(id, pin) {
 
     const response = {
       success: true,
-      data: { name: rowName, className: rowClass }
+      data: { id: rowId, name: data[i][1] || '', className: rowClass }
     };
 
-    const todayRecord = getTodayRecord(inputId);
+    const todayRecord = getTodayRecord(rowId);
     if (todayRecord) {
       response.already = true;
       response.record = todayRecord;
@@ -186,7 +187,7 @@ function verifyStudent(id, pin) {
     return response;
   }
 
-  return { success: false, message: 'Student ID tidak terdaftar. Silakan hubungi guru pembimbing.' };
+  return { success: false, message: 'Student ID atau Nama tidak terdaftar. Silakan hubungi guru pembimbing.' };
 }
 
 function submitAttendance(payload) {
@@ -202,7 +203,7 @@ function submitAttendance(payload) {
   }
 
   const student = verify.data;
-  const studentId = id.toString().trim().toUpperCase();
+  const studentId = student.id; // Gunakan Student ID kanonik dari sheet
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
 
