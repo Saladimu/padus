@@ -25,6 +25,8 @@ function doPost(e) {
       return respond(verifyStudent(data.id, data.pin));
     } else if (action === 'submit') {
       return respond(submitAttendance(data));
+    } else if (action === 'debug') {
+      return respond(debugCheck(data.id));
     }
 
     return respond({ success: false, message: 'Action tidak valid.' });
@@ -42,6 +44,35 @@ function doOptions(e) {
 function respond(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// SEMENTARA: hanya untuk diagnosa format data, hapus setelah selesai.
+function debugCheck(studentId) {
+  const sheet = getSheet(SHEET_NAME_ATTENDANCE);
+  if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
+  const rows = sheet.getDataRange().getValues();
+  const now = new Date();
+  const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
+  const target = String(studentId || '').trim().toUpperCase();
+  const matches = [];
+  for (let i = 1; i < rows.length; i++) {
+    const recId = rows[i][2] ? String(rows[i][2]).trim().toUpperCase() : '';
+    if (target && recId !== target) continue;
+    matches.push({
+      col1Raw: rows[i][1],
+      col1IsDate: isDateValue(rows[i][1]),
+      col2: rows[i][2],
+      matchesToday: matchesToday(rows[i][1], dateString)
+    });
+  }
+  return {
+    success: true,
+    todayGMT7: dateString,
+    scriptTimezone: Session.getScriptTimeZone(),
+    targetId: target,
+    rowCount: rows.length - 1,
+    matches: matches
+  };
 }
 
 function getSheet(name) {
@@ -67,6 +98,49 @@ function pinMatches(storedPin, inputPin) {
     return stored === hashPin(input);
   }
   return stored === input;
+}
+
+function isDateValue(v) {
+  return v instanceof Date || Object.prototype.toString.call(v) === '[object Date]';
+}
+
+function matchesToday(cellValue, todayString) {
+  if (!cellValue) return false;
+  if (isDateValue(cellValue)) {
+    // Object Date dari Sheets kadang gagal dicek dengan instanceof, gunakan isDateValue().
+    const tz = Session.getScriptTimeZone();
+    if (Utilities.formatDate(cellValue, tz, 'yyyy-MM-dd') === todayString) return true;
+    if (Utilities.formatDate(cellValue, 'GMT+7', 'yyyy-MM-dd') === todayString) return true;
+    return false;
+  }
+  const text = String(cellValue).trim();
+  // Menangani teks "2026-08-24", "2026-08-24 08:00:00", dsb.
+  if (text.substring(0, 10) === todayString) return true;
+  return text === todayString;
+}
+
+function getTodayRecord(studentId) {
+  const sheet = getSheet(SHEET_NAME_ATTENDANCE);
+  if (!sheet) return null;
+  const data = sheet.getDataRange().getValues();
+  const now = new Date();
+  const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i] || data[i][2] === '') continue;
+
+    const recId = data[i][2] ? data[i][2].toString().trim().toUpperCase() : '';
+    if (recId !== studentId) continue;
+
+    if (matchesToday(data[i][1], dateString)) {
+      return {
+        date: dateString,
+        type: data[i][5] || '',
+        remark: data[i][6] || ''
+      };
+    }
+  }
+  return null;
 }
 
 function verifyStudent(id, pin) {
@@ -98,10 +172,18 @@ function verifyStudent(id, pin) {
       return { success: false, message: 'PIN yang dimasukkan salah.' };
     }
 
-    return {
+    const response = {
       success: true,
       data: { name: rowName, className: rowClass }
     };
+
+    const todayRecord = getTodayRecord(inputId);
+    if (todayRecord) {
+      response.already = true;
+      response.record = todayRecord;
+    }
+
+    return response;
   }
 
   return { success: false, message: 'Student ID tidak terdaftar. Silakan hubungi guru pembimbing.' };
@@ -115,6 +197,9 @@ function submitAttendance(payload) {
 
   const verify = verifyStudent(id, pin);
   if (!verify.success) return verify;
+  if (verify.already) {
+    return { success: false, message: 'Absensi Anda untuk hari ini sudah tercatat.' };
+  }
 
   const student = verify.data;
   const studentId = id.toString().trim().toUpperCase();
@@ -133,13 +218,9 @@ function submitAttendance(payload) {
     for (let i = 1; i < data.length; i++) {
       if (!data[i] || data[i][2] === '') continue;
 
-      let recDate = data[i][1];
-      if (recDate instanceof Date) {
-        recDate = Utilities.formatDate(recDate, 'GMT+7', 'yyyy-MM-dd');
-      }
       const recId = data[i][2] ? data[i][2].toString().trim().toUpperCase() : '';
 
-      if (recId === studentId && recDate === dateString) {
+      if (recId === studentId && matchesToday(data[i][1], dateString)) {
         return { success: false, message: 'Absensi Anda untuk hari ini sudah tercatat.' };
       }
     }

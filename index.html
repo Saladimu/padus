@@ -143,6 +143,14 @@
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('id-ID', dateOptions);
 
+    // Format tanggal "yyyy-MM-dd" dari backend menjadi teks bahasa Indonesia
+    function formatDateDisplay(dateStr) {
+        const parts = String(dateStr || '').split('-');
+        if (parts.length !== 3) return dateStr;
+        const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return date.toLocaleDateString('id-ID', dateOptions);
+    }
+
     // ==========================================
     // PROSES TAHAP 1: VERIFIKASI SISWA (DIUBAH KE POST)
     // ==========================================
@@ -168,13 +176,25 @@
                 body: JSON.stringify(payload)
             });
             const result = await response.json();
+            console.log('[Absensi] verify response:', result);
 
             // Di Code.gs Anda menggunakan properti 'success', bukan 'status'
             if (result.success) {
                 // Simpan ID & PIN global untuk validasi lapis dua saat submit attendance
                 currentStudentId = studentId;
                 currentStudentPin = studentPin;
-            
+
+                // Jika siswa sudah absen hari ini, tampilkan pemberitahuan dan hentikan alur
+                if (result.already) {
+                    const rec = result.record || {};
+                    let notice = `Akun Anda sudah melakukan absensi pada tanggal ${formatDateDisplay(rec.date) || 'hari ini'}, dengan jenis latihan "${rec.type || '-'}".`;
+                    if (rec.remark) {
+                        notice += ` Remark: "${rec.remark}"`;
+                    }
+                    showStatusModal("Pemberitahuan", notice, true);
+                    return;
+                }
+
                 // Isi informasi ke form tahap 2 sesuai properti return backend Anda (result.data.name & result.data.className)
                 document.getElementById('displayName').textContent = result.data.name;
                 document.getElementById('displayClass').textContent = result.data.className;

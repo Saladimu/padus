@@ -6,7 +6,7 @@ Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web*
 
 | Action | Deskripsi |
 |--------|-----------|
-| `verify` | Verifikasi `id` + `pin` terhadap sheet `STUDENTS`; mengembalikan nama dan kelas siswa. |
+| `verify` | Verifikasi `id` + `pin` terhadap sheet `STUDENTS`; mengembalikan nama dan kelas siswa. Jika siswa sudah tercatat absen hari ini, respons menyertakan `already: true` beserta `record` (tanggal, jenis latihan, remark). |
 | `submit` | Validasi ulang identitas, cek duplikasi per hari, lalu menulis baris ke sheet `ATTENDANCE`. |
 
 ## Struktur Sheet
@@ -27,3 +27,7 @@ Duplikasi dicegah berdasarkan kombinasi `ID` + `Tanggal` (format `yyyy-MM-dd`, z
 - `type` divalidasi terhadap `VALID_TYPES` di sisi server.
 - Panjang input `id`/`pin` dibatasi.
 - Gunakan `LockService` untuk mencegah race condition saat menulis absensi.
+
+## Duplikasi Absensi
+
+- Pengecekan dilakukan dua lapis: pada `verify` (via `getTodayRecord()`) frontend menampilkan pemberitahuan "Pemberitahuan", dan pada `submit` (via `submitAttendance()`) sebagai pengaman terhadap race condition.
