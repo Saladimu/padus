@@ -25,6 +25,8 @@ function doPost(e) {
       return respond(verifyStudent(data.id, data.pin));
     } else if (action === 'submit') {
       return respond(submitAttendance(data));
+    } else if (action === 'ping') {
+      return respond({ success: true, message: 'pong' });
     } else if (action === 'debug') {
       return respond(debugCheck(data.id));
     }

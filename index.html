@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -19,7 +19,13 @@
 
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative">
         <!-- Header -->
-        <div class="bg-blue-600 p-6 text-center text-white">
+        <div class="bg-blue-600 p-6 text-center text-white relative">
+            <button id="btnSettings" onclick="toggleSettingsModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </button>
             <div class="flex justify-center mb-2">
                 <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain">
             </div>
@@ -107,6 +113,63 @@
         </div>
     </div>
 
+    <!-- Modal Pengaturan Admin -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Pengaturan Admin</h3>
+                <button onclick="toggleSettingsModal()" class="text-gray-500 hover:text-red-500 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                <!-- Keamanan -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-sm mb-1">Keamanan</h4>
+                    <p class="text-xs text-gray-500 mb-3">Pengaturan backend dilindungi kata sandi admin.</p>
+
+                    <div id="secLocked">
+                        <label for="unlockPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Admin</label>
+                        <input type="password" id="unlockPwd" autocomplete="current-password" placeholder="Masukkan kata sandi admin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <button id="btnUnlock" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Buka Kunci</button>
+                        <p class="text-xs text-gray-400 mt-2">Koneksi Google Sheets dikunci sampai kata sandi yang benar dimasukkan.</p>
+                    </div>
+
+                    <div id="secUnlocked" class="hidden">
+                        <div class="flex justify-end mb-3">
+                            <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition">Kunci Pengaturan</button>
+                        </div>
+                        <label for="oldPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Saat Ini</label>
+                        <input type="password" id="oldPwd" autocomplete="current-password" placeholder="Kata sandi saat ini" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <label for="newPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Kata Sandi Baru</label>
+                        <input type="password" id="newPwd" autocomplete="new-password" placeholder="Minimal 4 karakter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <label for="confirmPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Konfirmasi Kata Sandi Baru</label>
+                        <input type="password" id="confirmPwd" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <button id="btnChangePwd" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Ganti Kata Sandi</button>
+                    </div>
+                </div>
+
+                <!-- Koneksi Google Sheets -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" id="connBlock">
+                    <h4 class="font-bold text-sm mb-1">Koneksi Google Sheets</h4>
+                    <p class="text-xs text-gray-500 mb-3">Atur URL Aplikasi Web Google Apps Script sebagai backend absensi.</p>
+                    <label for="apiUrlSetting" class="block text-sm font-medium text-gray-700 mb-1">Apps Script Web App URL</label>
+                    <input type="url" id="apiUrlSetting" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <div class="flex gap-2 mt-3">
+                        <button id="btnTestConn" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Test Koneksi</button>
+                        <button id="btnSaveConn" class="w-1/2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Simpan</button>
+                    </div>
+                    <p id="connStatus" class="text-sm mt-2"></p>
+                </div>
+
+                <!-- Setup Backend -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-sm mb-1">Setup Backend</h4>
+                    <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
+                    <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition">Admin: Setup Google Sheets Backend</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Setup Admin (Google Apps Script Code) -->
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
@@ -178,7 +241,7 @@
         };
 
         try {
-            const response = await fetch(GAS_WEB_APP_URL, {
+            const response = await fetch(getApiUrl(), {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
@@ -246,7 +309,7 @@
         };
 
         try {
-            const response = await fetch(GAS_WEB_APP_URL, {
+            const response = await fetch(getApiUrl(), {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
@@ -334,7 +397,196 @@
                         modal.classList.remove('flex');
                     }, 300);
                 }
-        }
+            }
+
+            // ==========================================
+            // SETTINGS ADMIN (KATA SANDI & KONEKSI GOOGLE SHEETS)
+            // ==========================================
+            const LS_CONFIG = 'choir_absensi_config';
+            const LS_PWD = 'choir_absensi_pwd';
+
+            function getConfig() {
+                try {
+                    return JSON.parse(localStorage.getItem(LS_CONFIG)) || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            function setConfig(cfg) {
+                localStorage.setItem(LS_CONFIG, JSON.stringify(cfg));
+            }
+
+            // URL backend: pakai yang disimpan, fallback ke URL bawaan.
+            function getApiUrl() {
+                const cfg = getConfig();
+                return cfg.apiUrl && cfg.apiUrl.trim() ? cfg.apiUrl.trim() : GAS_WEB_APP_URL;
+            }
+
+            // ========== Keamanan ==========
+
+            function hashPassword(pwd) {
+                if (window.crypto && window.crypto.subtle) {
+                    return window.crypto.subtle.digest('SHA-256', new TextEncoder().encode('choir_' + pwd))
+                        .then(function (buf) {
+                            return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+                                return ('0' + b.toString(16)).slice(-2);
+                            }).join('');
+                        });
+                }
+                var h = 5381;
+                var s = 'choir_' + pwd;
+                for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+                return Promise.resolve('djb2_' + h.toString(16));
+            }
+
+            function checkPassword(pwd) {
+                const stored = localStorage.getItem(LS_PWD);
+                return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '00000');
+            }
+
+            let settingsLocked = true;
+
+            function applySecurityState() {
+                const secLocked = document.getElementById('secLocked');
+                const secUnlocked = document.getElementById('secUnlocked');
+                const urlInput = document.getElementById('apiUrlSetting');
+                secLocked.classList.toggle('hidden', !settingsLocked);
+                secUnlocked.classList.toggle('hidden', settingsLocked);
+                urlInput.disabled = settingsLocked;
+                document.getElementById('btnTestConn').disabled = settingsLocked;
+                document.getElementById('btnSaveConn').disabled = settingsLocked;
+                urlInput.placeholder = settingsLocked ? 'Terkunci - masukkan kata sandi admin' : 'https://script.google.com/macros/s/.../exec';
+                urlInput.value = settingsLocked ? '' : (getConfig().apiUrl || '');
+            }
+
+            function unlockSettings() {
+                const p = document.getElementById('unlockPwd').value;
+                if (!p) {
+                    showStatusModal("Gagal", "Masukkan kata sandi admin terlebih dahulu.", false);
+                    return;
+                }
+                checkPassword(p).then(ok => {
+                    if (!ok) {
+                        showStatusModal("Gagal", "Kata sandi yang dimasukkan salah.", false);
+                        return;
+                    }
+                    document.getElementById('unlockPwd').value = '';
+                    settingsLocked = false;
+                    applySecurityState();
+                    showStatusModal("Berhasil", "Pengaturan berhasil dibuka kunci.", true);
+                });
+            }
+
+            function lockSettings() {
+                settingsLocked = true;
+                applySecurityState();
+                document.getElementById('connStatus').textContent = '';
+                showStatusModal("Pemberitahuan", "Pengaturan berhasil dikunci kembali.", true);
+            }
+
+            function changePassword() {
+                const old = document.getElementById('oldPwd').value;
+                const np = document.getElementById('newPwd').value;
+                const cp = document.getElementById('confirmPwd').value;
+                if (!old) {
+                    showStatusModal("Gagal", "Masukkan kata sandi saat ini.", false);
+                    return;
+                }
+                if (!np || np.length < 4) {
+                    showStatusModal("Gagal", "Kata sandi baru minimal 4 karakter.", false);
+                    return;
+                }
+                if (np !== cp) {
+                    showStatusModal("Gagal", "Konfirmasi kata sandi baru tidak cocok.", false);
+                    return;
+                }
+                checkPassword(old).then(ok => {
+                    if (!ok) {
+                        showStatusModal("Gagal", "Kata sandi saat ini salah.", false);
+                        return;
+                    }
+                    hashPassword(np).then(newHash => {
+                        localStorage.setItem(LS_PWD, newHash);
+                        document.getElementById('oldPwd').value = '';
+                        document.getElementById('newPwd').value = '';
+                        document.getElementById('confirmPwd').value = '';
+                        showStatusModal("Berhasil", "Kata sandi admin berhasil diganti.", true);
+                    });
+                });
+            }
+
+            // ========== Koneksi Google Sheets ==========
+
+            function setConnStatus(msg, type) {
+                const el = document.getElementById('connStatus');
+                el.textContent = msg || '';
+                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
+            }
+
+            function saveConfig() {
+                const url = document.getElementById('apiUrlSetting').value.trim();
+                const cfg = getConfig();
+                cfg.apiUrl = url;
+                setConfig(cfg);
+                testConnection();
+            }
+
+            function testConnection() {
+                const url = document.getElementById('apiUrlSetting').value.trim();
+                const cfg = getConfig();
+                cfg.apiUrl = url;
+                setConfig(cfg);
+
+                if (!url) {
+                    setConnStatus('URL belum diisi.', 'err');
+                    return;
+                }
+
+                setConnStatus('Menguji koneksi...', '');
+                fetch(url, { method: 'POST', body: JSON.stringify({ action: 'ping' }) })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.success === true) {
+                            setConnStatus('Koneksi berhasil! Backend aktif dan dapat digunakan.', 'ok');
+                        } else if (res && res.success === false) {
+                            setConnStatus('Backend merespons, namun action ping tidak tersedia. Pastikan code.gs sudah diperbarui.', 'err');
+                        } else {
+                            setConnStatus('Respons tidak dikenali. Pastikan URL adalah Apps Script Web App.', 'err');
+                        }
+                    })
+                    .catch(() => {
+                        setConnStatus('Koneksi gagal. Periksa URL dan deployment Apps Script.', 'err');
+                    });
+            }
+
+            function toggleSettingsModal() {
+                const modal = document.getElementById('settingsModal');
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                } else {
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 300);
+                }
+            }
+
+            document.getElementById('btnUnlock').addEventListener('click', unlockSettings);
+            document.getElementById('btnLock').addEventListener('click', lockSettings);
+            document.getElementById('btnChangePwd').addEventListener('click', changePassword);
+            document.getElementById('btnTestConn').addEventListener('click', testConnection);
+            document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
+            document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') unlockSettings();
+            });
+            document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveConfig();
+            });
+            applySecurityState();
     </script>
 </body>
 </html>
