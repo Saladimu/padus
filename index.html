@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -20,12 +20,19 @@
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative">
         <!-- Header -->
         <div class="bg-blue-600 p-6 text-center text-white relative">
-            <button id="btnSettings" onclick="toggleSettingsModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-            </button>
+            <div class="absolute top-3 right-3 flex items-center gap-2">
+                <button id="btnRefresh" onclick="location.reload()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Muat Ulang Data" aria-label="Muat Ulang Data">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+                <button id="btnSettings" onclick="toggleSettingsModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+            </div>
             <div class="flex justify-center mb-2">
                 <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain">
             </div>
@@ -175,6 +182,14 @@
                     <p id="reportStatus" class="text-sm mt-2"></p>
                 </div>
 
+                <!-- Daftar Siswa -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" id="studentBlock">
+                    <h4 class="font-bold text-sm mb-1">Daftar Siswa</h4>
+                    <p class="text-xs text-gray-500 mb-3">Lihat daftar siswa dari sheet STUDENTS (PIN tidak ditampilkan).</p>
+                    <button id="btnShowStudents" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Daftar Siswa</button>
+                    <p id="studentStatus" class="text-sm mt-2"></p>
+                </div>
+
                 <!-- Setup Backend -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-bold text-sm mb-1">Setup Backend</h4>
@@ -207,6 +222,32 @@
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
                 <button onclick="closeReportModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Daftar Siswa -->
+    <div id="studentModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-green-700 p-5 text-white text-center relative shrink-0">
+                <button onclick="closeStudentModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
+                <div class="flex justify-center mb-2">
+                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                </div>
+                <h3 class="text-lg font-bold tracking-wide">DAFTAR SISWA</h3>
+                <p class="text-sm text-green-200 mt-1">Sheet: STUDENTS</p>
+                <p class="text-xs text-green-200 mt-0.5 font-semibold" id="studentCountDisplay">-</p>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1" id="studentScroll">
+                <div id="studentList" class="space-y-2"></div>
+                <div id="studentEmpty" class="text-center py-10 text-gray-500">
+                    <div class="text-4xl mb-2 text-gray-300">-</div>
+                    <p class="font-semibold text-gray-600">Tidak ada data</p>
+                    <p class="text-sm">Belum ada siswa terdaftar pada sheet STUDENTS.</p>
+                </div>
+            </div>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
+                <button onclick="closeStudentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
     </div>
@@ -506,6 +547,7 @@
                 urlInput.value = settingsLocked ? '' : (getConfig().apiUrl || '');
                 document.getElementById('reportDate').disabled = settingsLocked;
                 document.getElementById('btnShowReport').disabled = settingsLocked;
+                document.getElementById('btnShowStudents').disabled = settingsLocked;
                 if (settingsLocked) {
                     document.getElementById('reportStatus').textContent = '';
                 }
@@ -685,6 +727,68 @@
                 }, 300);
             }
 
+            function setStudentStatus(msg, type) {
+                const el = document.getElementById('studentStatus');
+                el.textContent = msg || '';
+                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
+            }
+
+            function loadStudents() {
+                setStudentStatus('Memuat daftar siswa...', '');
+                fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'students' }) })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            setStudentStatus(res.message || 'Gagal memuat daftar siswa.', 'err');
+                            return;
+                        }
+                        setStudentStatus('', '');
+                        renderStudents(res);
+                    })
+                    .catch(() => setStudentStatus('Koneksi gagal. Periksa backend.', 'err'));
+            }
+
+            function renderStudents(res) {
+                const students = res.students || [];
+                document.getElementById('studentCountDisplay').textContent = students.length + ' siswa terdaftar';
+                document.getElementById('studentEmpty').classList.toggle('hidden', students.length > 0);
+                document.getElementById('studentList').innerHTML = students.map(s => {
+                    const initial = (s.name || '?').trim().charAt(0).toUpperCase();
+                    const active = String(s.status).toUpperCase() === 'ACTIVE';
+                    const statusBadge = active
+                        ? '<span class="text-xs font-semibold text-green-600 shrink-0">Aktif</span>'
+                        : '<span class="text-xs font-semibold text-red-500 shrink-0">Nonaktif</span>';
+                    return '<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">' +
+                        '<div class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold shrink-0">' + escapeHtml(initial) + '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<div class="flex items-center justify-between gap-2">' +
+                        '<span class="font-semibold text-gray-800 text-sm truncate">' + escapeHtml(s.name) + '</span>' +
+                        statusBadge +
+                        '</div>' +
+                        '<div class="text-xs text-gray-500">' + escapeHtml(s.id) + (s.className ? ' | ' + escapeHtml(s.className) : '') + '</div>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+                openStudentModal();
+            }
+
+            function openStudentModal() {
+                const modal = document.getElementById('studentModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('studentScroll').scrollTop = 0;
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+
+            function closeStudentModal() {
+                const modal = document.getElementById('studentModal');
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            }
+
             function toggleSettingsModal() {
                 const modal = document.getElementById('settingsModal');
                 if (modal.classList.contains('hidden')) {
@@ -709,6 +813,7 @@
             document.getElementById('reportDate').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') loadReport();
             });
+            document.getElementById('btnShowStudents').addEventListener('click', loadStudents);
             document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') unlockSettings();
             });
@@ -716,6 +821,11 @@
                 if (e.key === 'Enter') saveConfig();
             });
             applySecurityState();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(function () {});
+        }
     </script>
 </body>
 </html>

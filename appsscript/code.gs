@@ -29,6 +29,8 @@ function doPost(e) {
       return respond({ success: true, message: 'pong' });
     } else if (action === 'report') {
       return respond(getAttendanceReport(data.date));
+    } else if (action === 'students') {
+      return respond(getStudentList());
     } else if (action === 'debug') {
       return respond(debugCheck(data.id));
     }
@@ -234,6 +236,30 @@ function getAttendanceReport(date) {
     count: records.length,
     records: records
   };
+}
+
+function getStudentList() {
+  const sheet = getSheet(SHEET_NAME_STUDENTS);
+  if (!sheet) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
+  const data = sheet.getDataRange().getValues();
+  const students = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i] || (data[i][0] === '' && data[i][1] === '')) continue;
+
+    students.push({
+      id: data[i][0] ? String(data[i][0]).trim() : '',
+      name: data[i][1] ? String(data[i][1]).trim() : '',
+      className: data[i][2] ? String(data[i][2]).trim() : '',
+      status: data[i][4] ? String(data[i][4]).trim().toUpperCase() : ''
+    });
+  }
+
+  students.sort(function (a, b) {
+    return String(a.name).localeCompare(String(b.name));
+  });
+
+  return { success: true, count: students.length, students: students };
 }
 
 function submitAttendance(payload) {

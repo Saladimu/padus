@@ -8,6 +8,7 @@ Aplikasi web absensi ekstrakurikuler Paduan Suara. Frontend berupa satu halaman 
 index.html            Halaman utama aplikasi
 styles.css            CSS Tailwind hasil build (minified)
 src/input.css         Sumber CSS (Tailwind v4 + custom styles) untuk rebuild
+sw.js                 Service worker (cache aset agar akses cepat & offline)
 favicon.png           Ikon tab (32x32)
 choir-icon-128.png    Logo header (128px, PNG fallback)
 choir-icon-128.webp   Logo header (128px, WebP - digunakan bila didukung)
@@ -15,6 +16,10 @@ choir-icon.png        Logo sumber asli 512x512
 appsscript/code.gs    Backend Google Apps Script
 appsscript/readme.md  Panduan deploy backend
 ```
+
+## Caching (Service Worker)
+
+`sw.js` meng-cache aset statis (CSS, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-vN`); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak.
 
 ## Cara Kerja
 
