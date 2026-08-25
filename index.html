@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=5">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -165,12 +165,48 @@
                     <p id="connStatus" class="text-sm mt-2"></p>
                 </div>
 
+                <!-- Laporan Absensi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" id="reportBlock">
+                    <h4 class="font-bold text-sm mb-1">Laporan Absensi</h4>
+                    <p class="text-xs text-gray-500 mb-3">Lihat data absensi berdasarkan tanggal.</p>
+                    <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                    <input type="date" id="reportDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                    <button id="btnShowReport" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Data</button>
+                    <p id="reportStatus" class="text-sm mt-2"></p>
+                </div>
+
                 <!-- Setup Backend -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-bold text-sm mb-1">Setup Backend</h4>
                     <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
                     <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition">Admin: Setup Google Sheets Backend</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Laporan Absensi -->
+    <div id="reportModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white text-center relative shrink-0">
+                <button onclick="closeReportModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
+                <div class="flex justify-center mb-2">
+                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                </div>
+                <h3 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI</h3>
+                <p class="text-sm text-blue-200 mt-1" id="reportDateDisplay">-</p>
+                <p class="text-xs text-blue-200 mt-0.5 font-semibold" id="reportCountDisplay">-</p>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1" id="reportScroll">
+                <div id="reportList" class="space-y-2"></div>
+                <div id="reportEmpty" class="text-center py-10 text-gray-500">
+                    <div class="text-4xl mb-2 text-gray-300">-</div>
+                    <p class="font-semibold text-gray-600">Tidak ada data</p>
+                    <p class="text-sm">Tidak ada absensi tercatat pada tanggal ini.</p>
+                </div>
+            </div>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
+                <button onclick="closeReportModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
     </div>
@@ -468,6 +504,11 @@
                 document.getElementById('btnSaveConn').disabled = settingsLocked;
                 urlInput.placeholder = settingsLocked ? 'Terkunci - masukkan kata sandi admin' : 'https://script.google.com/macros/s/.../exec';
                 urlInput.value = settingsLocked ? '' : (getConfig().apiUrl || '');
+                document.getElementById('reportDate').disabled = settingsLocked;
+                document.getElementById('btnShowReport').disabled = settingsLocked;
+                if (settingsLocked) {
+                    document.getElementById('reportStatus').textContent = '';
+                }
             }
 
             function unlockSettings() {
@@ -570,6 +611,80 @@
                     });
             }
 
+            function escapeHtml(str) {
+                return String(str || '').replace(/[&<>"']/g, function (m) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+                });
+            }
+
+            function setReportStatus(msg, type) {
+                const el = document.getElementById('reportStatus');
+                el.textContent = msg || '';
+                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
+            }
+
+            function loadReport() {
+                const date = document.getElementById('reportDate').value;
+                if (!date) {
+                    setReportStatus('Pilih tanggal terlebih dahulu.', 'err');
+                    return;
+                }
+                setReportStatus('Memuat data...', '');
+                fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date }) })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.success) {
+                            setReportStatus(res.message || 'Gagal memuat laporan.', 'err');
+                            return;
+                        }
+                        setReportStatus('', '');
+                        renderReport(res);
+                    })
+                    .catch(() => setReportStatus('Koneksi gagal. Periksa backend.', 'err'));
+            }
+
+            function renderReport(res) {
+                document.getElementById('reportDateDisplay').textContent = formatDateDisplay(res.date) || res.date;
+                const records = res.records || [];
+                document.getElementById('reportCountDisplay').textContent = records.length + ' siswa tercatat';
+                document.getElementById('reportEmpty').classList.toggle('hidden', records.length > 0);
+                document.getElementById('reportList').innerHTML = records.map(r => {
+                    const initial = (r.name || '?').trim().charAt(0).toUpperCase();
+                    const remark = r.remark ? '<div class="text-xs text-gray-400 mt-0.5">' + escapeHtml(r.remark) + '</div>' : '';
+                    return '<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">' +
+                        '<div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">' + escapeHtml(initial) + '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<div class="flex items-center justify-between gap-2">' +
+                        '<span class="font-semibold text-gray-800 text-sm truncate">' + escapeHtml(r.name) + '</span>' +
+                        '<span class="text-xs font-semibold text-green-600 shrink-0">' + escapeHtml(r.status) + '</span>' +
+                        '</div>' +
+                        '<div class="text-xs text-gray-500">' + escapeHtml(r.id) + ' | ' + escapeHtml(r.className) + '</div>' +
+                        '<div class="text-xs text-gray-500">' + escapeHtml(r.type) + '</div>' +
+                        remark +
+                        '<div class="text-xs text-gray-400 mt-1">' + escapeHtml(r.timestamp) + '</div>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
+                openReportModal();
+            }
+
+            function openReportModal() {
+                const modal = document.getElementById('reportModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('reportScroll').scrollTop = 0;
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+
+            function closeReportModal() {
+                const modal = document.getElementById('reportModal');
+                modal.classList.add('opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            }
+
             function toggleSettingsModal() {
                 const modal = document.getElementById('settingsModal');
                 if (modal.classList.contains('hidden')) {
@@ -590,6 +705,10 @@
             document.getElementById('btnChangePwd').addEventListener('click', changePassword);
             document.getElementById('btnTestConn').addEventListener('click', testConnection);
             document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
+            document.getElementById('btnShowReport').addEventListener('click', loadReport);
+            document.getElementById('reportDate').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') loadReport();
+            });
             document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') unlockSettings();
             });

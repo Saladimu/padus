@@ -27,6 +27,8 @@ function doPost(e) {
       return respond(submitAttendance(data));
     } else if (action === 'ping') {
       return respond({ success: true, message: 'pong' });
+    } else if (action === 'report') {
+      return respond(getAttendanceReport(data.date));
     } else if (action === 'debug') {
       return respond(debugCheck(data.id));
     }
@@ -190,6 +192,48 @@ function verifyStudent(id, pin) {
   }
 
   return { success: false, message: 'Student ID atau Nama tidak terdaftar. Silakan hubungi guru pembimbing.' };
+}
+
+function getAttendanceReport(date) {
+  const sheet = getSheet(SHEET_NAME_ATTENDANCE);
+  if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
+  if (!date) return { success: false, message: 'Tanggal wajib diisi.' };
+
+    const target = String(date).trim();
+    const data = sheet.getDataRange().getValues();
+    const records = [];
+
+    function formatTimestamp(v) {
+      if (!v) return '';
+      if (isDateValue(v)) return Utilities.formatDate(v, 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
+      return String(v).trim();
+    }
+
+    for (let i = 1; i < data.length; i++) {
+      if (!data[i] || data[i][1] === '') continue;
+      if (!matchesToday(data[i][1], target)) continue;
+
+      records.push({
+        timestamp: formatTimestamp(data[i][0]),
+      id: data[i][2] ? String(data[i][2]) : '',
+      name: data[i][3] ? String(data[i][3]) : '',
+      className: data[i][4] ? String(data[i][4]) : '',
+      type: data[i][5] ? String(data[i][5]) : '',
+      remark: data[i][6] ? String(data[i][6]) : '',
+      status: data[i][7] ? String(data[i][7]) : ''
+    });
+  }
+
+  records.sort(function (a, b) {
+    return String(a.timestamp).localeCompare(String(b.timestamp));
+  });
+
+  return {
+    success: true,
+    date: target,
+    count: records.length,
+    records: records
+  };
 }
 
 function submitAttendance(payload) {

@@ -8,6 +8,7 @@ Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web*
 |--------|-----------|
 | `verify` | Verifikasi `id` (Student ID **atau** Nama) + `pin` terhadap sheet `STUDENTS`; mengembalikan nama dan kelas siswa. Jika siswa sudah tercatat absen hari ini, respons menyertakan `already: true` beserta `record` (tanggal, jenis latihan, remark). |
 | `ping` | Kesehatan koneksi; mengembalikan `{ success: true }`. Dipakai oleh menu **Test Koneksi** di Pengaturan Admin. |
+| `report` | Mengembalikan rekap absensi untuk tanggal tertentu (`date` format `yyyy-MM-dd`) dari sheet `ATTENDANCE`, diurutkan berdasarkan timestamp. Dipakai oleh menu **Laporan Absensi**. |
 | `submit` | Validasi ulang identitas, cek duplikasi per hari, lalu menulis baris ke sheet `ATTENDANCE`. |
 
 ## Struktur Sheet

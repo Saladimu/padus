@@ -30,6 +30,7 @@ Klik ikon roda gigi di pojok kanan atas untuk membuka **Pengaturan Admin**:
 - **Kata sandi**: pengaturan dilindungi kata sandi (default `00000`, tidak ditampilkan di halaman web). Bisa diganti lewat menu "Ganti Kata Sandi" setelah membuka kunci.
 - **Koneksi Google Sheets**: simpan URL Aplikasi Web Google Apps Script (`/exec`) di menu ini. URL tersimpan di `localStorage` dan dipakai aplikasi; jika kosong, aplikasi memakai URL bawaan `GAS_WEB_APP_URL`. Tombol **Test Koneksi** memanggil action `ping` pada backend.
 - **Admin: Setup Google Sheets Backend**: membuka panduan deploy backend.
+- **Laporan Absensi**: masukkan tanggal untuk menampilkan rekap data absensi hari itu (nama, ID, kelas, jenis latihan, waktu, status) langsung di layar.
 
 ## Setup Backend (Google Apps Script)
 
