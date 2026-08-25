@@ -57,7 +57,12 @@
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
                     <p class="text-xs text-blue-500 font-semibold uppercase tracking-wider mb-1">Data Siswa Valid</p>
                     <p class="font-bold text-gray-800 text-lg" id="displayName">-</p>
-                    <p class="text-sm text-gray-600" id="displayClass">-</p>
+                    <div class="flex items-center gap-2 text-sm mt-1">
+                        <span class="text-gray-600"><span class="font-semibold text-gray-700">ID:</span> <span id="displayStudentId">-</span></span>
+                        <span class="text-gray-300">|</span>
+                        <span class="text-gray-600" id="displayClass">-</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2"><span class="font-semibold text-gray-700">Login:</span> <span id="displayLoginTime">-</span></p>
                 </div>
 
                 <div>
@@ -267,7 +272,10 @@
 
                 // Isi informasi ke form tahap 2 sesuai properti return backend Anda (result.data.name & result.data.className)
                 document.getElementById('displayName').textContent = result.data.name;
+                document.getElementById('displayStudentId').textContent = result.data.id || studentIdentity;
                 document.getElementById('displayClass').textContent = result.data.className;
+                document.getElementById('displayLoginTime').textContent =
+                    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
                 // Switch Form Tampilan
                 verifyForm.classList.add('hidden');
@@ -341,6 +349,8 @@
         currentStudentPin = null;
         verifyForm.reset();
         attendanceForm.reset();
+        document.getElementById('displayStudentId').textContent = '-';
+        document.getElementById('displayLoginTime').textContent = '-';
         attendanceForm.classList.add('hidden');
         verifyForm.classList.remove('hidden');
     }
