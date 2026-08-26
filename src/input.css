@@ -35,18 +35,30 @@ body {
     }
 }
 @media print {
+    html, body {
+        height: auto !important;
+    }
+    body.printing-report,
+    body.printing-students {
+        display: block !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        background-image: none !important;
+    }
     body.printing-report > *:not(#reportPrintArea) {
         display: none !important;
     }
     body.printing-report #reportPrintArea {
         display: block !important;
-        padding: 16px;
+        padding: 0;
     }
     body.printing-students > *:not(#studentPrintArea) {
         display: none !important;
     }
     body.printing-students #studentPrintArea {
         display: block !important;
-        padding: 16px;
+        padding: 0;
     }
 }
