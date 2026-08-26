@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=10">
+    <link rel="stylesheet" href="styles.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -236,14 +236,14 @@
         <table style="width:100%; border-collapse:collapse; font-size:12px;">
             <thead>
                 <tr>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">No</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Nama</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">ID</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Kelas</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Jenis</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Catatan</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Waktu</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Status</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Nama</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">ID</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Kelas</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Jenis</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Catatan</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Waktu</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Status</th>
                 </tr>
             </thead>
             <tbody id="printReportRows"></tbody>
@@ -287,11 +287,11 @@
         <table style="width:100%; border-collapse:collapse; font-size:12px;">
             <thead>
                 <tr>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">No</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Nama</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">ID</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Kelas</th>
-                    <th style="border:1px solid #999; padding:6px; text-align:left;">Status</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Nama</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">ID</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Kelas</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Status</th>
                 </tr>
             </thead>
             <tbody id="printStudentRows"></tbody>
@@ -775,14 +775,14 @@
                 document.getElementById('printReportCount').textContent = records.length + ' siswa tercatat';
                 document.getElementById('printReportRows').innerHTML = records.length ? records.map((r, i) => {
                     return '<tr>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + (i + 1) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.name) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.id) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.className) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.type) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.remark) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.timestamp) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.status) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.name) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.id) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.className) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.type) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.remark) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.timestamp) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.status) + '</td>' +
                         '</tr>';
                 }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="8">Tidak ada data</td></tr>';
             }
@@ -861,11 +861,11 @@
                 document.getElementById('printStudentDate').textContent = 'Dicetak: ' + new Date().toLocaleDateString('id-ID', dateOptions);
                 document.getElementById('printStudentRows').innerHTML = students.length ? students.map((s, i) => {
                     return '<tr>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + (i + 1) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.name) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.id) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.className) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(String(s.status).toUpperCase() === 'ACTIVE' ? 'Aktif' : 'Nonaktif') + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(String(s.status).toUpperCase() === 'ACTIVE' ? 'Aktif' : 'Nonaktif') + '</td>' +
                         '</tr>';
                 }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
                 openStudentModal();
