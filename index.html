@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link rel="stylesheet" href="styles.css?v=13">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -219,6 +219,10 @@
                     <p class="font-semibold text-gray-600">Tidak ada data</p>
                     <p class="text-sm">Tidak ada absensi tercatat pada tanggal ini.</p>
                 </div>
+                <div id="reportAbsentBlock" class="hidden mt-4 border-t pt-4">
+                    <h4 class="font-semibold text-yellow-700 text-sm mb-2">Siswa yang tidak hadir :</h4>
+                    <div id="reportAbsentList" class="space-y-2"></div>
+                </div>
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
                 <button onclick="printReport()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
@@ -248,6 +252,20 @@
             </thead>
             <tbody id="printReportRows"></tbody>
         </table>
+        <div id="printReportAbsentBlock" style="margin-top:16px;">
+            <h3 style="font-size:13px; font-weight:bold; margin:0 0 4px;">Siswa yang tidak hadir :</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr>
+                        <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
+                        <th style="border:1px solid #999; padding:6px; text-align:center;">Nama</th>
+                        <th style="border:1px solid #999; padding:6px; text-align:center;">ID</th>
+                        <th style="border:1px solid #999; padding:6px; text-align:center;">Kelas</th>
+                    </tr>
+                </thead>
+                <tbody id="printReportAbsentRows"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Modal Daftar Siswa -->
@@ -764,8 +782,24 @@
                         '</div>';
                 }).join('');
                 currentReportData = res;
+                populateReportAbsent(res);
                 populateReportPrint(res);
                 openReportModal();
+            }
+
+            function populateReportAbsent(res) {
+                const absent = res.absent || [];
+                const block = document.getElementById('reportAbsentBlock');
+                block.classList.toggle('hidden', absent.length === 0);
+                document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
+                    return '<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">' +
+                        '<div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">' + (i + 1) + '</div>' +
+                        '<div class="flex-1 min-w-0">' +
+                        '<div class="font-semibold text-yellow-900 text-sm truncate">' + escapeHtml(s.name) + '</div>' +
+                        '<div class="text-xs text-yellow-800">' + escapeHtml(s.id) + ' | ' + escapeHtml(s.className) + '</div>' +
+                        '</div>' +
+                        '</div>';
+                }).join('');
             }
 
             function populateReportPrint(res) {
@@ -785,6 +819,16 @@
                         '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.status) + '</td>' +
                         '</tr>';
                 }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="8">Tidak ada data</td></tr>';
+                const absent = res.absent || [];
+                document.getElementById('printReportAbsentBlock').style.display = absent.length ? 'block' : 'none';
+                document.getElementById('printReportAbsentRows').innerHTML = absent.length ? absent.map((s, i) => {
+                    return '<tr>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
+                        '</tr>';
+                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="4">Tidak ada data</td></tr>';
             }
 
             function openReportModal() {

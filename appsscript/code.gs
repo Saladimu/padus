@@ -204,6 +204,7 @@ function getAttendanceReport(date) {
     const target = String(date).trim();
     const data = sheet.getDataRange().getValues();
     const records = [];
+    const attendedIds = {};
 
     function formatTimestamp(v) {
       if (!v) return '';
@@ -214,6 +215,9 @@ function getAttendanceReport(date) {
     for (let i = 1; i < data.length; i++) {
       if (!data[i] || data[i][1] === '') continue;
       if (!matchesToday(data[i][1], target)) continue;
+
+      const id = data[i][2] ? String(data[i][2]).trim().toUpperCase() : '';
+      if (id) attendedIds[id] = true;
 
       records.push({
         timestamp: formatTimestamp(data[i][0]),
@@ -234,8 +238,38 @@ function getAttendanceReport(date) {
     success: true,
     date: target,
     count: records.length,
-    records: records
+    records: records,
+    absent: getAbsentStudents(attendedIds)
   };
+}
+
+function getAbsentStudents(attendedIds) {
+  const sheet = getSheet(SHEET_NAME_STUDENTS);
+  if (!sheet) return [];
+  const data = sheet.getDataRange().getValues();
+  const absent = [];
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i] || data[i][0] === '') continue;
+
+    const rowId = data[i][0] ? String(data[i][0]).trim().toUpperCase() : '';
+    const rowStatus = data[i][4] ? String(data[i][4]).trim().toUpperCase() : '';
+
+    if (!rowId || rowStatus !== 'ACTIVE') continue;
+    if (attendedIds[rowId]) continue;
+
+    absent.push({
+      id: data[i][0] ? String(data[i][0]).trim() : '',
+      name: data[i][1] ? String(data[i][1]).trim() : '',
+      className: data[i][2] ? String(data[i][2]).trim() : ''
+    });
+  }
+
+  absent.sort(function (a, b) {
+    return String(a.name).localeCompare(String(b.name));
+  });
+
+  return absent;
 }
 
 function getStudentList() {
