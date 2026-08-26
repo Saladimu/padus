@@ -29,6 +29,7 @@ appsscript/readme.md  Panduan deploy backend
 - **Pengaturan Admin**: kunci kata sandi, ganti kata sandi, atur URL backend, dan **Test Koneksi** (action `ping`).
 - **Laporan Absensi**: rekap absensi per tanggal (action `report`).
 - **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan).
+- **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
 
 ## Cara Kerja
@@ -43,14 +44,23 @@ appsscript/readme.md  Panduan deploy backend
 - Pada tahap `verify`, backend memeriksa riwayat absensi hari ini (`getTodayRecord()`). Jika siswa sudah tercatat, respons menyertakan `already: true` beserta `record` (tanggal, jenis latihan, remark), lalu frontend menampilkan modal **Pemberitahuan** dan menghentikan alur.
 - Pada tahap `submit`, `submitAttendance()` memeriksa ulang duplikasi sebagai pengaman tambahan terhadap race condition (bersama `LockService`).
 
+## Cetak / PDF (Print)
+
+Modal **Laporan Absensi** dan **Daftar Siswa** memiliki tombol **Print** yang memicu dialog print browser (`window.print()`), sehingga pengguna dapat mencetak atau menyimpan ke PDF.
+
+- Saat mencetak, seluruh elemen aplikasi disembunyikan dan hanya area cetak (kop + tabel) yang ditampilkan (`@media print` di `src/input.css`).
+- Header tabel dicetak rata tengah (`text-align:center`).
+- Halaman memakai margin `1cm` dengan footer nomor halaman otomatis **"Hal: X/Y"** (`@page` + `@bottom-center`).
+- Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan) atau `Students+<tanggal>` (daftar siswa) agar nama file PDF yang disimpan lebih deskriptif, lalu dikembalikan setelah pencetakan selesai.
+
 ## Pengaturan Admin (Settings)
 
 Klik ikon roda gigi di pojok kanan atas untuk membuka **Pengaturan Admin**:
 
 - **Keamanan**: seluruh pengaturan dilindungi kata sandi (default `00000`, tidak ditampilkan di halaman web). Bisa diganti lewat menu "Ganti Kata Sandi" setelah membuka kunci.
 - **Koneksi Google Sheets**: simpan URL Aplikasi Web Google Apps Script (`/exec`) di menu ini. URL tersimpan di `localStorage` dan dipakai aplikasi; jika kosong, aplikasi memakai URL bawaan `GAS_WEB_APP_URL`. Tombol **Test Koneksi** memanggil action `ping` pada backend.
-- **Laporan Absensi**: masukkan tanggal untuk menampilkan rekap data absensi hari itu (nama, ID, kelas, jenis latihan, waktu, status) langsung di layar. Submenu ini terkunci sampai kata sandi dimasukkan.
-- **Daftar Siswa**: menampilkan seluruh siswa dari sheet `STUDENTS` (nama, ID, kelas, status Aktif/Nonaktif; PIN tidak ditampilkan), diurutkan berdasarkan nama. Submenu ini terkunci sampai kata sandi dimasukkan.
+- **Laporan Absensi**: masukkan tanggal untuk menampilkan rekap data absensi hari itu (nama, ID, kelas, jenis latihan, waktu, status) langsung di layar. Tombol **Print** mencetak/menyimpan laporan ke PDF dengan kop "LAPORAN ABSENSI PADUAN SUARA" dan header tabel di tengah. Submenu ini terkunci sampai kata sandi dimasukkan.
+- **Daftar Siswa**: menampilkan seluruh siswa dari sheet `STUDENTS` (nama, ID, kelas, status Aktif/Nonaktif; PIN tidak ditampilkan), diurutkan berdasarkan nama. Tombol **Print** mencetak/menyimpan daftar ke PDF dengan kop "DAFTAR SISWA PADUAN SUARA". Submenu ini terkunci sampai kata sandi dimasukkan.
 - **Setup Backend**: membuka panduan deploy backend.
 
 ## Setup Backend (Google Apps Script)
@@ -113,3 +123,4 @@ NODE_PATH=$(npm root -g) node "$(npm root -g)/@tailwindcss/cli/dist/index.mjs" -
 - **Meta tag tambahan**: `description` dan `theme-color`.
 - **`code.gs`**: PIN di-hash (dengan fallback plaintext), validasi `type` di backend, validasi panjang input, `console.error` di catch, serta `const` untuk variabel yang tidak berubah.
 - **`code.gs`**: verifikasi mendukung Student ID **atau** Nama (case-insensitive); pencegahan absensi ganda dua lapis (`getTodayRecord()` saat `verify` + `matchesToday()` saat `submit`) yang menangani sel berformat tanggal maupun teks; action baru `ping`, `report`, dan `students`.
+- **Cetak ke PDF**: tombol **Print** pada modal Laporan Absensi dan Daftar Siswa dengan area cetak khusus (`@media print`), header tabel rata tengah, margin `1cm`, dan footer nomor halaman **"Hal: X/Y"** (`@page` + `counter`).
