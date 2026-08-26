@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=10">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -116,7 +116,7 @@
     </button>
 
     <!-- Modal Status (Berhasil/Gagal) -->
-    <div id="statusModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+    <div id="statusModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[70] p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300" id="statusModalContent">
             <div id="statusIcon" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"></div>
             <h3 id="statusTitle" class="text-xl font-bold text-gray-800 mb-2">Status</h3>
@@ -220,10 +220,34 @@
                     <p class="text-sm">Tidak ada absensi tercatat pada tanggal ini.</p>
                 </div>
             </div>
-            <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
-                <button onclick="closeReportModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
+                <button onclick="printReport()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
+                <button onclick="closeReportModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
+    </div>
+
+    <div id="reportPrintArea" class="hidden">
+        <div style="text-align:center; margin-bottom:16px;">
+            <h2 style="font-size:18px; font-weight:bold; margin:0 0 4px;">LAPORAN ABSENSI PADUAN SUARA</h2>
+            <p style="margin:2px 0; font-size:13px;" id="printReportDate">-</p>
+            <p style="margin:2px 0; font-size:12px;" id="printReportCount">-</p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+                <tr>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">No</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Nama</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">ID</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Kelas</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Jenis</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Catatan</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Waktu</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="printReportRows"></tbody>
+        </table>
     </div>
 
     <!-- Modal Daftar Siswa -->
@@ -246,10 +270,32 @@
                     <p class="text-sm">Belum ada siswa terdaftar pada sheet STUDENTS.</p>
                 </div>
             </div>
-            <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
-                <button onclick="closeStudentModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
+                <button onclick="printStudents()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
+                <button onclick="closeStudentModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
+    </div>
+
+    <div id="studentPrintArea" class="hidden">
+        <div style="text-align:center; margin-bottom:16px;">
+            <h2 style="font-size:18px; font-weight:bold; margin:0 0 4px;">DAFTAR SISWA PADUAN SUARA</h2>
+            <p style="margin:2px 0; font-size:13px;">Sheet: STUDENTS</p>
+            <p style="margin:2px 0; font-size:12px;" id="printStudentCount">-</p>
+            <p style="margin:2px 0; font-size:12px;" id="printStudentDate">-</p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+                <tr>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">No</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Nama</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">ID</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Kelas</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:left;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="printStudentRows"></tbody>
+        </table>
     </div>
 
     <!-- Modal Setup Admin (Google Apps Script Code) -->
@@ -283,6 +329,8 @@
     // Data Global sementara
     let currentStudentId = null;
     let currentStudentPin = null;
+    let currentReportDate = null;
+    let currentReportData = null;
 
     // Element Referensi
     const verifyForm = document.getElementById('verifyForm');
@@ -301,6 +349,12 @@
         if (parts.length !== 3) return dateStr;
         const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
         return date.toLocaleDateString('id-ID', dateOptions);
+    }
+
+    // Tanggal hari ini dalam format "yyyy-MM-dd"
+    function todayISO() {
+        const now = new Date();
+        return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     }
 
     // ==========================================
@@ -709,7 +763,28 @@
                         '</div>' +
                         '</div>';
                 }).join('');
+                currentReportData = res;
+                populateReportPrint(res);
                 openReportModal();
+            }
+
+            function populateReportPrint(res) {
+                const records = res.records || [];
+                currentReportDate = res.date || '';
+                document.getElementById('printReportDate').textContent = formatDateDisplay(res.date) || res.date;
+                document.getElementById('printReportCount').textContent = records.length + ' siswa tercatat';
+                document.getElementById('printReportRows').innerHTML = records.length ? records.map((r, i) => {
+                    return '<tr>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + (i + 1) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.name) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.id) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.className) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.type) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.remark) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.timestamp) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(r.status) + '</td>' +
+                        '</tr>';
+                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="8">Tidak ada data</td></tr>';
             }
 
             function openReportModal() {
@@ -718,6 +793,17 @@
                 modal.classList.add('flex');
                 document.getElementById('reportScroll').scrollTop = 0;
                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+
+            function printReport() {
+                if (!currentReportData) return;
+                populateReportPrint(currentReportData);
+                const prevTitle = document.title;
+                document.title = 'Absensi+' + (currentReportData.date || '');
+                document.body.classList.add('printing-report');
+                window.print();
+                document.body.classList.remove('printing-report');
+                document.title = prevTitle;
             }
 
             function closeReportModal() {
@@ -771,6 +857,17 @@
                         '</div>' +
                         '</div>';
                 }).join('');
+                document.getElementById('printStudentCount').textContent = students.length + ' siswa terdaftar';
+                document.getElementById('printStudentDate').textContent = 'Dicetak: ' + new Date().toLocaleDateString('id-ID', dateOptions);
+                document.getElementById('printStudentRows').innerHTML = students.length ? students.map((s, i) => {
+                    return '<tr>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + (i + 1) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.name) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.id) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(s.className) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;">' + escapeHtml(String(s.status).toUpperCase() === 'ACTIVE' ? 'Aktif' : 'Nonaktif') + '</td>' +
+                        '</tr>';
+                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
                 openStudentModal();
             }
 
@@ -780,6 +877,15 @@
                 modal.classList.add('flex');
                 document.getElementById('studentScroll').scrollTop = 0;
                 setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            }
+
+            function printStudents() {
+                const prevTitle = document.title;
+                document.title = 'Students+' + todayISO();
+                document.body.classList.add('printing-students');
+                window.print();
+                document.body.classList.remove('printing-students');
+                document.title = prevTitle;
             }
 
             function closeStudentModal() {
