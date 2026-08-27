@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=17">
+    <link rel="stylesheet" href="styles.css?v=18">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -24,6 +24,13 @@
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative">
         <!-- Header -->
         <div class="bg-blue-600 p-6 text-center text-white relative">
+            <div class="absolute top-3 left-3">
+                <button id="btnHelp" onclick="toggleHelpModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Bantuan" aria-label="Bantuan">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </button>
+            </div>
             <div class="absolute top-3 right-3 flex items-center gap-2">
                 <button id="btnRefresh" onclick="location.reload()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Muat Ulang Data" aria-label="Muat Ulang Data">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -200,6 +207,19 @@
                     <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
                     <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition">Admin: Setup Google Sheets Backend</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Bantuan -->
+    <div id="helpModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-blue-600 text-white shrink-0">
+                <h3 class="text-lg font-bold">Panduan Absensi</h3>
+                <button onclick="toggleHelpModal()" class="text-white/80 hover:text-white text-2xl leading-none" aria-label="Tutup">&times;</button>
+            </div>
+            <div class="overflow-y-auto flex-1">
+                <div id="helpContent" class="help-content p-5"></div>
             </div>
         </div>
     </div>
@@ -1011,6 +1031,98 @@
             function toggleSettingsModal() {
                 const modal = document.getElementById('settingsModal');
                 if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                } else {
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }, 300);
+                }
+            }
+
+            // ========== Bantuan (Panduan Absensi) ==========
+            let helpLoaded = false;
+
+            function renderMarkdown(md) {
+                const src = String(md || '').replace(/\r\n/g, '\n');
+                const lines = src.split('\n');
+                const out = [];
+                let list = null;
+                let quote = false;
+
+                function inline(text) {
+                    return text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+                }
+                function closeList() {
+                    if (list) { out.push('</' + list + '>'); list = null; }
+                }
+                function closeQuote() {
+                    if (quote) { out.push('</blockquote>'); quote = false; }
+                }
+
+                for (let i = 0; i < lines.length; i++) {
+                    const raw = lines[i];
+                    const isHardBreak = / {2,}$/.test(raw);
+                    const line = raw.trim();
+                    let m;
+
+                    if (!line) { closeList(); closeQuote(); continue; }
+
+                    if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+                        closeList(); closeQuote();
+                        const lv = m[1].length;
+                        out.push('<' + 'h' + lv + '>' + inline(escapeHtml(m[2])) + '</' + 'h' + lv + '>');
+                        continue;
+                    }
+                    if ((m = line.match(/^>\s?(.*)$/))) {
+                        closeList();
+                        if (!quote) { out.push('<blockquote>'); quote = true; }
+                        out.push('<p>' + inline(escapeHtml(m[1])) + '</p>');
+                        continue;
+                    } else if (quote) {
+                        closeQuote();
+                    }
+                    if ((m = line.match(/^[-*]\s+(.*)$/))) {
+                        if (list !== 'ul') { closeList(); out.push('<ul>'); list = 'ul'; }
+                        out.push('<li>' + inline(escapeHtml(m[1])) + (isHardBreak ? '<br>' : '') + '</li>');
+                        continue;
+                    }
+                    if ((m = line.match(/^\d+\.\s+(.*)$/))) {
+                        if (list !== 'ol') { closeList(); out.push('<ol>'); list = 'ol'; }
+                        out.push('<li>' + inline(escapeHtml(m[1])) + (isHardBreak ? '<br>' : '') + '</li>');
+                        continue;
+                    }
+                    closeList();
+                    out.push('<p>' + inline(escapeHtml(line)) + (isHardBreak ? '<br>' : '') + '</p>');
+                }
+                closeList(); closeQuote();
+                return out.join('\n');
+            }
+
+            function loadHelpContent() {
+                const content = document.getElementById('helpContent');
+                content.innerHTML = '<p class="text-sm text-gray-500">Memuat panduan...</p>';
+                fetch('Absensi.md', { cache: 'no-store' })
+                    .then(r => {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.text();
+                    })
+                    .then(md => {
+                        content.innerHTML = renderMarkdown(md);
+                        helpLoaded = true;
+                    })
+                    .catch(() => {
+                        content.innerHTML = '<p class="text-sm text-red-500">Gagal memuat panduan. Periksa koneksi Anda.</p>';
+                    });
+            }
+
+            function toggleHelpModal() {
+                const modal = document.getElementById('helpModal');
+                if (modal.classList.contains('hidden')) {
+                    if (!helpLoaded) loadHelpContent();
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
                     setTimeout(() => modal.classList.remove('opacity-0'), 10);

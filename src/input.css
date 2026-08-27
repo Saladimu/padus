@@ -34,6 +34,65 @@ body {
     background-color: #dc2626;
     animation: blinkRed 1s linear infinite;
 }
+.help-content {
+    background: linear-gradient(180deg, #eff6ff 0%, #ffffff 60%, #f5f3ff 100%);
+    border-radius: 0.75rem;
+    color: #1f2937;
+    line-height: 1.7;
+    font-size: 0.875rem;
+}
+.help-content h1 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    margin: 0 0 0.5rem;
+    text-align: center;
+}
+.help-content h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e40af;
+    margin: 1.25rem 0 0.5rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #dbeafe;
+}
+.help-content h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #4338ca;
+    margin: 1.1rem 0 0.4rem;
+}
+.help-content p {
+    margin: 0.55rem 0;
+}
+.help-content ul,
+.help-content ol {
+    margin: 0.55rem 0 0.55rem 1.25rem;
+}
+.help-content ul {
+    list-style: disc;
+}
+.help-content ol {
+    list-style: decimal;
+}
+.help-content li {
+    margin: 0.3rem 0;
+}
+.help-content blockquote {
+    background: #eef2ff;
+    border-left: 4px solid #6366f1;
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 0.6rem 0.9rem;
+    margin: 0.9rem 0;
+    color: #3730a3;
+    font-style: italic;
+}
+.help-content strong {
+    color: #0f172a;
+}
+.help-content p:last-child {
+    margin-bottom: 0;
+}
 @page {
     margin: 1cm;
     @bottom-center {
