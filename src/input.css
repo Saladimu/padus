@@ -69,4 +69,43 @@ body {
         display: block !important;
         padding: 0;
     }
+    #printReportTable,
+    #printReportAbsentTable,
+    #printStudentTable {
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+    }
+    #printReportTable th,
+    #printReportTable td,
+    #printReportAbsentTable th,
+    #printReportAbsentTable td,
+    #printStudentTable th,
+    #printStudentTable td {
+        border: 1px solid #999 !important;
+        padding: 6px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+    #printReportTable th:nth-child(1) { width: 6% !important; }
+    #printReportTable th:nth-child(2) { width: 17% !important; }
+    #printReportTable th:nth-child(3) { width: 11% !important; }
+    #printReportTable th:nth-child(4) { width: 12% !important; }
+    #printReportTable th:nth-child(5) { width: 14% !important; }
+    #printReportTable th:nth-child(6) { width: 18% !important; }
+    #printReportTable th:nth-child(7) { width: 14% !important; }
+    #printReportTable th:nth-child(8) { width: 8% !important; }
+    #printReportAbsentTable th:nth-child(1) { width: 8% !important; }
+    #printReportAbsentTable th:nth-child(2) { width: 45% !important; }
+    #printReportAbsentTable th:nth-child(3) { width: 20% !important; }
+    #printReportAbsentTable th:nth-child(4) { width: 27% !important; }
+    #printStudentTable th:nth-child(1) { width: 8% !important; }
+    #printStudentTable th:nth-child(2) { width: 42% !important; }
+    #printStudentTable th:nth-child(3) { width: 18% !important; }
+    #printStudentTable th:nth-child(4) { width: 22% !important; }
+    #printStudentTable th:nth-child(5) { width: 10% !important; }
 }

@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=16">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -241,7 +241,7 @@
             <p style="margin:2px 0; font-size:13px;" id="printReportDate">-</p>
             <p style="margin:2px 0; font-size:12px;" id="printReportCount">-</p>
         </div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <table id="printReportTable" style="width:100%; border-collapse:collapse; font-size:12px;">
             <thead>
                 <tr>
                     <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
@@ -258,7 +258,7 @@
         </table>
         <div id="printReportAbsentBlock" style="margin-top:16px;">
             <h3 style="font-size:13px; font-weight:bold; margin:0 0 4px;">Siswa yang tidak hadir :</h3>
-            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <table id="printReportAbsentTable" style="width:100%; border-collapse:collapse; font-size:12px;">
                 <thead>
                     <tr>
                         <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
@@ -306,7 +306,7 @@
             <p style="margin:2px 0; font-size:12px;" id="printStudentCount">-</p>
             <p style="margin:2px 0; font-size:12px;" id="printStudentDate">-</p>
         </div>
-        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+        <table id="printStudentTable" style="width:100%; border-collapse:collapse; font-size:12px;">
             <thead>
                 <tr>
                     <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
