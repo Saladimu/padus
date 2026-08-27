@@ -31,6 +31,8 @@ function doPost(e) {
       return respond(getAttendanceReport(data.date));
     } else if (action === 'students') {
       return respond(getStudentList());
+    } else if (action === 'maintenance') {
+      return respond(handleMaintenance(data.value));
     } else if (action === 'debug') {
       return respond(debugCheck(data.id));
     }
@@ -45,6 +47,23 @@ function doPost(e) {
 function doOptions(e) {
   // Dibutuhkan untuk preflight CORS pada web app Google Apps Script.
   return respond({ success: true });
+}
+
+const MAINTENANCE_KEY = 'choir_maintenance';
+
+function getMaintenanceMode() {
+  return PropertiesService.getScriptProperties().getProperty(MAINTENANCE_KEY) === '1';
+}
+
+function setMaintenanceMode(value) {
+  PropertiesService.getScriptProperties().setProperty(MAINTENANCE_KEY, value ? '1' : '0');
+}
+
+function handleMaintenance(value) {
+  if (typeof value === 'boolean') {
+    setMaintenanceMode(value);
+  }
+  return { success: true, maintenance: getMaintenanceMode() };
 }
 
 function respond(obj) {

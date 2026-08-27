@@ -367,6 +367,7 @@
     let maintenanceMode = false;
     let logoClickCount = 0;
     let logoClickTimer = null;
+    let maintenanceSyncInFlight = false;
 
     function logoClick() {
         logoClickCount++;
@@ -379,10 +380,28 @@
         }
     }
 
+    function maintenanceApiUrl() {
+        const base = getApiUrl();
+        const sep = base.indexOf('?') === -1 ? '?' : '&';
+        return base + sep + '_=' + Date.now();
+    }
+
     function toggleMaintenance() {
-        maintenanceMode = !maintenanceMode;
-        try { localStorage.setItem('choir_maintenance', maintenanceMode ? '1' : '0'); } catch (e) {}
-        applyMaintenance(maintenanceMode);
+        if (maintenanceSyncInFlight) return;
+        maintenanceSyncInFlight = true;
+        const newValue = !maintenanceMode;
+        applyMaintenance(newValue);
+        fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance', value: newValue }) })
+            .then(r => r.json())
+            .then(res => {
+                if (res && res.success) {
+                    applyMaintenance(!!res.maintenance);
+                } else {
+                    applyMaintenance(!newValue);
+                }
+            })
+            .catch(() => applyMaintenance(!newValue))
+            .finally(() => { maintenanceSyncInFlight = false; });
     }
 
     function applyMaintenance(on) {
@@ -395,11 +414,15 @@
         btnVerify.classList.toggle('cursor-not-allowed', on);
     }
 
-    (function initMaintenance() {
-        let stored = '0';
-        try { stored = localStorage.getItem('choir_maintenance') || '0'; } catch (e) {}
-        applyMaintenance(stored === '1');
-    })();
+    function initMaintenance() {
+        fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
+            .then(r => r.json())
+            .then(res => {
+                if (res && res.success) applyMaintenance(!!res.maintenance);
+            })
+            .catch(() => {});
+    }
+    initMaintenance();
 
     // Tampilkan Tanggal Hari Ini di Header
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
