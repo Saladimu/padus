@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=14">
+    <link rel="stylesheet" href="styles.css?v=15">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,6 +16,10 @@
     </noscript>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="maintenanceWindow" class="hidden fixed inset-x-0 top-0 z-[80] flex justify-center pt-4 pointer-events-none">
+        <div class="blink-red text-white font-bold text-sm px-5 py-3 rounded-lg shadow-2xl border-2 border-red-300 text-center">We're Getting Things Ready</div>
+    </div>
 
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative">
         <!-- Header -->
@@ -34,7 +38,7 @@
                 </button>
             </div>
             <div class="flex justify-center mb-2">
-                <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain">
+                <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain" id="centerLogo" onclick="logoClick()" style="cursor:pointer" title="Logo Paduan Suara">
             </div>
             <h1 class="text-xl font-bold tracking-wide">ABSENSI PADUAN SUARA</h1>
             <p class="text-sm text-blue-200 mt-1" id="currentDateDisplay">Memuat tanggal...</p>
@@ -356,6 +360,46 @@
     const btnVerify = document.getElementById('btnVerify');
     const btnSubmit = document.getElementById('btnSubmit');
     const btnBack = document.getElementById('btnBack');
+
+    // ==========================================
+    // MODE MAINTENANCE TERSEMBUNYI (5x klik logo)
+    // ==========================================
+    let maintenanceMode = false;
+    let logoClickCount = 0;
+    let logoClickTimer = null;
+
+    function logoClick() {
+        logoClickCount++;
+        if (logoClickTimer) clearTimeout(logoClickTimer);
+        logoClickTimer = setTimeout(function () { logoClickCount = 0; }, 1500);
+        if (logoClickCount >= 5) {
+            logoClickCount = 0;
+            clearTimeout(logoClickTimer);
+            toggleMaintenance();
+        }
+    }
+
+    function toggleMaintenance() {
+        maintenanceMode = !maintenanceMode;
+        try { localStorage.setItem('choir_maintenance', maintenanceMode ? '1' : '0'); } catch (e) {}
+        applyMaintenance(maintenanceMode);
+    }
+
+    function applyMaintenance(on) {
+        maintenanceMode = on;
+        document.getElementById('maintenanceWindow').classList.toggle('hidden', !on);
+        document.getElementById('studentIdentity').disabled = on;
+        document.getElementById('studentPin').disabled = on;
+        btnVerify.disabled = on;
+        btnVerify.classList.toggle('opacity-50', on);
+        btnVerify.classList.toggle('cursor-not-allowed', on);
+    }
+
+    (function initMaintenance() {
+        let stored = '0';
+        try { stored = localStorage.getItem('choir_maintenance') || '0'; } catch (e) {}
+        applyMaintenance(stored === '1');
+    })();
 
     // Tampilkan Tanggal Hari Ini di Header
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
