@@ -5,7 +5,9 @@ Aplikasi web absensi ekstrakurikuler Paduan Suara. Frontend berupa satu halaman 
 ## Struktur Proyek
 
 ```
-index.html            Halaman utama aplikasi
+index.html            Halaman utama aplikasi (HTML semantik: header/main/footer)
+app.js                Logika aplikasi (dimuat dengan <script defer>; SW didaftarkan di sini)
+Absensi.md            Panduan penggunaan (dirender di modal Bantuan)
 styles.css            CSS Tailwind hasil build (minified)
 src/input.css         Sumber CSS (Tailwind v4 + custom styles) untuk rebuild
 sw.js                 Service worker (cache aset agar akses cepat & offline)
@@ -31,6 +33,7 @@ appsscript/readme.md  Panduan deploy backend
 - **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan).
 - **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
 - **Mode Maintenance tersembunyi**: klik logo tengah 5x untuk menyalakan/mematikan mode perawatan. Saat ON, muncul jendela kecil merah berkedip "We're Getting Things Ready" dan input Student ID/PIN dinonaktifkan. Status disimpan di backend (global untuk semua perangkat).
+- **Bantuan / Panduan**: tombol ikon `?` di kiri atas membuka modal berisi panduan penggunaan yang dirender dari `Absensi.md` (Markdown) lewat renderer Markdown ringan di `app.js`.
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
 
 ## Cara Kerja
@@ -70,7 +73,7 @@ Klik ikon roda gigi di pojok kanan atas untuk membuka **Pengaturan Admin**:
 2. Buat sheet dengan nama `STUDENTS` (kolom: ID, Nama, Kelas, PIN, Status) dan `ATTENDANCE` (kolom: Timestamp, Tanggal, ID, Nama, Kelas, Jenis, Remark, Status).
 3. Buka **Ekstensi > Apps Script**, salin isi `appsscript/code.gs`.
 4. **Terapkan > Penerapan Baru**, pilih **Aplikasi Web** (Execute as: Me, Access: Anyone).
-5. Salin URL Aplikasi Web ke variabel `GAS_WEB_APP_URL` di `index.html`.
+5. Salin URL Aplikasi Web ke variabel `GAS_WEB_APP_URL` di `app.js`.
 
 ### Backend Actions (API)
 
@@ -109,7 +112,7 @@ function migratePinHash(studentId, pin) {
 
 ## Rebuild CSS
 
-`styles.css` adalah hasil build dari `src/input.css` menggunakan Tailwind v4 CLI. Jika mengubah class Tailwind atau custom style, jalankan ulang:
+`styles.css` adalah hasil build dari `src/input.css` menggunakan Tailwind v4 CLI. Tailwind memindai class pada `index.html` **dan** `app.js` (dideklarasikan lewat `@source "../app.js"` di `src/input.css`), jadi pastikan kedua file tersebut ikut dipindai sebelum build. Jika mengubah class Tailwind atau custom style, jalankan ulang:
 
 ```bash
 # Sumber CSS ada di src/input.css; output ke styles.css
@@ -119,6 +122,9 @@ NODE_PATH=$(npm root -g) node "$(npm root -g)/@tailwindcss/cli/dist/index.mjs" -
 ## Audit & Optimisasi yang Sudah Diterapkan
 
 - **Tailwind Play CDN dihapus** -> diganti `styles.css` hasil build (lebih cepat, tidak render-blocking).
+- **Script inline besar diekstrak** ke `app.js` (~40KB) dan dimuat dengan `<script defer>` di `<head>`, sehingga halaman langsung ter-render tanpa menunggu skrip besar selesai di-parse; pendaftaran Service Worker juga dipindah ke bagian atas `app.js`.
+- **HTML semantik**: struktur memakai `<header>`, `<main>`, dan `<footer>`, serta hierarki heading diperbaiki (`h1` -> `h2` -> `h3`); `bg-gray-50` ditambahkan pada `<body>`.
+- **Modal Bantuan**: tombol `?` di header membuka panduan yang dirender dari `Absensi.md` (Markdown) memakai renderer Markdown ringan tanpa pustaka eksternal.
 - **Google Fonts non-blocking** + `preconnect`.
 - **Logo diperkecil** dari 512x512 / 38KB menjadi 128px WebP (5KB) + fallback PNG (13KB).
 - **Favicon 32x32** dibuat dari logo.
