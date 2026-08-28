@@ -102,7 +102,7 @@ function hashPassword(pwd) {
 
 function checkPassword(pwd) {
     const stored = localStorage.getItem(LS_PWD);
-    return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '00000');
+    return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '000001');
 }
 
 // Renderer Markdown sederhana untuk panduan (Absensi.md)
