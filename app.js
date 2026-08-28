@@ -654,7 +654,15 @@ function generatePdfFromElement(el, filename, bodyClass) {
                 scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
-                logging: false
+                logging: false,
+                imageTimeout: 15000,
+                onclone: function (clonedDoc) {
+                    clonedDoc.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]')
+                        .forEach(function (link) { link.remove(); });
+                    var style = clonedDoc.createElement('style');
+                    style.textContent = 'html,body,#reportPrintArea,#studentPrintArea{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif!important}';
+                    clonedDoc.head.appendChild(style);
+                }
             }).then(function (canvas) {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
@@ -675,16 +683,52 @@ function generatePdfFromElement(el, filename, bodyClass) {
                     pdf.addImage(dataUrl, 'JPEG', margin, position, imgWidth, imgHeight);
                     heightLeft -= contentHeight;
                 }
-                pdf.save(filename + '.pdf');
+                savePdfOnDevice(pdf.output('blob'), filename);
             }).catch(function (err) {
                 console.error('Gagal membuat PDF:', err);
-                window.print();
+                alert('Gagal membuat PDF: ' + (err && err.message ? err.message : err) +
+                      '\nCoba lagi. Jika tetap gagal, gunakan browser desktop (Chrome/Firefox) untuk mencetak.');
             }).then(function () {
                 document.body.classList.remove(bodyClass);
                 resolve();
             });
         }, 60);
     });
+}
+
+function savePdfOnDevice(blob, filename) {
+    const fileName = filename + '.pdf';
+    if (typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [new File([blob], fileName, { type: 'application/pdf' })] })) {
+        navigator.share({
+            files: [new File([blob], fileName, { type: 'application/pdf' })],
+            title: fileName,
+            text: fileName
+        }).catch(function (err) {
+            console.warn('Berbagi PDF dibatalkan/gagal:', err);
+            downloadBlob(blob, fileName);
+        });
+        return;
+    }
+    downloadBlob(blob, fileName);
+}
+
+function downloadBlob(blob, fileName) {
+    try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    } catch (err) {
+        console.error('Unduhan PDF gagal:', err);
+        alert('PDF dibuat, tetapi perangkat tidak dapat menyimpannya otomatis.\n' +
+              'Gunakan browser desktop (Chrome/Firefox) untuk mencetak/simpan PDF.');
+    }
 }
 
 function printReport() {

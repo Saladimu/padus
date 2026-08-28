@@ -5,7 +5,7 @@
    - Cache diberi versi dan dibatasi jumlah entri agar tetap cukup besar
      namun tidak membengkak tak terkendali.
 */
-var CACHE_NAME = 'choir-absensi-v3';
+var CACHE_NAME = 'choir-absensi-v4';
 var CORE_ASSETS = [
   './',
   './index.html',
