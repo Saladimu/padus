@@ -11,6 +11,8 @@ Absensi.md            Panduan penggunaan (dirender di modal Bantuan)
 styles.css            CSS Tailwind hasil build (minified)
 src/input.css         Sumber CSS (Tailwind v4 + custom styles) untuk rebuild
 sw.js                 Service worker (cache aset agar akses cepat & offline)
+jspdf.umd.min.js      Pustaka jsPDF 2.5.1 (UMD) untuk cetak PDF di perangkat
+html2canvas.min.js    Pustaka html2canvas-pro 1.5.8 (UMD) untuk capture area cetak
 favicon.png           Ikon tab (32x32)
 choir-icon-128.png    Logo header (128px, PNG fallback)
 choir-icon-128.webp   Logo header (128px, WebP - digunakan bila didukung)
@@ -21,7 +23,7 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Caching (Service Worker)
 
-`sw.js` meng-cache aset statis (CSS, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-vN`); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak.
+`sw.js` meng-cache aset statis (CSS, JS termasuk `jspdf.umd.min.js` dan `html2canvas.min.js`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-v3` saat ini); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak. Saat menambah aset baru (misal pustaka JS), daftarkan di `CORE_ASSETS` dan naikkan versi cache agar perangkat (termasuk APK) memuat versi baru.
 
 ## Fitur
 
@@ -31,7 +33,7 @@ appsscript/readme.md  Panduan deploy backend
 - **Pengaturan Admin**: kunci kata sandi, ganti kata sandi, atur URL backend, dan **Test Koneksi** (action `ping`).
 - **Laporan Absensi**: rekap absensi per tanggal (action `report`), termasuk daftar **siswa yang tidak hadir** (nama, ID, kelas).
 - **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan).
-- **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
+- **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa — dialog print browser di desktop, atau pembuatan PDF klien (html2canvas-pro + jsPDF) di perangkat Android/APK.
 - **Mode Maintenance tersembunyi**: klik logo tengah 5x untuk menyalakan/mematikan mode perawatan. Saat ON, muncul jendela kecil merah berkedip "We're Getting Things Ready" dan input Student ID/PIN dinonaktifkan. Status disimpan di backend (global untuk semua perangkat).
 - **Bantuan / Panduan**: tombol ikon `?` di kiri atas membuka modal berisi panduan penggunaan yang dirender dari `Absensi.md` (Markdown) lewat renderer Markdown ringan di `app.js`.
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
@@ -50,12 +52,17 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Cetak / PDF (Print)
 
-Modal **Laporan Absensi** dan **Daftar Siswa** memiliki tombol **Print** yang memicu dialog print browser (`window.print()`), sehingga pengguna dapat mencetak atau menyimpan ke PDF.
+Modal **Laporan Absensi** dan **Daftar Siswa** memiliki tombol **Print** yang mencetak atau menyimpan laporan ke PDF dalam dua mode:
 
-- Saat mencetak, seluruh elemen aplikasi disembunyikan dan hanya area cetak (kop + tabel) yang ditampilkan (`@media print` di `src/input.css`). Hasil cetak laporan juga memuat bagian **Siswa yang tidak hadir :** di bawah tabel absensi.
+1. **Desktop / browser biasa**: memicu dialog print browser (`window.print()`), sehingga pengguna dapat mencetak ke printer atau menyimpan ke PDF.
+2. **Perangkat Android (WebView/APK)**: `window.print()` tidak didukung di WebView (no-op), sehingga aplikasi otomatis beralih ke **pembuatan PDF di sisi klien** — area cetak di-capture dengan `html2canvas-pro` lalu disusun menjadi PDF A4 dengan `jsPDF` (`pdf.save()` memicu unduhan/berbagi file). Deteksi dilakukan lewat `userAgent` (`isAndroidEnvironment()`) dan memeriksa ketersediaan kedua pustaka.
+
+- Saat mencetak, seluruh elemen aplikasi disembunyikan dan hanya area cetak (kop + tabel) yang ditampilkan (`@media print` di `src/input.css`). Pada mode PDF perangkat, kelas `body.pdf-report` / `body.pdf-students` menampilkan area cetak di layar agar bisa di-capture (html2canvas tidak membaca `@media print`).
+- Aturan `table-layout: fixed` + `word-break: break-word` untuk tabel cetak diletakkan **di luar** `@media print` (CSS biasa) sehingga tetap berlaku saat capture html2canvas.
+- Hasil cetak laporan juga memuat bagian **Siswa yang tidak hadir :** di bawah tabel absensi.
 - Header tabel dicetak rata tengah (`text-align:center`).
-- Halaman memakai margin `1cm` dengan footer nomor halaman otomatis **"Hal: X/Y"** (`@page` + `@bottom-center`).
-- Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan) atau `Students+<tanggal>` (daftar siswa) agar nama file PDF yang disimpan lebih deskriptif, lalu dikembalikan setelah pencetakan selesai.
+- Halaman memakai margin `1cm` dengan footer nomor halaman otomatis **"Hal: X/Y"** (`@page` + `@bottom-center`); pada PDF perangkat, konten tinggi lebih dari satu halaman A4 otomatis dipecah (sliding per halaman).
+- Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan) atau `Students+<tanggal>` (daftar siswa) agar nama file PDF yang disimpan lebih deskriptif (di desktop, dikembalikan setelah pencetakan selesai).
 
 ## Pengaturan Admin (Settings)
 
@@ -132,3 +139,4 @@ NODE_PATH=$(npm root -g) node "$(npm root -g)/@tailwindcss/cli/dist/index.mjs" -
 - **`code.gs`**: PIN di-hash (dengan fallback plaintext), validasi `type` di backend, validasi panjang input, `console.error` di catch, serta `const` untuk variabel yang tidak berubah.
 - **`code.gs`**: verifikasi mendukung Student ID **atau** Nama (case-insensitive); pencegahan absensi ganda dua lapis (`getTodayRecord()` saat `verify` + `matchesToday()` saat `submit`) yang menangani sel berformat tanggal maupun teks; action baru `ping`, `report`, dan `students`.
 - **Cetak ke PDF**: tombol **Print** pada modal Laporan Absensi dan Daftar Siswa dengan area cetak khusus (`@media print`), header tabel rata tengah, margin `1cm`, dan footer nomor halaman **"Hal: X/Y"** (`@page` + `counter`).
+- **Cetak di Android/APK**: `window.print()` tidak berfungsi di Android WebView, sehingga ditambahkan fallback pembuatan PDF klien (`html2canvas-pro` capture + `jsPDF` A4 dengan pemecahan halaman otomatis). Kedua pustaka (UMD) dimuat via `<script defer>` di `index.html`, didaftarkan di `CORE_ASSETS` service worker, dan aturan tabel cetak dipindah ke CSS biasa agar tetap berlaku saat capture canvas.

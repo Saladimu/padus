@@ -5,12 +5,14 @@
    - Cache diberi versi dan dibatasi jumlah entri agar tetap cukup besar
      namun tidak membengkak tak terkendali.
 */
-var CACHE_NAME = 'choir-absensi-v2';
+var CACHE_NAME = 'choir-absensi-v3';
 var CORE_ASSETS = [
   './',
   './index.html',
   './app.js',
   './styles.css',
+  './jspdf.umd.min.js',
+  './html2canvas.min.js',
   './favicon.png',
   './choir-icon-128.png',
   './choir-icon-128.webp'

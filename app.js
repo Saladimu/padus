@@ -633,9 +633,71 @@ function openReportModal() {
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
 }
 
+// ==========================================
+// CETAK / PDF (fallback untuk Android WebView)
+// ==========================================
+function isAndroidEnvironment() {
+    return (navigator.userAgent || '').toLowerCase().indexOf('android') !== -1;
+}
+
+function pdfLibsReady() {
+    return typeof window.jspdf !== 'undefined' &&
+           typeof window.jspdf.jsPDF === 'function' &&
+           typeof window.html2canvas === 'function';
+}
+
+function generatePdfFromElement(el, filename, bodyClass) {
+    document.body.classList.add(bodyClass);
+    return new Promise(function (resolve) {
+        setTimeout(function () {
+            window.html2canvas(el, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            }).then(function (canvas) {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = 210;
+                const pageHeight = 297;
+                const margin = 10;
+                const imgWidth = pageWidth - margin * 2;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                const contentHeight = pageHeight - margin * 2;
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                let heightLeft = imgHeight;
+                let position = margin;
+                pdf.addImage(dataUrl, 'JPEG', margin, position, imgWidth, imgHeight);
+                heightLeft -= contentHeight;
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + margin;
+                    pdf.addPage();
+                    pdf.addImage(dataUrl, 'JPEG', margin, position, imgWidth, imgHeight);
+                    heightLeft -= contentHeight;
+                }
+                pdf.save(filename + '.pdf');
+            }).catch(function (err) {
+                console.error('Gagal membuat PDF:', err);
+                window.print();
+            }).then(function () {
+                document.body.classList.remove(bodyClass);
+                resolve();
+            });
+        }, 60);
+    });
+}
+
 function printReport() {
     if (!currentReportData) return;
     populateReportPrint(currentReportData);
+    if (isAndroidEnvironment() && pdfLibsReady()) {
+        generatePdfFromElement(
+            document.getElementById('reportPrintArea'),
+            'Absensi-' + (currentReportData.date || todayISO()),
+            'pdf-report'
+        );
+        return;
+    }
     const prevTitle = document.title;
     document.title = 'Absensi+' + (currentReportData.date || '');
     document.body.classList.add('printing-report');
@@ -721,6 +783,14 @@ function openStudentModal() {
 }
 
 function printStudents() {
+    if (isAndroidEnvironment() && pdfLibsReady()) {
+        generatePdfFromElement(
+            document.getElementById('studentPrintArea'),
+            'Students-' + todayISO(),
+            'pdf-students'
+        );
+        return;
+    }
     const prevTitle = document.title;
     document.title = 'Students+' + todayISO();
     document.body.classList.add('printing-students');
