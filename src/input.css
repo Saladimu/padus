@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../index.html";
+@source "../app.js";
 
 body {
     font-family: 'Inter', sans-serif;

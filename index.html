@@ -7,15 +7,16 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=18">
+    <link rel="stylesheet" href="styles.css?v=19">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     </noscript>
+    <script src="app.js" defer></script>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
     <div id="maintenanceWindow" class="hidden fixed inset-x-0 top-0 z-[80] flex justify-center pt-4 pointer-events-none">
         <div class="blink-red text-white font-bold text-sm px-5 py-3 rounded-lg shadow-2xl border-2 border-red-300 text-center">We're Getting Things Ready</div>
@@ -23,7 +24,7 @@
 
     <div class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden relative">
         <!-- Header -->
-        <div class="bg-blue-600 p-6 text-center text-white relative">
+        <header class="bg-blue-600 p-6 text-center text-white relative">
             <div class="absolute top-3 left-3">
                 <button id="btnHelp" onclick="toggleHelpModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Bantuan" aria-label="Bantuan">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -45,14 +46,14 @@
                 </button>
             </div>
             <div class="flex justify-center mb-2">
-                <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain" id="centerLogo" onclick="logoClick()" style="cursor:pointer" title="Logo Paduan Suara">
+                <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain cursor-pointer" id="centerLogo" onclick="logoClick()" title="Logo Paduan Suara">
             </div>
             <h1 class="text-xl font-bold tracking-wide">ABSENSI PADUAN SUARA</h1>
             <p class="text-sm text-blue-200 mt-1" id="currentDateDisplay">Memuat tanggal...</p>
-        </div>
+        </header>
 
         <!-- Form Container -->
-        <div class="p-6">
+        <main class="p-6">
             
             <!-- Tahap 1: Validasi -->
             <form id="verifyForm" class="space-y-4">
@@ -118,8 +119,13 @@
                     </button>
                 </div>
             </form>
-        </div>
+        </main>
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-4 text-center text-xs text-gray-400">
+        <p>Absensi Ekskul Paduan Suara &middot; Berbasis Google Sheets</p>
+    </footer>
 
     <!-- Tombol Admin (Setup) - dinonaktifkan -->
     <button onclick="toggleAdminModal()" class="hidden">
@@ -130,7 +136,7 @@
     <div id="statusModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[70] p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300" id="statusModalContent">
             <div id="statusIcon" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"></div>
-            <h3 id="statusTitle" class="text-xl font-bold text-gray-800 mb-2">Status</h3>
+            <h2 id="statusTitle" class="text-xl font-bold text-gray-800 mb-2">Status</h2>
             <p id="statusMessage" class="text-gray-600 mb-6">Pesan detail akan muncul di sini.</p>
             <button onclick="closeStatusModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition">Lanjutkan</button>
         </div>
@@ -140,13 +146,13 @@
     <div id="settingsModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-bold text-gray-800">Pengaturan Admin</h3>
+                <h2 class="text-lg font-bold text-gray-800">Pengaturan Admin</h2>
                 <button onclick="toggleSettingsModal()" class="text-gray-500 hover:text-red-500 text-2xl leading-none">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-5">
                 <!-- Keamanan -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 class="font-bold text-sm mb-1">Keamanan</h4>
+                    <h3 class="font-bold text-sm mb-1">Keamanan</h3>
                     <p class="text-xs text-gray-500 mb-3">Pengaturan backend dilindungi kata sandi admin.</p>
 
                     <div id="secLocked">
@@ -172,7 +178,7 @@
 
                 <!-- Koneksi Google Sheets -->
                 <div class="bg-green-50 p-4 rounded-lg border border-green-200" id="connBlock">
-                    <h4 class="font-bold text-sm mb-1">Koneksi Google Sheets</h4>
+                    <h3 class="font-bold text-sm mb-1">Koneksi Google Sheets</h3>
                     <p class="text-xs text-gray-500 mb-3">Atur URL Aplikasi Web Google Apps Script sebagai backend absensi.</p>
                     <label for="apiUrlSetting" class="block text-sm font-medium text-gray-700 mb-1">Apps Script Web App URL</label>
                     <input type="url" id="apiUrlSetting" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
@@ -185,7 +191,7 @@
 
                 <!-- Laporan Absensi -->
                 <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 hidden" id="reportBlock">
-                    <h4 class="font-bold text-sm mb-1">Laporan Absensi</h4>
+                    <h3 class="font-bold text-sm mb-1">Laporan Absensi</h3>
                     <p class="text-xs text-gray-500 mb-3">Lihat data absensi berdasarkan tanggal.</p>
                     <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
                     <input type="date" id="reportDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
@@ -195,7 +201,7 @@
 
                 <!-- Daftar Siswa -->
                 <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 hidden" id="studentBlock">
-                    <h4 class="font-bold text-sm mb-1">Daftar Siswa</h4>
+                    <h3 class="font-bold text-sm mb-1">Daftar Siswa</h3>
                     <p class="text-xs text-gray-500 mb-3">Lihat daftar siswa dari sheet STUDENTS (PIN tidak ditampilkan).</p>
                     <button id="btnShowStudents" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Daftar Siswa</button>
                     <p id="studentStatus" class="text-sm mt-2"></p>
@@ -203,7 +209,7 @@
 
                 <!-- Setup Backend -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 class="font-bold text-sm mb-1">Setup Backend</h4>
+                    <h3 class="font-bold text-sm mb-1">Setup Backend</h3>
                     <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
                     <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition">Admin: Setup Google Sheets Backend</button>
                 </div>
@@ -215,7 +221,7 @@
     <div id="helpModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-blue-600 text-white shrink-0">
-                <h3 class="text-lg font-bold">Panduan Absensi</h3>
+                <h2 class="text-lg font-bold">Panduan Absensi</h2>
                 <button onclick="toggleHelpModal()" class="text-white/80 hover:text-white text-2xl leading-none" aria-label="Tutup">&times;</button>
             </div>
             <div class="overflow-y-auto flex-1">
@@ -232,7 +238,7 @@
                 <div class="flex justify-center mb-2">
                     <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
                 </div>
-                <h3 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI</h3>
+                <h2 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI</h2>
                 <p class="text-sm text-blue-200 mt-1" id="reportDateDisplay">-</p>
                 <p class="text-xs text-blue-200 mt-0.5 font-semibold" id="reportCountDisplay">-</p>
             </div>
@@ -244,7 +250,7 @@
                     <p class="text-sm">Tidak ada absensi tercatat pada tanggal ini.</p>
                 </div>
                 <div id="reportAbsentBlock" class="hidden mt-4 border-t pt-4">
-                    <h4 class="font-semibold text-yellow-700 text-sm mb-2">Siswa yang tidak hadir :</h4>
+                    <h3 class="font-semibold text-yellow-700 text-sm mb-2">Siswa yang tidak hadir :</h3>
                     <div id="reportAbsentList" class="space-y-2"></div>
                 </div>
             </div>
@@ -257,7 +263,7 @@
 
     <div id="reportPrintArea" class="hidden">
         <div style="text-align:center; margin-bottom:16px;">
-            <h2 style="font-size:18px; font-weight:bold; margin:0 0 4px;">LAPORAN ABSENSI PADUAN SUARA</h2>
+            <h1 style="font-size:18px; font-weight:bold; margin:0 0 4px;">LAPORAN ABSENSI PADUAN SUARA</h1>
             <p style="margin:2px 0; font-size:13px;" id="printReportDate">-</p>
             <p style="margin:2px 0; font-size:12px;" id="printReportCount">-</p>
         </div>
@@ -277,7 +283,7 @@
             <tbody id="printReportRows"></tbody>
         </table>
         <div id="printReportAbsentBlock" style="margin-top:16px;">
-            <h3 style="font-size:13px; font-weight:bold; margin:0 0 4px;">Siswa yang tidak hadir :</h3>
+            <h2 style="font-size:13px; font-weight:bold; margin:0 0 4px;">Siswa yang tidak hadir :</h2>
             <table id="printReportAbsentTable" style="width:100%; border-collapse:collapse; font-size:12px;">
                 <thead>
                     <tr>
@@ -300,7 +306,7 @@
                 <div class="flex justify-center mb-2">
                     <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
                 </div>
-                <h3 class="text-lg font-bold tracking-wide">DAFTAR SISWA</h3>
+                <h2 class="text-lg font-bold tracking-wide">DAFTAR SISWA</h2>
                 <p class="text-sm text-green-200 mt-1">Sheet: STUDENTS</p>
                 <p class="text-xs text-green-200 mt-0.5 font-semibold" id="studentCountDisplay">-</p>
             </div>
@@ -321,7 +327,7 @@
 
     <div id="studentPrintArea" class="hidden">
         <div style="text-align:center; margin-bottom:16px;">
-            <h2 style="font-size:18px; font-weight:bold; margin:0 0 4px;">DAFTAR SISWA PADUAN SUARA</h2>
+            <h1 style="font-size:18px; font-weight:bold; margin:0 0 4px;">DAFTAR SISWA PADUAN SUARA</h1>
             <p style="margin:2px 0; font-size:13px;">Sheet: STUDENTS</p>
             <p style="margin:2px 0; font-size:12px;" id="printStudentCount">-</p>
             <p style="margin:2px 0; font-size:12px;" id="printStudentDate">-</p>
@@ -344,12 +350,12 @@
     <div id="adminModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-bold text-gray-800">Panduan Setup Backend Google Sheets</h3>
+                <h2 class="text-lg font-bold text-gray-800">Panduan Setup Backend Google Sheets</h2>
                 <button onclick="toggleAdminModal()" class="text-gray-500 hover:text-red-500">&times; Tutup</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1">
                 <p class="mb-4 text-sm text-gray-600">Untuk menggunakan aplikasi ini secara nyata, Anda perlu mendeploy kode di bawah ini ke Google Apps Script dan menautkannya dengan Spreadsheet Anda.</p>
-                <h4 class="font-bold text-sm mb-2">Langkah Penyusunan:</h4>
+                <h3 class="font-bold text-sm mb-2">Langkah Penyusunan:</h3>
                 <ol class="list-decimal pl-5 text-sm text-gray-600 space-y-1 mb-4">
                     <li>Buka Google Sheets Anda.</li>
                     <li>Klik <strong>Ekstensi &gt; Apps Script</strong>.</li>
@@ -361,802 +367,5 @@
         </div>
     </div>
 
-    <!-- LOGIKA JAVASCRIPT INTEGRASI BACKEND -->
-    <script>
-    // ==========================================
-    // CONFIGURASI BACKEND 
-    // ==========================================
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8mxqoDrC0Wjqn-xPkTeqEMaBce2nGJR1ASrgazuTHSizvfhDEm8jfTCOP7mtHAr5zMQ/exec";
-
-    // Data Global sementara
-    let currentStudentId = null;
-    let currentStudentPin = null;
-    let currentReportDate = null;
-    let currentReportData = null;
-
-    // Element Referensi
-    const verifyForm = document.getElementById('verifyForm');
-    const attendanceForm = document.getElementById('attendanceForm');
-    const btnVerify = document.getElementById('btnVerify');
-    const btnSubmit = document.getElementById('btnSubmit');
-    const btnBack = document.getElementById('btnBack');
-
-    // ==========================================
-    // MODE MAINTENANCE TERSEMBUNYI (5x klik logo)
-    // ==========================================
-    let maintenanceMode = false;
-    let logoClickCount = 0;
-    let logoClickTimer = null;
-    let maintenanceSyncInFlight = false;
-
-    function logoClick() {
-        logoClickCount++;
-        if (logoClickTimer) clearTimeout(logoClickTimer);
-        logoClickTimer = setTimeout(function () { logoClickCount = 0; }, 1500);
-        if (logoClickCount >= 5) {
-            logoClickCount = 0;
-            clearTimeout(logoClickTimer);
-            toggleMaintenance();
-        }
-    }
-
-    function maintenanceApiUrl() {
-        const base = getApiUrl();
-        const sep = base.indexOf('?') === -1 ? '?' : '&';
-        return base + sep + '_=' + Date.now();
-    }
-
-    function toggleMaintenance() {
-        if (maintenanceSyncInFlight) return;
-        maintenanceSyncInFlight = true;
-        const newValue = !maintenanceMode;
-        applyMaintenance(newValue);
-        fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance', value: newValue }) })
-            .then(r => r.json())
-            .then(res => {
-                if (res && res.success) {
-                    applyMaintenance(!!res.maintenance);
-                } else {
-                    applyMaintenance(!newValue);
-                }
-            })
-            .catch(() => applyMaintenance(!newValue))
-            .finally(() => { maintenanceSyncInFlight = false; });
-    }
-
-    function applyMaintenance(on) {
-        maintenanceMode = on;
-        document.getElementById('maintenanceWindow').classList.toggle('hidden', !on);
-        document.getElementById('studentIdentity').disabled = on;
-        document.getElementById('studentPin').disabled = on;
-        btnVerify.disabled = on;
-        btnVerify.classList.toggle('opacity-50', on);
-        btnVerify.classList.toggle('cursor-not-allowed', on);
-    }
-
-    function initMaintenance() {
-        fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
-            .then(r => r.json())
-            .then(res => {
-                if (res && res.success) applyMaintenance(!!res.maintenance);
-            })
-            .catch(() => {});
-    }
-    initMaintenance();
-
-    // Tampilkan Tanggal Hari Ini di Header
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('id-ID', dateOptions);
-
-    // Format tanggal "yyyy-MM-dd" dari backend menjadi teks bahasa Indonesia
-    function formatDateDisplay(dateStr) {
-        const parts = String(dateStr || '').split('-');
-        if (parts.length !== 3) return dateStr;
-        const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-        return date.toLocaleDateString('id-ID', dateOptions);
-    }
-
-    // Tanggal hari ini dalam format "yyyy-MM-dd"
-    function todayISO() {
-        const now = new Date();
-        return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    }
-
-    // ==========================================
-    // PROSES TAHAP 1: VERIFIKASI SISWA (DIUBAH KE POST)
-    // ==========================================
-    verifyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const studentIdentity = document.getElementById('studentIdentity').value.trim();
-        const studentPin = document.getElementById('studentPin').value.trim();
-
-        // Nyalakan Loader
-        document.getElementById('verifyLoader').classList.remove('hidden');
-        btnVerify.disabled = true;
-
-        // Payload disesuaikan dengan kebutuhan fungsi verifyStudent(id, pin) di Code.gs
-        const payload = {
-            action: 'verify',
-            id: studentIdentity,
-            pin: studentPin
-        };
-
-        try {
-            const response = await fetch(getApiUrl(), {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-            console.log('[Absensi] verify response:', result);
-
-            // Di Code.gs Anda menggunakan properti 'success', bukan 'status'
-            if (result.success) {
-                // Simpan ID & PIN global untuk validasi lapis dua saat submit attendance
-                currentStudentId = studentIdentity;
-                currentStudentPin = studentPin;
-
-                // Jika siswa sudah absen hari ini, tampilkan pemberitahuan dan hentikan alur
-                if (result.already) {
-                    const rec = result.record || {};
-                    let notice = `Akun Anda sudah melakukan absensi pada tanggal ${formatDateDisplay(rec.date) || 'hari ini'}, dengan jenis latihan "${rec.type || '-'}".`;
-                    if (rec.remark) {
-                        notice += ` Remark: "${rec.remark}"`;
-                    }
-                    showStatusModal("Pemberitahuan", notice, true);
-                    return;
-                }
-
-                // Isi informasi ke form tahap 2 sesuai properti return backend Anda (result.data.name & result.data.className)
-                document.getElementById('displayName').textContent = result.data.name;
-                document.getElementById('displayStudentId').textContent = result.data.id || studentIdentity;
-                document.getElementById('displayClass').textContent = result.data.className;
-                document.getElementById('displayLoginTime').textContent =
-                    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-                // Switch Form Tampilan
-                verifyForm.classList.add('hidden');
-                attendanceForm.classList.remove('hidden');
-            } else {
-                showStatusModal("Gagal", result.message || "ID atau PIN salah!", false);
-            }
-        } catch (error) {
-            console.error(error);
-            showStatusModal("Error", "Gagal terhubung ke server backend.", false);
-        } finally {
-            // Matikan Loader
-            document.getElementById('verifyLoader').classList.add('hidden');
-            btnVerify.disabled = false;
-        }
-    });
-
-    // ==========================================
-    // PROSES TAHAP 2: SUBMIT ABSENSI (DISESUAIKAN PAYLOAD)
-    // ==========================================
-    attendanceForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!currentStudentId || !currentStudentPin) return;
-
-        const jenisLatihan = document.getElementById('jenisLatihan').value;
-        const remark = document.getElementById('remark').value.trim();
-
-        // Nyalakan Loader
-        document.getElementById('submitLoader').classList.remove('hidden');
-        btnSubmit.disabled = true;
-
-        // Payload disesuaikan dengan destructuring di fungsi submitAttendance(payload): { id, pin, type, remark }
-        const payload = {
-            action: "submit", // Sesuai kondisi "else if (action === 'submit')" di Code.gs
-            id: currentStudentId,
-            pin: currentStudentPin,
-            type: jenisLatihan,
-            remark: remark
-        };
-
-        try {
-            const response = await fetch(getApiUrl(), {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                showStatusModal("Berhasil!", result.message, true);
-                resetForm();
-            } else {
-                showStatusModal("Gagal", result.message || "Gagal menyimpan absensi.", false);
-            }
-        } catch (error) {
-            console.error(error);
-            showStatusModal("Error", "Terjadi gangguan jaringan saat mengirim data.", false);
-        } finally {
-            // Matikan Loader
-            document.getElementById('submitLoader').classList.add('hidden');
-            btnSubmit.disabled = false;
-        }
-    });
-
-    // Tombol Batal / Kembali ke Tahap 1
-    btnBack.addEventListener('click', () => {
-        resetForm();
-    });
-
-    function resetForm() {
-        currentStudentId = null;
-        currentStudentPin = null;
-        verifyForm.reset();
-        attendanceForm.reset();
-        document.getElementById('displayStudentId').textContent = '-';
-        document.getElementById('displayLoginTime').textContent = '-';
-        attendanceForm.classList.add('hidden');
-        verifyForm.classList.remove('hidden');
-    }
-
-
-            // ==========================================
-            // FUNGSI MODAL STATUS & ADMIN MODAL
-            // ==========================================
-            function showStatusModal(title, message, isSuccess) {
-                const modal = document.getElementById('statusModal');
-                const content = document.getElementById('statusModalContent');
-                const iconContainer = document.getElementById('statusIcon');
-            
-                document.getElementById('statusTitle').textContent = title;
-                document.getElementById('statusMessage').textContent = message;
-
-                if (isSuccess) {
-                    iconContainer.className = "mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-green-100 text-green-600";
-                    iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
-                } else {
-                    iconContainer.className = "mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-red-100 text-red-600";
-                    iconContainer.innerHTML = `<svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-                }
-
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-95');
-                }, 10);
-            }
-
-            function closeStatusModal() {
-                const modal = document.getElementById('statusModal');
-                const content = document.getElementById('statusModalContent');
-                modal.classList.add('opacity-0');
-                content.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                }, 300);
-            }
-
-            function toggleAdminModal() {
-                const modal = document.getElementById('adminModal');
-                if(modal.classList.contains('hidden')) {
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    setTimeout(() => modal.classList.remove('opacity-0'), 10);
-                } else {
-                    modal.classList.add('opacity-0');
-                    setTimeout(() => {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                    }, 300);
-                }
-            }
-
-            // ==========================================
-            // SETTINGS ADMIN (KATA SANDI & KONEKSI GOOGLE SHEETS)
-            // ==========================================
-            const LS_CONFIG = 'choir_absensi_config';
-            const LS_PWD = 'choir_absensi_pwd';
-
-            function getConfig() {
-                try {
-                    return JSON.parse(localStorage.getItem(LS_CONFIG)) || {};
-                } catch (e) {
-                    return {};
-                }
-            }
-
-            function setConfig(cfg) {
-                localStorage.setItem(LS_CONFIG, JSON.stringify(cfg));
-            }
-
-            // URL backend: pakai yang disimpan, fallback ke URL bawaan.
-            function getApiUrl() {
-                const cfg = getConfig();
-                return cfg.apiUrl && cfg.apiUrl.trim() ? cfg.apiUrl.trim() : GAS_WEB_APP_URL;
-            }
-
-            // ========== Keamanan ==========
-
-            function hashPassword(pwd) {
-                if (window.crypto && window.crypto.subtle) {
-                    return window.crypto.subtle.digest('SHA-256', new TextEncoder().encode('choir_' + pwd))
-                        .then(function (buf) {
-                            return Array.prototype.map.call(new Uint8Array(buf), function (b) {
-                                return ('0' + b.toString(16)).slice(-2);
-                            }).join('');
-                        });
-                }
-                var h = 5381;
-                var s = 'choir_' + pwd;
-                for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-                return Promise.resolve('djb2_' + h.toString(16));
-            }
-
-            function checkPassword(pwd) {
-                const stored = localStorage.getItem(LS_PWD);
-                return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '00000');
-            }
-
-            let settingsLocked = true;
-
-            function applySecurityState() {
-                const secLocked = document.getElementById('secLocked');
-                const secUnlocked = document.getElementById('secUnlocked');
-                const urlInput = document.getElementById('apiUrlSetting');
-                secLocked.classList.toggle('hidden', !settingsLocked);
-                secUnlocked.classList.toggle('hidden', settingsLocked);
-                urlInput.disabled = settingsLocked;
-                document.getElementById('btnTestConn').disabled = settingsLocked;
-                document.getElementById('btnSaveConn').disabled = settingsLocked;
-                urlInput.placeholder = settingsLocked ? 'Terkunci - masukkan kata sandi admin' : 'https://script.google.com/macros/s/.../exec';
-                urlInput.value = settingsLocked ? '' : (getConfig().apiUrl || '');
-                document.getElementById('reportDate').disabled = settingsLocked;
-                document.getElementById('btnShowReport').disabled = settingsLocked;
-                document.getElementById('btnShowStudents').disabled = settingsLocked;
-                document.getElementById('reportBlock').classList.toggle('hidden', settingsLocked);
-                document.getElementById('studentBlock').classList.toggle('hidden', settingsLocked);
-                if (settingsLocked) {
-                    document.getElementById('reportStatus').textContent = '';
-                }
-            }
-
-            function unlockSettings() {
-                const p = document.getElementById('unlockPwd').value;
-                if (!p) {
-                    showStatusModal("Gagal", "Masukkan kata sandi admin terlebih dahulu.", false);
-                    return;
-                }
-                checkPassword(p).then(ok => {
-                    if (!ok) {
-                        showStatusModal("Gagal", "Kata sandi yang dimasukkan salah.", false);
-                        return;
-                    }
-                    document.getElementById('unlockPwd').value = '';
-                    settingsLocked = false;
-                    applySecurityState();
-                    showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
-                });
-            }
-
-            function lockSettings() {
-                settingsLocked = true;
-                applySecurityState();
-                document.getElementById('connStatus').textContent = '';
-                showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
-            }
-
-            function changePassword() {
-                const old = document.getElementById('oldPwd').value;
-                const np = document.getElementById('newPwd').value;
-                const cp = document.getElementById('confirmPwd').value;
-                if (!old) {
-                    showStatusModal("Gagal", "Masukkan kata sandi saat ini.", false);
-                    return;
-                }
-                if (!np || np.length < 4) {
-                    showStatusModal("Gagal", "Kata sandi baru minimal 4 karakter.", false);
-                    return;
-                }
-                if (np !== cp) {
-                    showStatusModal("Gagal", "Konfirmasi kata sandi baru tidak cocok.", false);
-                    return;
-                }
-                checkPassword(old).then(ok => {
-                    if (!ok) {
-                        showStatusModal("Gagal", "Kata sandi saat ini salah.", false);
-                        return;
-                    }
-                    hashPassword(np).then(newHash => {
-                        localStorage.setItem(LS_PWD, newHash);
-                        document.getElementById('oldPwd').value = '';
-                        document.getElementById('newPwd').value = '';
-                        document.getElementById('confirmPwd').value = '';
-                        showStatusModal("Berhasil", "Kata sandi admin berhasil diganti.", true);
-                    });
-                });
-            }
-
-            // ========== Koneksi Google Sheets ==========
-
-            function setConnStatus(msg, type) {
-                const el = document.getElementById('connStatus');
-                el.textContent = msg || '';
-                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
-            }
-
-            function saveConfig() {
-                const url = document.getElementById('apiUrlSetting').value.trim();
-                const cfg = getConfig();
-                cfg.apiUrl = url;
-                setConfig(cfg);
-                testConnection();
-            }
-
-            function testConnection() {
-                const url = document.getElementById('apiUrlSetting').value.trim();
-                const cfg = getConfig();
-                cfg.apiUrl = url;
-                setConfig(cfg);
-
-                if (!url) {
-                    setConnStatus('URL belum diisi.', 'err');
-                    return;
-                }
-
-                setConnStatus('Menguji koneksi...', '');
-                fetch(url, { method: 'POST', body: JSON.stringify({ action: 'ping' }) })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res && res.success === true) {
-                            setConnStatus('Koneksi berhasil! Backend aktif dan dapat digunakan.', 'ok');
-                        } else if (res && res.success === false) {
-                            setConnStatus('Backend merespons, namun action ping tidak tersedia. Pastikan code.gs sudah diperbarui.', 'err');
-                        } else {
-                            setConnStatus('Respons tidak dikenali. Pastikan URL adalah Apps Script Web App.', 'err');
-                        }
-                    })
-                    .catch(() => {
-                        setConnStatus('Koneksi gagal. Periksa URL dan deployment Apps Script.', 'err');
-                    });
-            }
-
-            function escapeHtml(str) {
-                return String(str || '').replace(/[&<>"']/g, function (m) {
-                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-                });
-            }
-
-            function setReportStatus(msg, type) {
-                const el = document.getElementById('reportStatus');
-                el.textContent = msg || '';
-                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
-            }
-
-            function loadReport() {
-                const date = document.getElementById('reportDate').value;
-                if (!date) {
-                    setReportStatus('Pilih tanggal terlebih dahulu.', 'err');
-                    return;
-                }
-                setReportStatus('Memuat data...', '');
-                fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date }) })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (!res.success) {
-                            setReportStatus(res.message || 'Gagal memuat laporan.', 'err');
-                            return;
-                        }
-                        setReportStatus('', '');
-                        renderReport(res);
-                    })
-                    .catch(() => setReportStatus('Koneksi gagal. Periksa backend.', 'err'));
-            }
-
-            function renderReport(res) {
-                document.getElementById('reportDateDisplay').textContent = formatDateDisplay(res.date) || res.date;
-                const records = res.records || [];
-                document.getElementById('reportCountDisplay').textContent = records.length + ' siswa tercatat';
-                document.getElementById('reportEmpty').classList.toggle('hidden', records.length > 0);
-                document.getElementById('reportList').innerHTML = records.map(r => {
-                    const initial = (r.name || '?').trim().charAt(0).toUpperCase();
-                    const remark = r.remark ? '<div class="text-xs text-gray-400 mt-0.5">' + escapeHtml(r.remark) + '</div>' : '';
-                    return '<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">' +
-                        '<div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">' + escapeHtml(initial) + '</div>' +
-                        '<div class="flex-1 min-w-0">' +
-                        '<div class="flex items-center justify-between gap-2">' +
-                        '<span class="font-semibold text-gray-800 text-sm truncate">' + escapeHtml(r.name) + '</span>' +
-                        '<span class="text-xs font-semibold text-green-600 shrink-0">' + escapeHtml(r.status) + '</span>' +
-                        '</div>' +
-                        '<div class="text-xs text-gray-500">' + escapeHtml(r.id) + ' | ' + escapeHtml(r.className) + '</div>' +
-                        '<div class="text-xs text-gray-500">' + escapeHtml(r.type) + '</div>' +
-                        remark +
-                        '<div class="text-xs text-gray-400 mt-1">' + escapeHtml(r.timestamp) + '</div>' +
-                        '</div>' +
-                        '</div>';
-                }).join('');
-                currentReportData = res;
-                populateReportAbsent(res);
-                populateReportPrint(res);
-                openReportModal();
-            }
-
-            function populateReportAbsent(res) {
-                const absent = res.absent || [];
-                const block = document.getElementById('reportAbsentBlock');
-                block.classList.toggle('hidden', absent.length === 0);
-                document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
-                    return '<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">' +
-                        '<div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">' + (i + 1) + '</div>' +
-                        '<div class="flex-1 min-w-0">' +
-                        '<div class="font-semibold text-yellow-900 text-sm truncate">' + escapeHtml(s.name) + '</div>' +
-                        '<div class="text-xs text-yellow-800">' + escapeHtml(s.id) + ' | ' + escapeHtml(s.className) + '</div>' +
-                        '</div>' +
-                        '</div>';
-                }).join('');
-            }
-
-            function populateReportPrint(res) {
-                const records = res.records || [];
-                currentReportDate = res.date || '';
-                document.getElementById('printReportDate').textContent = formatDateDisplay(res.date) || res.date;
-                document.getElementById('printReportCount').textContent = records.length + ' siswa tercatat';
-                document.getElementById('printReportRows').innerHTML = records.length ? records.map((r, i) => {
-                    return '<tr>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.name) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.id) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.className) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.type) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.remark) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.timestamp) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.status) + '</td>' +
-                        '</tr>';
-                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="8">Tidak ada data</td></tr>';
-                const absent = res.absent || [];
-                document.getElementById('printReportAbsentBlock').style.display = absent.length ? 'block' : 'none';
-                document.getElementById('printReportAbsentRows').innerHTML = absent.length ? absent.map((s, i) => {
-                    return '<tr>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
-                        '</tr>';
-                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="4">Tidak ada data</td></tr>';
-            }
-
-            function openReportModal() {
-                const modal = document.getElementById('reportModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.getElementById('reportScroll').scrollTop = 0;
-                setTimeout(() => modal.classList.remove('opacity-0'), 10);
-            }
-
-            function printReport() {
-                if (!currentReportData) return;
-                populateReportPrint(currentReportData);
-                const prevTitle = document.title;
-                document.title = 'Absensi+' + (currentReportData.date || '');
-                document.body.classList.add('printing-report');
-                window.print();
-                document.body.classList.remove('printing-report');
-                document.title = prevTitle;
-            }
-
-            function closeReportModal() {
-                const modal = document.getElementById('reportModal');
-                modal.classList.add('opacity-0');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                }, 300);
-            }
-
-            function setStudentStatus(msg, type) {
-                const el = document.getElementById('studentStatus');
-                el.textContent = msg || '';
-                el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
-            }
-
-            function loadStudents() {
-                setStudentStatus('Memuat daftar siswa...', '');
-                fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'students' }) })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (!res.success) {
-                            setStudentStatus(res.message || 'Gagal memuat daftar siswa.', 'err');
-                            return;
-                        }
-                        setStudentStatus('', '');
-                        renderStudents(res);
-                    })
-                    .catch(() => setStudentStatus('Koneksi gagal. Periksa backend.', 'err'));
-            }
-
-            function renderStudents(res) {
-                const students = res.students || [];
-                document.getElementById('studentCountDisplay').textContent = students.length + ' siswa terdaftar';
-                document.getElementById('studentEmpty').classList.toggle('hidden', students.length > 0);
-                document.getElementById('studentList').innerHTML = students.map(s => {
-                    const initial = (s.name || '?').trim().charAt(0).toUpperCase();
-                    const active = String(s.status).toUpperCase() === 'ACTIVE';
-                    const statusBadge = active
-                        ? '<span class="text-xs font-semibold text-green-600 shrink-0">Aktif</span>'
-                        : '<span class="text-xs font-semibold text-red-500 shrink-0">Nonaktif</span>';
-                    return '<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">' +
-                        '<div class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold shrink-0">' + escapeHtml(initial) + '</div>' +
-                        '<div class="flex-1 min-w-0">' +
-                        '<div class="flex items-center justify-between gap-2">' +
-                        '<span class="font-semibold text-gray-800 text-sm truncate">' + escapeHtml(s.name) + '</span>' +
-                        statusBadge +
-                        '</div>' +
-                        '<div class="text-xs text-gray-500">' + escapeHtml(s.id) + (s.className ? ' | ' + escapeHtml(s.className) : '') + '</div>' +
-                        '</div>' +
-                        '</div>';
-                }).join('');
-                document.getElementById('printStudentCount').textContent = students.length + ' siswa terdaftar';
-                document.getElementById('printStudentDate').textContent = 'Dicetak: ' + new Date().toLocaleDateString('id-ID', dateOptions);
-                document.getElementById('printStudentRows').innerHTML = students.length ? students.map((s, i) => {
-                    return '<tr>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(String(s.status).toUpperCase() === 'ACTIVE' ? 'Aktif' : 'Nonaktif') + '</td>' +
-                        '</tr>';
-                }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
-                openStudentModal();
-            }
-
-            function openStudentModal() {
-                const modal = document.getElementById('studentModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.getElementById('studentScroll').scrollTop = 0;
-                setTimeout(() => modal.classList.remove('opacity-0'), 10);
-            }
-
-            function printStudents() {
-                const prevTitle = document.title;
-                document.title = 'Students+' + todayISO();
-                document.body.classList.add('printing-students');
-                window.print();
-                document.body.classList.remove('printing-students');
-                document.title = prevTitle;
-            }
-
-            function closeStudentModal() {
-                const modal = document.getElementById('studentModal');
-                modal.classList.add('opacity-0');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    modal.classList.remove('flex');
-                }, 300);
-            }
-
-            function toggleSettingsModal() {
-                const modal = document.getElementById('settingsModal');
-                if (modal.classList.contains('hidden')) {
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    setTimeout(() => modal.classList.remove('opacity-0'), 10);
-                } else {
-                    modal.classList.add('opacity-0');
-                    setTimeout(() => {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                    }, 300);
-                }
-            }
-
-            // ========== Bantuan (Panduan Absensi) ==========
-            let helpLoaded = false;
-
-            function renderMarkdown(md) {
-                const src = String(md || '').replace(/\r\n/g, '\n');
-                const lines = src.split('\n');
-                const out = [];
-                let list = null;
-                let quote = false;
-
-                function inline(text) {
-                    return text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                }
-                function closeList() {
-                    if (list) { out.push('</' + list + '>'); list = null; }
-                }
-                function closeQuote() {
-                    if (quote) { out.push('</blockquote>'); quote = false; }
-                }
-
-                for (let i = 0; i < lines.length; i++) {
-                    const raw = lines[i];
-                    const isHardBreak = / {2,}$/.test(raw);
-                    const line = raw.trim();
-                    let m;
-
-                    if (!line) { closeList(); closeQuote(); continue; }
-
-                    if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
-                        closeList(); closeQuote();
-                        const lv = m[1].length;
-                        out.push('<' + 'h' + lv + '>' + inline(escapeHtml(m[2])) + '</' + 'h' + lv + '>');
-                        continue;
-                    }
-                    if ((m = line.match(/^>\s?(.*)$/))) {
-                        closeList();
-                        if (!quote) { out.push('<blockquote>'); quote = true; }
-                        out.push('<p>' + inline(escapeHtml(m[1])) + '</p>');
-                        continue;
-                    } else if (quote) {
-                        closeQuote();
-                    }
-                    if ((m = line.match(/^[-*]\s+(.*)$/))) {
-                        if (list !== 'ul') { closeList(); out.push('<ul>'); list = 'ul'; }
-                        out.push('<li>' + inline(escapeHtml(m[1])) + (isHardBreak ? '<br>' : '') + '</li>');
-                        continue;
-                    }
-                    if ((m = line.match(/^\d+\.\s+(.*)$/))) {
-                        if (list !== 'ol') { closeList(); out.push('<ol>'); list = 'ol'; }
-                        out.push('<li>' + inline(escapeHtml(m[1])) + (isHardBreak ? '<br>' : '') + '</li>');
-                        continue;
-                    }
-                    closeList();
-                    out.push('<p>' + inline(escapeHtml(line)) + (isHardBreak ? '<br>' : '') + '</p>');
-                }
-                closeList(); closeQuote();
-                return out.join('\n');
-            }
-
-            function loadHelpContent() {
-                const content = document.getElementById('helpContent');
-                content.innerHTML = '<p class="text-sm text-gray-500">Memuat panduan...</p>';
-                fetch('Absensi.md', { cache: 'no-store' })
-                    .then(r => {
-                        if (!r.ok) throw new Error('HTTP ' + r.status);
-                        return r.text();
-                    })
-                    .then(md => {
-                        content.innerHTML = renderMarkdown(md);
-                        helpLoaded = true;
-                    })
-                    .catch(() => {
-                        content.innerHTML = '<p class="text-sm text-red-500">Gagal memuat panduan. Periksa koneksi Anda.</p>';
-                    });
-            }
-
-            function toggleHelpModal() {
-                const modal = document.getElementById('helpModal');
-                if (modal.classList.contains('hidden')) {
-                    if (!helpLoaded) loadHelpContent();
-                    modal.classList.remove('hidden');
-                    modal.classList.add('flex');
-                    setTimeout(() => modal.classList.remove('opacity-0'), 10);
-                } else {
-                    modal.classList.add('opacity-0');
-                    setTimeout(() => {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                    }, 300);
-                }
-            }
-
-            document.getElementById('btnUnlock').addEventListener('click', unlockSettings);
-            document.getElementById('btnLock').addEventListener('click', lockSettings);
-            document.getElementById('btnChangePwd').addEventListener('click', changePassword);
-            document.getElementById('btnTestConn').addEventListener('click', testConnection);
-            document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
-            document.getElementById('btnShowReport').addEventListener('click', loadReport);
-            document.getElementById('reportDate').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') loadReport();
-            });
-            document.getElementById('btnShowStudents').addEventListener('click', loadStudents);
-            document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') unlockSettings();
-            });
-            document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') saveConfig();
-            });
-            applySecurityState();
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(function () {});
-        }
-    </script>
 </body>
 </html>
