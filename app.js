@@ -821,5 +821,6 @@ document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
 // INISIALISASI
 // ==========================================
 document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('id-ID', dateOptions);
+document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
