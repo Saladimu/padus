@@ -16,6 +16,66 @@ const VALID_TYPES = [
   'Latihan Tambahan', 'Lainnya'
 ];
 
+// Rate limit verifikasi untuk mencegah brute-force PIN
+const VERIFY_MAX_FAILS = 5;          // maksimal percobaan gagal per identitas
+const VERIFY_WINDOW_MIN = 5;         // durasi blokir (menit)
+const VERIFY_GLOBAL_MAX_FAILS = 50;  // pengaman global bila banyak percobaan gagal
+const VERIFY_CACHE_TTL = 300;        // detik (5 menit)
+
+function getVerifyCache() {
+  return CacheService.getScriptCache();
+}
+
+function verifyFailCountKey(idKey) {
+  return 'vfail:' + idKey;
+}
+
+function verifyBlockKey(idKey) {
+  return 'vblock:' + idKey;
+}
+
+// Mengembalikan sisa menit blokir (0 = tidak terblokir).
+function verifyBlocked(idKey) {
+  const cache = getVerifyCache();
+  const until = Number(cache.get(verifyBlockKey(idKey)) || 0);
+  if (until > Date.now()) {
+    return Math.max(1, Math.ceil((until - Date.now()) / 60000));
+  }
+  const globalUntil = Number(cache.get('vblock:global') || 0);
+  if (globalUntil > Date.now()) {
+    return Math.max(1, Math.ceil((globalUntil - Date.now()) / 60000));
+  }
+  return 0;
+}
+
+// Catat kegagalan verifikasi; kembalikan true jika kini terblokir.
+function recordVerifyFail(idKey) {
+  const cache = getVerifyCache();
+  const countKey = verifyFailCountKey(idKey);
+  const count = Number(cache.get(countKey) || 0) + 1;
+
+  const g = Number(cache.get('vgfail') || 0) + 1;
+  cache.put('vgfail', String(g), VERIFY_CACHE_TTL);
+  if (g >= VERIFY_GLOBAL_MAX_FAILS) {
+    cache.put('vblock:global', String(Date.now() + VERIFY_WINDOW_MIN * 60000), VERIFY_CACHE_TTL);
+  }
+
+  if (count >= VERIFY_MAX_FAILS) {
+    cache.put(verifyBlockKey(idKey), String(Date.now() + VERIFY_WINDOW_MIN * 60000), VERIFY_CACHE_TTL);
+    cache.remove(countKey);
+    return true;
+  }
+  cache.put(countKey, String(count), VERIFY_CACHE_TTL);
+  return false;
+}
+
+// Bersihkan catatan kegagalan saat verifikasi berhasil.
+function clearVerifyFails(idKey) {
+  const cache = getVerifyCache();
+  cache.remove(verifyFailCountKey(idKey));
+  cache.remove(verifyBlockKey(idKey));
+}
+
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
@@ -31,6 +91,8 @@ function doPost(e) {
       return respond(getAttendanceReport(data.date));
     } else if (action === 'students') {
       return respond(getStudentList());
+    } else if (action === 'history') {
+      return respond(getStudentHistory(data.id));
     } else if (action === 'maintenance') {
       return respond(handleMaintenance(data.value));
     } else if (action === 'debug') {
@@ -174,10 +236,17 @@ function verifyStudent(id, pin) {
     return { success: false, message: 'Student ID/Nama atau PIN terlalu panjang.' };
   }
 
+  const idKey = id.toString().trim().toUpperCase();
+
+  const blockedMin = verifyBlocked(idKey);
+  if (blockedMin > 0) {
+    return { success: false, message: 'Terlalu banyak percobaan gagal. Coba lagi dalam ' + blockedMin + ' menit.' };
+  }
+
   const sheet = getSheet(SHEET_NAME_STUDENTS);
   if (!sheet) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
   const data = sheet.getDataRange().getValues();
-  const input = id.toString().trim().toUpperCase();
+  const input = idKey;
 
   for (let i = 1; i < data.length; i++) {
     if (!data[i] || data[i][0] === '') continue;
@@ -192,11 +261,15 @@ function verifyStudent(id, pin) {
     if (rowId !== input && rowName !== input) continue;
 
     if (rowStatus !== 'ACTIVE') {
+      recordVerifyFail(idKey);
       return { success: false, message: 'Akun Anda tidak memiliki akses untuk melakukan absensi.' };
     }
     if (!pinMatches(rowPin, pin)) {
+      recordVerifyFail(idKey);
       return { success: false, message: 'PIN yang dimasukkan salah.' };
     }
+
+    clearVerifyFails(idKey);
 
     const response = {
       success: true,
@@ -212,6 +285,7 @@ function verifyStudent(id, pin) {
     return response;
   }
 
+  recordVerifyFail(idKey);
   return { success: false, message: 'Student ID atau Nama tidak terdaftar. Silakan hubungi guru pembimbing.' };
 }
 
@@ -313,6 +387,64 @@ function getStudentList() {
   });
 
   return { success: true, count: students.length, students: students };
+}
+
+function getStudentHistory(studentId) {
+  const sheet = getSheet(SHEET_NAME_ATTENDANCE);
+  if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
+  if (!studentId) return { success: false, message: 'ID siswa wajib diisi.' };
+
+  const target = String(studentId).trim().toUpperCase();
+  const data = sheet.getDataRange().getValues();
+  const records = [];
+  let studentName = '';
+  let className = '';
+
+  const stuSheet = getSheet(SHEET_NAME_STUDENTS);
+  if (stuSheet) {
+    const stuData = stuSheet.getDataRange().getValues();
+    for (let i = 1; i < stuData.length; i++) {
+      if (!stuData[i]) continue;
+      const sid = stuData[i][0] ? String(stuData[i][0]).trim().toUpperCase() : '';
+      if (sid === target) {
+        studentName = stuData[i][1] ? String(stuData[i][1]).trim() : '';
+        className = stuData[i][2] ? String(stuData[i][2]).trim() : '';
+        break;
+      }
+    }
+  }
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i] || data[i][2] === '') continue;
+    const recId = data[i][2] ? String(data[i][2]).trim().toUpperCase() : '';
+    if (recId !== target) continue;
+
+    let dateStr = '';
+    if (isDateValue(data[i][1])) dateStr = Utilities.formatDate(data[i][1], 'GMT+7', 'yyyy-MM-dd');
+    else dateStr = String(data[i][1]).trim().substring(0, 10);
+
+    records.push({
+      date: dateStr,
+      type: data[i][5] ? String(data[i][5]) : '',
+      remark: data[i][6] ? String(data[i][6]) : '',
+      status: data[i][7] ? String(data[i][7]) : '',
+      timestamp: data[i][0] ? (isDateValue(data[i][0]) ? Utilities.formatDate(data[i][0], 'GMT+7', 'yyyy-MM-dd HH:mm:ss') : String(data[i][0]).trim()) : ''
+    });
+  }
+
+  records.sort(function (a, b) {
+    return String(a.date).localeCompare(String(b.date));
+  });
+  records.reverse(); // riwayat terbaru di atas
+
+  return {
+    success: true,
+    id: String(studentId).trim(),
+    name: studentName,
+    className: className,
+    count: records.length,
+    records: records
+  };
 }
 
 function submitAttendance(payload) {

@@ -30,7 +30,8 @@ appsscript/readme.md  Panduan deploy backend
 - **Cegah absensi ganda**: siswa yang sudah tercatat absen hari ini otomatis diblokir.
 - **Pengaturan Admin**: kunci kata sandi, ganti kata sandi, atur URL backend, dan **Test Koneksi** (action `ping`).
 - **Laporan Absensi**: rekap absensi per tanggal (action `report`), termasuk daftar **siswa yang tidak hadir** (nama, ID, kelas).
-- **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan).
+- **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan). Setiap siswa memiliki tombol **Riwayat** untuk melihat riwayat absensinya (action `history`).
+- **Rate-limit login**: 5 kali percobaan verifikasi gagal pada identitas yang sama memblokir percobaan selama 5 menit (plus pengaman global untuk mencegah brute-force massal).
 - **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
 - **Mode Maintenance tersembunyi**: klik logo tengah 5x untuk menyalakan/mematikan mode perawatan. Saat ON, muncul jendela kecil merah berkedip "We're Getting Things Ready" dan input Student ID/PIN dinonaktifkan. Status disimpan di backend (global untuk semua perangkat).
 - **Bantuan / Panduan**: tombol ikon `?` di kiri atas membuka modal berisi panduan penggunaan yang dirender dari `Absensi.md` (Markdown) lewat renderer Markdown ringan di `app.js`.
@@ -81,12 +82,13 @@ Backend `appsscript/code.gs` menerima POST JSON dengan field `action`. Daftar ac
 
 | Action | Deskripsi |
 |--------|-----------|
-| `verify` | Verifikasi `id` (Student ID **atau** Nama) + `pin` terhadap sheet `STUDENTS`. Mengembalikan nama, ID, dan kelas. Jika siswa sudah tercatat absen hari ini, menyertakan `already: true` + `record`. |
+| `verify` | Verifikasi `id` (Student ID **atau** Nama) + `pin` terhadap sheet `STUDENTS`. Mengembalikan nama, ID, dan kelas. Jika siswa sudah tercatat absen hari ini, menyertakan `already: true` + `record`. Dilindungi **rate-limit**: 5 percobaan gagal per identitas memicu blokir 5 menit (CacheService). |
 | `submit` | Validasi ulang identitas, cek duplikasi per hari, lalu menulis baris ke sheet `ATTENDANCE`. |
 | `ping` | Uji koneksi backend (`{ success: true }`); dipakai menu **Test Koneksi**. |
 | `report` | Rekap absensi untuk tanggal tertentu (`date` format `yyyy-MM-dd`), diurutkan berdasarkan timestamp. Menyertakan `absent`: daftar siswa berstatus `ACTIVE` yang belum absen (nama diurutkan ascending, ID, kelas). |
 | `maintenance` | Membaca status mode maintenance global. Jika field `value` (boolean) disertakan, menyimpan status tersebut. Nilai tersimpan di Script Properties sehingga berlaku untuk semua perangkat. |
 | `students` | Daftar siswa dari sheet `STUDENTS` (tanpa PIN), diurutkan berdasarkan nama. |
+| `history` | Riwayat absensi per siswa (`id`). Mengembalikan data siswa (nama, kelas) + daftar kehadiran (tanggal, jenis, catatan, status, timestamp) terbaru di atas. Dipakai tombol **Riwayat** pada modal Daftar Siswa. |
 
 Dokumentasi detail ada di `appsscript/readme.md`.
 

@@ -24,6 +24,7 @@ let currentStudentId = null;
 let currentStudentPin = null;
 let currentReportDate = null;
 let currentReportData = null;
+let currentStudentList = [];
 
 let maintenanceMode = false;
 let logoClickCount = 0;
@@ -684,9 +685,10 @@ function loadStudents() {
 
 function renderStudents(res) {
     const students = res.students || [];
+    currentStudentList = students;
     document.getElementById('studentCountDisplay').textContent = students.length + ' siswa terdaftar';
     document.getElementById('studentEmpty').classList.toggle('hidden', students.length > 0);
-    document.getElementById('studentList').innerHTML = students.map(s => {
+    document.getElementById('studentList').innerHTML = students.map((s, i) => {
         const initial = (s.name || '?').trim().charAt(0).toUpperCase();
         const active = String(s.status).toUpperCase() === 'ACTIVE';
         const statusBadge = active
@@ -701,6 +703,7 @@ function renderStudents(res) {
                 </div>
                 <div class="text-xs text-gray-500">${escapeHtml(s.id)}${s.className ? ' | ' + escapeHtml(s.className) : ''}</div>
             </div>
+            <button onclick="showStudentHistory(${i})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg transition">Riwayat</button>
         </div>`;
     }).join('');
     document.getElementById('printStudentCount').textContent = students.length + ' siswa terdaftar';
@@ -736,6 +739,66 @@ function printStudents() {
 
 function closeStudentModal() {
     const modal = document.getElementById('studentModal');
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// ==========================================
+// RIWAYAT ABSENSI PER SISWA
+// ==========================================
+function showStudentHistory(index) {
+    const student = currentStudentList[index];
+    if (!student) return;
+    const modal = document.getElementById('historyModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('historyScroll').scrollTop = 0;
+    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+    document.getElementById('historyNameDisplay').textContent = student.name || '-';
+    document.getElementById('historyMetaDisplay').textContent =
+        (student.id || '') + (student.className ? ' | ' + student.className : '');
+    document.getElementById('historyList').innerHTML = '';
+    document.getElementById('historyEmpty').classList.add('hidden');
+    document.getElementById('historyStatus').textContent = 'Memuat riwayat...';
+
+    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'history', id: student.id }) })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) {
+                document.getElementById('historyStatus').textContent = res.message || 'Gagal memuat riwayat.';
+                return;
+            }
+            const records = res.records || [];
+            document.getElementById('historyStatus').textContent = records.length + ' kali hadir';
+            document.getElementById('historyEmpty').classList.toggle('hidden', records.length > 0);
+            document.getElementById('historyList').innerHTML = records.map(r => {
+                const day = (r.date || '').substring(8, 10) || '?';
+                const remark = r.remark ? `<div class="text-xs text-gray-400 mt-0.5">Catatan: ${escapeHtml(r.remark)}</div>` : '';
+                return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">${escapeHtml(day)}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(formatDateDisplay(r.date) || r.date)}</span>
+                            <span class="text-xs font-semibold text-green-600 shrink-0">${escapeHtml(r.status)}</span>
+                        </div>
+                        <div class="text-xs text-gray-500">${escapeHtml(r.type)}</div>
+                        ${remark}
+                        <div class="text-xs text-gray-400 mt-1">${escapeHtml(r.timestamp)}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        })
+        .catch(() => {
+            document.getElementById('historyStatus').textContent = 'Koneksi gagal. Periksa backend.';
+        });
+}
+
+function closeHistoryModal() {
+    const modal = document.getElementById('historyModal');
     modal.classList.add('opacity-0');
     setTimeout(() => {
         modal.classList.add('hidden');

@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=19">
+    <link rel="stylesheet" href="styles.css?v=20">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -321,6 +321,33 @@
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
                 <button onclick="printStudents()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
                 <button onclick="closeStudentModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Absensi Siswa -->
+    <div id="historyModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 text-white text-center relative shrink-0">
+                <button onclick="closeHistoryModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
+                <div class="flex justify-center mb-2">
+                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                </div>
+                <h2 class="text-lg font-bold tracking-wide">RIWAYAT ABSENSI</h2>
+                <p class="text-sm text-indigo-200 mt-1" id="historyNameDisplay">-</p>
+                <p class="text-xs text-indigo-200 mt-0.5 font-semibold" id="historyMetaDisplay">-</p>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1" id="historyScroll">
+                <p id="historyStatus" class="text-sm text-gray-500 mb-2"></p>
+                <div id="historyList" class="space-y-2"></div>
+                <div id="historyEmpty" class="hidden text-center py-10 text-gray-500">
+                    <div class="text-4xl mb-2 text-gray-300">-</div>
+                    <p class="font-semibold text-gray-600">Belum ada riwayat</p>
+                    <p class="text-sm">Siswa ini belum pernah tercatat absensi.</p>
+                </div>
+            </div>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
+                <button onclick="closeHistoryModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
     </div>
