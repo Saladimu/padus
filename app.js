@@ -558,6 +558,10 @@ function renderReport(res) {
     const records = res.records || [];
     document.getElementById('reportCountDisplay').textContent = records.length + ' siswa tercatat';
     document.getElementById('reportEmpty').classList.toggle('hidden', records.length > 0);
+    if (records.length === 0) {
+        document.getElementById('reportEmptyText').textContent =
+            'Tidak ada aktifitas latihan paduan suara pada ' + (formatDateDisplay(res.date) || res.date);
+    }
     document.getElementById('reportList').innerHTML = records.map(r => {
         const initial = (r.name || '?').trim().charAt(0).toUpperCase();
         const remark = r.remark ? `<div class="text-xs text-gray-400 mt-0.5">${escapeHtml(r.remark)}</div>` : '';
@@ -583,8 +587,9 @@ function renderReport(res) {
 
 function populateReportAbsent(res) {
     const absent = res.absent || [];
+    const records = res.records || [];
     const block = document.getElementById('reportAbsentBlock');
-    block.classList.toggle('hidden', absent.length === 0);
+    block.classList.toggle('hidden', absent.length === 0 || records.length === 0);
     document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
         return `<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">
             <div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
