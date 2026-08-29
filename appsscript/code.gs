@@ -294,26 +294,28 @@ function getAttendanceReport(date) {
   if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
   if (!date) return { success: false, message: 'Tanggal wajib diisi.' };
 
-    const target = String(date).trim();
-    const data = sheet.getDataRange().getValues();
-    const records = [];
-    const attendedIds = {};
+  const target = String(date).trim();
+  const todayStr = Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
+  if (target > todayStr) return { success: false, message: 'Tanggal tidak boleh melebihi hari ini.' };
+  const data = sheet.getDataRange().getValues();
+  const records = [];
+  const attendedIds = {};
 
-    function formatTimestamp(v) {
-      if (!v) return '';
-      if (isDateValue(v)) return Utilities.formatDate(v, 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
-      return String(v).trim();
-    }
+  function formatTimestamp(v) {
+    if (!v) return '';
+    if (isDateValue(v)) return Utilities.formatDate(v, 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
+    return String(v).trim();
+  }
 
-    for (let i = 1; i < data.length; i++) {
-      if (!data[i] || data[i][1] === '') continue;
-      if (!matchesToday(data[i][1], target)) continue;
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i] || data[i][1] === '') continue;
+    if (!matchesToday(data[i][1], target)) continue;
 
-      const id = data[i][2] ? String(data[i][2]).trim().toUpperCase() : '';
-      if (id) attendedIds[id] = true;
+    const id = data[i][2] ? String(data[i][2]).trim().toUpperCase() : '';
+    if (id) attendedIds[id] = true;
 
-      records.push({
-        timestamp: formatTimestamp(data[i][0]),
+    records.push({
+      timestamp: formatTimestamp(data[i][0]),
       id: data[i][2] ? String(data[i][2]) : '',
       name: data[i][3] ? String(data[i][3]) : '',
       className: data[i][4] ? String(data[i][4]) : '',

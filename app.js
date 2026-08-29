@@ -103,7 +103,7 @@ function hashPassword(pwd) {
 
 function checkPassword(pwd) {
     const stored = localStorage.getItem(LS_PWD);
-    return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '000001');
+    return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '00000');
 }
 
 // Renderer Markdown sederhana untuk panduan (Absensi.md)
@@ -538,6 +538,10 @@ function loadReport() {
     const date = document.getElementById('reportDate').value;
     if (!date) {
         setReportStatus('Pilih tanggal terlebih dahulu.', 'err');
+        return;
+    }
+    if (date > todayISO()) {
+        setReportStatus('Tanggal tidak boleh melebihi hari ini.', 'err');
         return;
     }
     setReportStatus('Memuat data...', '');
