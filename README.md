@@ -29,10 +29,10 @@ appsscript/readme.md  Panduan deploy backend
 - **Login dengan Student ID atau Nama**: verifikasi mencocokkan kolom ID **atau** Nama (case-insensitive) + PIN.
 - **Cegah absensi ganda**: siswa yang sudah tercatat absen hari ini otomatis diblokir.
 - **Pengaturan Admin**: kunci kata sandi, ganti kata sandi, atur URL backend, dan **Test Koneksi** (action `ping`).
-- **Laporan Absensi**: rekap absensi per tanggal (action `report`), termasuk daftar **siswa yang tidak hadir** (nama, ID, kelas).
-- **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan). Setiap siswa memiliki tombol **Riwayat** untuk melihat riwayat absensinya (action `history`).
+- **Laporan Absensi**: rekap absensi per tanggal (action `report`), termasuk daftar **siswa yang tidak hadir** (nama, ID, kelas). Setiap baris ditandai nomor urut (1, 2, 3, ...).
+- **Daftar Siswa**: melihat data siswa dari sheet `STUDENTS` (action `students`, PIN tidak ditampilkan). Setiap siswa ditandai nomor urut dan memiliki tombol **Riwayat** untuk melihat riwayat absensinya (action `history`).
 - **Rate-limit login**: 5 kali percobaan verifikasi gagal pada identitas yang sama memblokir percobaan selama 5 menit (plus pengaman global untuk mencegah brute-force massal).
-- **Cetak / PDF**: tombol **Print** pada Laporan Absensi dan Daftar Siswa untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
+- **Cetak / PDF**: tombol **Print** pada Laporan Absensi, Daftar Siswa, dan modal Riwayat Absensi untuk mencetak atau menyimpan ke PDF lewat dialog print browser.
 - **Mode Maintenance tersembunyi**: klik logo tengah 5x untuk menyalakan/mematikan mode perawatan. Saat ON, muncul jendela kecil merah berkedip "We're Getting Things Ready" dan input Student ID/PIN dinonaktifkan. Status disimpan di backend (global untuk semua perangkat).
 - **Bantuan / Panduan**: tombol ikon `?` di kiri atas membuka modal berisi panduan penggunaan yang dirender dari `Absensi.md` (Markdown) lewat renderer Markdown ringan di `app.js`.
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
@@ -51,12 +51,13 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Cetak / PDF (Print)
 
-Modal **Laporan Absensi** dan **Daftar Siswa** memiliki tombol **Print** yang memicu dialog print browser (`window.print()`), sehingga pengguna dapat mencetak atau menyimpan ke PDF.
+Modal **Laporan Absensi**, **Daftar Siswa**, dan **Riwayat Absensi** memiliki tombol **Print** yang memicu dialog print browser (`window.print()`), sehingga pengguna dapat mencetak atau menyimpan ke PDF.
 
 - Saat mencetak, seluruh elemen aplikasi disembunyikan dan hanya area cetak (kop + tabel) yang ditampilkan (`@media print` di `src/input.css`). Hasil cetak laporan juga memuat bagian **Siswa yang tidak hadir :** di bawah tabel absensi.
 - Header tabel dicetak rata tengah (`text-align:center`).
 - Halaman memakai margin `1cm` dengan footer nomor halaman otomatis **"Hal: X/Y"** (`@page` + `@bottom-center`).
-- Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan) atau `Students+<tanggal>` (daftar siswa) agar nama file PDF yang disimpan lebih deskriptif, lalu dikembalikan setelah pencetakan selesai.
+- Hasil cetak **Riwayat Absensi** dikelompokkan per bulan dengan baris judul bulan (contoh "Agustus 2026 &mdash; 5 kali hadir") dan kolom: No, Tanggal, Jam, Jenis, Note, Status (kolom Jam dan Status dibuat sempit).
+- Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan), `Students+<tanggal>` (daftar siswa), atau `History+<nama siswa>` (riwayat) agar nama file PDF yang disimpan lebih deskriptif, lalu dikembalikan setelah pencetakan selesai.
 
 ## Pengaturan Admin (Settings)
 
@@ -64,8 +65,8 @@ Klik ikon roda gigi di pojok kanan atas untuk membuka **Pengaturan Admin**:
 
 - **Keamanan**: seluruh pengaturan dilindungi kata sandi (default `00000`, tidak ditampilkan di halaman web). Bisa diganti lewat menu "Ganti Kata Sandi" setelah membuka kunci.
 - **Koneksi Google Sheets**: simpan URL Aplikasi Web Google Apps Script (`/exec`) di menu ini. URL tersimpan di `localStorage` dan dipakai aplikasi; jika kosong, aplikasi memakai URL bawaan `GAS_WEB_APP_URL`. Tombol **Test Koneksi** memanggil action `ping` pada backend.
-- **Laporan Absensi**: masukkan tanggal untuk menampilkan rekap data absensi hari itu (nama, ID, kelas, jenis latihan, waktu, status) langsung di layar. Tanggal di masa depan (melebihi hari ini) ditolak. Di bawahnya tampil daftar **Siswa yang tidak hadir :** (nomor, nama diurutkan ascending, ID, kelas) yang dihitung dari siswa berstatus `ACTIVE` tanpa catatan absensi pada tanggal tersebut. Tombol **Print** mencetak/menyimpan laporan ke PDF dengan kop "LAPORAN ABSENSI PADUAN SUARA" dan header tabel di tengah. Submenu ini terkunci sampai kata sandi dimasukkan.
-- **Daftar Siswa**: menampilkan seluruh siswa dari sheet `STUDENTS` (nama, ID, kelas, status Aktif/Nonaktif; PIN tidak ditampilkan), diurutkan berdasarkan nama. Tombol **Print** mencetak/menyimpan daftar ke PDF dengan kop "DAFTAR SISWA PADUAN SUARA". Submenu ini terkunci sampai kata sandi dimasukkan.
+- **Laporan Absensi**: masukkan tanggal untuk menampilkan rekap data absensi hari itu (nama, ID, kelas, jenis latihan, waktu, status) langsung di layar, setiap baris dengan nomor urut. Tanggal di masa depan (melebihi hari ini) ditolak. Di bawahnya tampil daftar **Siswa yang tidak hadir :** (nomor, nama diurutkan ascending, ID, kelas) yang dihitung dari siswa berstatus `ACTIVE` tanpa catatan absensi pada tanggal tersebut. Tombol **Print** mencetak/menyimpan laporan ke PDF dengan kop "LAPORAN ABSENSI PADUAN SUARA" dan header tabel di tengah. Submenu ini terkunci sampai kata sandi dimasukkan.
+- **Daftar Siswa**: menampilkan seluruh siswa dari sheet `STUDENTS` (nama, ID, kelas, status Aktif/Nonaktif; PIN tidak ditampilkan), diurutkan berdasarkan nama, setiap siswa dengan nomor urut. Tombol **Print** mencetak/menyimpan daftar ke PDF dengan kop "DAFTAR SISWA PADUAN SUARA". Setiap siswa memiliki tombol **Riwayat** untuk membuka modal **Riwayat Absensi** (dikelompokkan per bulan, total kehadiran per bulan, nomor urut kehadiran, dan tombol **Print**). Submenu ini terkunci sampai kata sandi dimasukkan.
 - **Setup Backend**: membuka panduan deploy backend.
 
 ## Setup Backend (Google Apps Script)
@@ -88,7 +89,7 @@ Backend `appsscript/code.gs` menerima POST JSON dengan field `action`. Daftar ac
 | `report` | Rekap absensi untuk tanggal tertentu (`date` format `yyyy-MM-dd`), diurutkan berdasarkan timestamp. Tanggal yang melebihi hari ini ditolak. Menyertakan `absent`: daftar siswa berstatus `ACTIVE` yang belum absen (nama diurutkan ascending, ID, kelas). |
 | `maintenance` | Membaca status mode maintenance global. Jika field `value` (boolean) disertakan, menyimpan status tersebut. Nilai tersimpan di Script Properties sehingga berlaku untuk semua perangkat. |
 | `students` | Daftar siswa dari sheet `STUDENTS` (tanpa PIN), diurutkan berdasarkan nama. |
-| `history` | Riwayat absensi per siswa (`id`). Mengembalikan data siswa (nama, kelas) + daftar kehadiran (tanggal, jenis, catatan, status, timestamp) terbaru di atas. Dipakai tombol **Riwayat** pada modal Daftar Siswa. |
+| `history` | Riwayat absensi per siswa (`id`). Mengembalikan data siswa (nama, kelas) + daftar kehadiran (tanggal, jenis, catatan, status, timestamp) terbaru di atas. Dipakai tombol **Riwayat** pada modal Daftar Siswa. Ditampilkan dikelompokkan per bulan dengan total kehadiran per bulan, diurutkan menaik per bulan, dan nomor urut kehadiran per bulan. |
 
 Dokumentasi detail ada di `appsscript/readme.md`.
 

@@ -865,7 +865,8 @@ function closeHistoryModal() {
 
 function printHistory() {
     const prevTitle = document.title;
-    document.title = 'History+' + todayISO();
+    const studentName = (document.getElementById('printHistoryStudent').textContent || '').trim();
+    document.title = 'History+' + (studentName || todayISO());
     document.body.classList.add('printing-history');
     window.print();
     document.body.classList.remove('printing-history');
