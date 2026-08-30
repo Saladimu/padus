@@ -815,7 +815,7 @@ function showStudentHistory(index) {
                 return `<div class="mb-3">
                     <div class="flex items-center justify-between px-1 mb-1.5">
                         <span class="text-sm font-bold text-indigo-700">${escapeHtml(label)}</span>
-                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${group.records.length} hadir</span>
+                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${group.records.length} kali hadir</span>
                     </div>
                     <div class="space-y-2">${items}</div>
                 </div>`;
@@ -831,7 +831,7 @@ function showStudentHistory(index) {
                 if (parts.length === 2) {
                     label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 }
-                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + group.records.length + ' hadir</td></tr>';
+                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + group.records.length + ' kali hadir</td></tr>';
                 const sorted = group.records.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
                 sorted.forEach((r, i) => {
                     const seq = i + 1;
