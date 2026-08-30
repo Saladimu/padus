@@ -779,11 +779,30 @@ function showStudentHistory(index) {
             const records = res.records || [];
             document.getElementById('historyStatus').textContent = records.length + ' kali hadir';
             document.getElementById('historyEmpty').classList.toggle('hidden', records.length > 0);
-            document.getElementById('historyList').innerHTML = records.map(r => {
-                const day = (r.date || '').substring(8, 10) || '?';
-                const remark = r.remark ? `<div class="text-xs text-gray-400 mt-0.5">Catatan: ${escapeHtml(r.remark)}</div>` : '';
-                return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">${escapeHtml(day)}</div>
+
+            const monthGroups = [];
+            records.forEach(r => {
+                const key = String(r.date || '').substring(0, 7);
+                let group = monthGroups.find(g => g.key === key);
+                if (!group) {
+                    group = { key: key, records: [] };
+                    monthGroups.push(group);
+                }
+                group.records.push(r);
+            });
+
+            document.getElementById('historyList').innerHTML = monthGroups.map(group => {
+                const parts = group.key.split('-');
+                let label = group.key;
+                if (parts.length === 2) {
+                    label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                }
+                const sorted = group.records.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+                const items = sorted.map((r, i) => {
+                    const seq = i + 1;
+                    const remark = r.remark ? `<div class="text-xs text-gray-400 mt-0.5">Catatan: ${escapeHtml(r.remark)}</div>` : '';
+                    return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shrink-0">${seq}</div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(formatDateDisplay(r.date) || r.date)}</span>
@@ -794,7 +813,43 @@ function showStudentHistory(index) {
                         <div class="text-xs text-gray-400 mt-1">${escapeHtml(r.timestamp)}</div>
                     </div>
                 </div>`;
+                }).join('');
+                return `<div class="mb-3">
+                    <div class="flex items-center justify-between px-1 mb-1.5">
+                        <span class="text-sm font-bold text-indigo-700">${escapeHtml(label)}</span>
+                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${group.records.length} hadir</span>
+                    </div>
+                    <div class="space-y-2">${items}</div>
+                </div>`;
             }).join('');
+
+            document.getElementById('printHistoryStudent').textContent = student.name || '-';
+            document.getElementById('printHistoryMeta').textContent =
+                (student.id || '') + (student.className ? ' | ' + student.className : '');
+            document.getElementById('printHistoryDate').textContent = 'Dicetak: ' + new Date().toLocaleDateString('id-ID', dateOptions);
+            document.getElementById('printHistoryRows').innerHTML = records.length ? monthGroups.map(group => {
+                const parts = group.key.split('-');
+                let label = group.key;
+                if (parts.length === 2) {
+                    label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                }
+                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + group.records.length + ' hadir</td></tr>';
+                const sorted = group.records.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+                sorted.forEach((r, i) => {
+                    const seq = i + 1;
+                    const ts = String(r.timestamp || '');
+                    const time = ts.length >= 19 ? ts.substring(11, 16) : '';
+                    html += '<tr>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + seq + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(formatDateDisplay(r.date) || r.date) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(time) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.type) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.remark) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.status) + '</td>' +
+                        '</tr>';
+                });
+                return html;
+            }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="6">Tidak ada data</td></tr>';
         })
         .catch(() => {
             document.getElementById('historyStatus').textContent = 'Koneksi gagal. Periksa backend.';
@@ -808,6 +863,15 @@ function closeHistoryModal() {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }, 300);
+}
+
+function printHistory() {
+    const prevTitle = document.title;
+    document.title = 'History+' + todayISO();
+    document.body.classList.add('printing-history');
+    window.print();
+    document.body.classList.remove('printing-history');
+    document.title = prevTitle;
 }
 
 // ==========================================

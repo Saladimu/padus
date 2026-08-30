@@ -7,14 +7,14 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20">
+    <link rel="stylesheet" href="styles.css?v=23">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     </noscript>
-    <script src="app.js" defer></script>
+    <script src="app.js?v=23" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -347,9 +347,32 @@
                 </div>
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
-                <button onclick="closeHistoryModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+                <button onclick="printHistory()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
+                <button onclick="closeHistoryModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
             </div>
         </div>
+    </div>
+
+    <div id="historyPrintArea" class="hidden">
+        <div style="text-align:center; margin-bottom:16px;">
+            <h1 style="font-size:18px; font-weight:bold; margin:0 0 4px;">RIWAYAT ABSENSI SISWA</h1>
+            <p style="margin:2px 0; font-size:13px;" id="printHistoryStudent">-</p>
+            <p style="margin:2px 0; font-size:12px;" id="printHistoryMeta">-</p>
+            <p style="margin:2px 0; font-size:12px;" id="printHistoryDate">-</p>
+        </div>
+        <table id="printHistoryTable" style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+                <tr>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">No</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Tanggal</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Jam</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Jenis</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Note</th>
+                    <th style="border:1px solid #999; padding:6px; text-align:center;">Status</th>
+                </tr>
+            </thead>
+            <tbody id="printHistoryRows"></tbody>
+        </table>
     </div>
 
     <div id="studentPrintArea" class="hidden">
