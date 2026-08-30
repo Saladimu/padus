@@ -567,11 +567,10 @@ function renderReport(res) {
         document.getElementById('reportEmptyText').textContent =
             'Tidak ada aktifitas latihan paduan suara pada ' + (formatDateDisplay(res.date) || res.date);
     }
-    document.getElementById('reportList').innerHTML = records.map(r => {
-        const initial = (r.name || '?').trim().charAt(0).toUpperCase();
+    document.getElementById('reportList').innerHTML = records.map((r, i) => {
         const remark = r.remark ? `<div class="text-xs text-gray-400 mt-0.5">${escapeHtml(r.remark)}</div>` : '';
         return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">${escapeHtml(initial)}</div>
+            <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                     <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)}</span>
@@ -693,13 +692,12 @@ function renderStudents(res) {
     document.getElementById('studentCountDisplay').textContent = students.length + ' siswa terdaftar';
     document.getElementById('studentEmpty').classList.toggle('hidden', students.length > 0);
     document.getElementById('studentList').innerHTML = students.map((s, i) => {
-        const initial = (s.name || '?').trim().charAt(0).toUpperCase();
         const active = String(s.status).toUpperCase() === 'ACTIVE';
         const statusBadge = active
             ? '<span class="text-xs font-semibold text-green-600 shrink-0">Aktif</span>'
             : '<span class="text-xs font-semibold text-red-500 shrink-0">Nonaktif</span>';
         return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold shrink-0">${escapeHtml(initial)}</div>
+            <div class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                     <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(s.name)}</span>

@@ -168,21 +168,21 @@ body {
     #printHistoryTable th:nth-child(4) { width: 20% !important; }
     #printHistoryTable th:nth-child(5) { width: 25% !important; }
     #printHistoryTable th:nth-child(6) { width: 10% !important; }
-    #printReportTable th:nth-child(1) { width: 6% !important; }
-    #printReportTable th:nth-child(2) { width: 17% !important; }
-    #printReportTable th:nth-child(3) { width: 11% !important; }
-    #printReportTable th:nth-child(4) { width: 12% !important; }
+    #printReportTable th:nth-child(1) { width: 5% !important; }
+    #printReportTable th:nth-child(2) { width: 22% !important; }
+    #printReportTable th:nth-child(3) { width: 8% !important; }
+    #printReportTable th:nth-child(4) { width: 9% !important; }
     #printReportTable th:nth-child(5) { width: 14% !important; }
-    #printReportTable th:nth-child(6) { width: 18% !important; }
+    #printReportTable th:nth-child(6) { width: 17% !important; }
     #printReportTable th:nth-child(7) { width: 14% !important; }
-    #printReportTable th:nth-child(8) { width: 8% !important; }
+    #printReportTable th:nth-child(8) { width: 11% !important; }
     #printReportAbsentTable th:nth-child(1) { width: 8% !important; }
-    #printReportAbsentTable th:nth-child(2) { width: 45% !important; }
-    #printReportAbsentTable th:nth-child(3) { width: 20% !important; }
-    #printReportAbsentTable th:nth-child(4) { width: 27% !important; }
+    #printReportAbsentTable th:nth-child(2) { width: 55% !important; }
+    #printReportAbsentTable th:nth-child(3) { width: 14% !important; }
+    #printReportAbsentTable th:nth-child(4) { width: 23% !important; }
     #printStudentTable th:nth-child(1) { width: 8% !important; }
-    #printStudentTable th:nth-child(2) { width: 42% !important; }
-    #printStudentTable th:nth-child(3) { width: 18% !important; }
-    #printStudentTable th:nth-child(4) { width: 22% !important; }
+    #printStudentTable th:nth-child(2) { width: 52% !important; }
+    #printStudentTable th:nth-child(3) { width: 12% !important; }
+    #printStudentTable th:nth-child(4) { width: 18% !important; }
     #printStudentTable th:nth-child(5) { width: 10% !important; }
 }
