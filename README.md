@@ -21,7 +21,9 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Caching (Service Worker)
 
-`sw.js` meng-cache aset statis (CSS, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-vN`); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak.
+`sw.js` meng-cache aset statis (CSS, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-v5`); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak.
+
+Karena aset statis memakai strategi cache-first, setiap rilis memakai **cache-busting berbasis tanggal** pada `app.js` dan `styles.css` (contoh `?v=20260831`) agar browser mengambil file versi terbaru — URL baru = cache miss = unduh ulang, lalu di-cache. Bila ada beberapa deploy dalam satu hari, tambahkan akhiran (contoh `?v=20260831b`, `?v=20260831c`). Jangan pernah memakai tanggal lama lagi (risiko cache basi).
 
 ## Fitur
 
@@ -56,7 +58,7 @@ Modal **Laporan Absensi**, **Daftar Siswa**, dan **Riwayat Absensi** memiliki to
 - Saat mencetak, seluruh elemen aplikasi disembunyikan dan hanya area cetak (kop + tabel) yang ditampilkan (`@media print` di `src/input.css`). Hasil cetak laporan juga memuat bagian **Siswa yang tidak hadir :** di bawah tabel absensi.
 - Header tabel dicetak rata tengah (`text-align:center`).
 - Halaman memakai margin `1cm` dengan footer nomor halaman otomatis **"Hal: X/Y"** (`@page` + `@bottom-center`).
-- Hasil cetak **Riwayat Absensi** dikelompokkan per bulan dengan baris judul bulan (contoh "Agustus 2026 &mdash; 5 kali hadir") dan kolom: No, Tanggal, Jam, Jenis, Note, Status (kolom Jam dan Status dibuat sempit).
+- Hasil cetak **Riwayat Absensi** dikelompokkan per bulan dengan baris judul bulan (contoh "Agustus 2026 &mdash; 5 kali hadir") dan kolom: No, Tanggal, Jam, Jenis, Note, Status (kolom Jam dan Status dibuat sempit). Di bagian bawah (footnote) ada ringkasan **"- Summary Absensi Siswa -"** yang memuat total kehadiran per bulan (Bulan + Tahun) dan total keseluruhan, dengan font kecil (10px) dan posisi rapat rata kanan.
 - Judul dokumen (`document.title`) sementara diubah menjadi `Absensi+<tanggal>` (laporan), `Students+<tanggal>` (daftar siswa), atau `History+<nama siswa>` (riwayat) agar nama file PDF yang disimpan lebih deskriptif, lalu dikembalikan setelah pencetakan selesai.
 
 ## Pengaturan Admin (Settings)
@@ -134,4 +136,6 @@ NODE_PATH=$(npm root -g) node "$(npm root -g)/@tailwindcss/cli/dist/index.mjs" -
 - **Meta tag tambahan**: `description` dan `theme-color`.
 - **`code.gs`**: PIN di-hash (dengan fallback plaintext), validasi `type` di backend, validasi panjang input, `console.error` di catch, serta `const` untuk variabel yang tidak berubah.
 - **`code.gs`**: verifikasi mendukung Student ID **atau** Nama (case-insensitive); pencegahan absensi ganda dua lapis (`getTodayRecord()` saat `verify` + `matchesToday()` saat `submit`) yang menangani sel berformat tanggal maupun teks; action baru `ping`, `report`, dan `students`.
-- **Cetak ke PDF**: tombol **Print** pada modal Laporan Absensi dan Daftar Siswa dengan area cetak khusus (`@media print`), header tabel rata tengah, margin `1cm`, dan footer nomor halaman **"Hal: X/Y"** (`@page` + `counter`).
+- **Cetak ke PDF**: tombol **Print** pada modal Laporan Absensi, Daftar Siswa, dan Riwayat Absensi dengan area cetak khusus (`@media print`), header tabel rata tengah, margin `1cm`, dan footer nomor halaman **"Hal: X/Y"** (`@page` + `counter`). Hasil cetak Riwayat dilengkapi ringkasan per bulan + total kehadiran di footnote.
+- **Riwayat Absensi**: tampilan dikelompokkan per bulan dengan total kehadiran per bulan ("N kali hadir"), nomor urut kehadiran per bulan (menaik), tombol **Print** (nama file PDF `History+<nama siswa>`), dan daftar siswa / laporan absensi memakai nomor urut sebagai penanda baris.
+- **Cache-busting berbasis tanggal**: `?v=YYYYMMDD` pada `app.js` dan `styles.css` agar rilis baru selalu terunduh walau service worker memakai cache-first.

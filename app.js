@@ -848,6 +848,16 @@ function showStudentHistory(index) {
                 });
                 return html;
             }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="6">Tidak ada data</td></tr>';
+
+            const summaryGroups = monthGroups.slice().sort((a, b) => String(a.key).localeCompare(String(b.key)));
+            document.getElementById('printHistorySummary').innerHTML = records.length ? '<div style="font-weight:bold; margin-bottom:2px;">- Summary Absensi Siswa -</div>' + summaryGroups.map(g => {
+                const parts = g.key.split('-');
+                let label = g.key;
+                if (parts.length === 2) {
+                    label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                }
+                return '<div>' + escapeHtml(label) + ' : ' + g.records.length + ' kali hadir</div>';
+            }).join('') + '<div style="font-weight:bold; border-top:1px solid #999; margin-top:2px; padding-top:2px;">Total : ' + records.length + ' kali hadir</div>' : '';
         })
         .catch(() => {
             document.getElementById('historyStatus').textContent = 'Koneksi gagal. Periksa backend.';
