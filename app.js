@@ -451,6 +451,7 @@ function applySecurityState() {
     document.getElementById('endYearSetting').disabled = settingsLocked;
     document.getElementById('btnSaveYear').disabled = settingsLocked;
     document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
+    document.getElementById('pwdChangeBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
     document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
     if (settingsLocked) {

@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831g">
+    <link rel="stylesheet" href="styles.css?v=20260831h">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,7 +16,7 @@
     </noscript>
     <script src="jspdf.umd.min.js" defer></script>
     <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260831g" defer></script>
+    <script src="app.js?v=20260831h" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -168,13 +168,6 @@
                         <div class="flex justify-end mb-3">
                             <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition">Kunci Pengaturan</button>
                         </div>
-                        <label for="oldPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Saat Ini</label>
-                        <input type="password" id="oldPwd" autocomplete="current-password" placeholder="Kata sandi saat ini" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <label for="newPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Kata Sandi Baru</label>
-                        <input type="password" id="newPwd" autocomplete="new-password" placeholder="Minimal 4 karakter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <label for="confirmPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Konfirmasi Kata Sandi Baru</label>
-                        <input type="password" id="confirmPwd" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <button id="btnChangePwd" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Ganti Kata Sandi</button>
                     </div>
                 </div>
 
@@ -219,6 +212,19 @@
                     <p class="text-xs text-gray-500 mb-3">Lihat daftar siswa dari sheet STUDENTS (PIN tidak ditampilkan).</p>
                     <button id="btnShowStudents" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Daftar Siswa</button>
                     <p id="studentStatus" class="text-sm mt-2"></p>
+                </div>
+
+                <!-- Ganti Kata Sandi Admin -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hidden" id="pwdChangeBlock">
+                    <h3 class="font-bold text-sm mb-1">Ganti Kata Sandi Admin</h3>
+                    <p class="text-xs text-gray-500 mb-3">Ubah kata sandi admin yang digunakan untuk membuka pengaturan.</p>
+                    <label for="oldPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Saat Ini</label>
+                    <input type="password" id="oldPwd" autocomplete="current-password" placeholder="Kata sandi saat ini" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <label for="newPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Kata Sandi Baru</label>
+                    <input type="password" id="newPwd" autocomplete="new-password" placeholder="Minimal 4 karakter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <label for="confirmPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Konfirmasi Kata Sandi Baru</label>
+                    <input type="password" id="confirmPwd" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                    <button id="btnChangePwd" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Ganti Kata Sandi</button>
                 </div>
 
                 <!-- Setup Backend -->
