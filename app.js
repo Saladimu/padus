@@ -755,13 +755,51 @@ function loadStudents() {
 }
 
 function renderStudents(res) {
-    const students = res.students || [];
-    currentStudentList = students;
-    document.getElementById('studentCountDisplay').textContent = students.length + ' siswa terdaftar';
-    document.getElementById('studentEmpty').classList.toggle('hidden', students.length > 0);
-    document.getElementById('studentList').innerHTML = students.map((s, i) => {
+    currentStudentList = res.students || [];
+    renderStudentList();
+    openStudentModal();
+}
+
+function renderStudentList() {
+    const filter = document.getElementById('studentStatusFilter').value;
+    const allStudents = currentStudentList.filter(s => {
         const active = String(s.status).toUpperCase() === 'ACTIVE';
-        const statusBadge = active
+        if (filter === 'all') return true;
+        return filter === 'active' ? active : !active;
+    });
+
+    const sortByName = function (a, b) {
+        return String(a.name || '').localeCompare(String(b.name || ''));
+    };
+    const isActive = function (s) {
+        return String(s.status).toUpperCase() === 'ACTIVE';
+    };
+
+    let groups = [];
+    if (filter === 'all') {
+        const active = allStudents.filter(isActive).sort(sortByName);
+        const inactive = allStudents.filter(function (s) { return !isActive(s); }).sort(sortByName);
+        if (active.length) groups.push({ label: 'Aktif', students: active });
+        if (inactive.length) groups.push({ label: 'Nonaktif', students: inactive });
+    } else {
+        const single = allStudents.slice().sort(sortByName);
+        if (single.length) groups.push({ label: filter === 'active' ? 'Aktif' : 'Nonaktif', students: single });
+    }
+
+    const countText = allStudents.length + ' siswa terdaftar';
+    document.getElementById('studentCountDisplay').textContent = countText;
+    document.getElementById('studentEmpty').classList.toggle('hidden', allStudents.length > 0);
+
+    const groupHeaderHtml = function (label, count) {
+        const accent = label === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700';
+        return `<div class="flex items-center justify-between ${accent} rounded-lg px-3 py-2 mb-2">
+            <span class="font-bold text-sm">${escapeHtml(label)}</span>
+            <span class="text-xs font-semibold">${count} siswa</span>
+        </div>`;
+    };
+    const rowHtml = function (s, i) {
+        const fullIndex = currentStudentList.indexOf(s);
+        const statusBadge = isActive(s)
             ? '<span class="text-xs font-semibold text-green-600 shrink-0">Aktif</span>'
             : '<span class="text-xs font-semibold text-red-500 shrink-0">Nonaktif</span>';
         return `<div class="flex items-start gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -773,21 +811,40 @@ function renderStudents(res) {
                 </div>
                 <div class="text-xs text-gray-500">${escapeHtml(s.id)}${s.className ? ' | ' + escapeHtml(s.className) : ''}</div>
             </div>
-            <button onclick="showStudentHistory(${i})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg transition">Riwayat</button>
+            <button onclick="showStudentHistory(${fullIndex})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-lg transition">Riwayat</button>
         </div>`;
-    }).join('');
-    document.getElementById('printStudentCount').textContent = students.length + ' siswa terdaftar';
+    };
+
+    let listHtml = '';
+    groups.forEach(function (g) {
+        if (filter === 'all') listHtml += groupHeaderHtml(g.label, g.students.length);
+        listHtml += g.students.map(rowHtml).join('');
+    });
+    document.getElementById('studentList').innerHTML = listHtml;
+
+    document.getElementById('printStudentCount').textContent = countText;
     document.getElementById('printStudentDate').textContent = 'Dicetak: ' + new Date().toLocaleDateString('id-ID', dateOptions);
-    document.getElementById('printStudentRows').innerHTML = students.length ? students.map((s, i) => {
-        return '<tr>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(String(s.status).toUpperCase() === 'ACTIVE' ? 'Aktif' : 'Nonaktif') + '</td>' +
-            '</tr>';
-    }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
-    openStudentModal();
+
+    let printHtml = '';
+    groups.forEach(function (g) {
+        if (filter === 'all') {
+            printHtml += '<tr><td colspan="5" style="border:1px solid #999;padding:6px;background:#e5e7eb;font-weight:bold;text-align:left;">' +
+                escapeHtml(g.label) + ' (' + g.students.length + ' siswa)</td></tr>';
+        }
+        printHtml += g.students.map(function (s, i) {
+            return '<tr>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(isActive(s) ? 'Aktif' : 'Nonaktif') + '</td>' +
+                '</tr>';
+        }).join('');
+    });
+    if (!printHtml) {
+        printHtml = '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
+    }
+    document.getElementById('printStudentRows').innerHTML = printHtml;
 }
 
 function openStudentModal() {
@@ -1019,6 +1076,7 @@ document.getElementById('reportDate').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') loadReport();
 });
 document.getElementById('btnShowStudents').addEventListener('click', loadStudents);
+document.getElementById('studentStatusFilter').addEventListener('change', renderStudentList);
 document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockSettings();
 });

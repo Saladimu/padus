@@ -7,14 +7,16 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831e">
+    <link rel="stylesheet" href="styles.css?v=20260831g">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     </noscript>
-    <script src="app.js?v=20260831e" defer></script>
+    <script src="jspdf.umd.min.js" defer></script>
+    <script src="html2canvas.min.js" defer></script>
+    <script src="app.js?v=20260831g" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -321,6 +323,14 @@
                 <h2 class="text-lg font-bold tracking-wide">DAFTAR SISWA</h2>
                 <p class="text-sm text-green-200 mt-1">Sheet: STUDENTS</p>
                 <p class="text-xs text-green-200 mt-0.5 font-semibold" id="studentCountDisplay">-</p>
+            </div>
+            <div class="px-4 py-2 bg-green-50 border-b shrink-0 flex items-center gap-2">
+                <label for="studentStatusFilter" class="text-sm font-medium text-gray-700 shrink-0">Status</label>
+                <select id="studentStatusFilter" class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-sm">
+                    <option value="active" selected>Aktif</option>
+                    <option value="inactive">Nonaktif</option>
+                    <option value="all">Semua</option>
+                </select>
             </div>
             <div class="p-4 overflow-y-auto flex-1" id="studentScroll">
                 <div id="studentList" class="space-y-2"></div>
