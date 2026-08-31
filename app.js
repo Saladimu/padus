@@ -80,6 +80,34 @@ function setConfig(cfg) {
     localStorage.setItem(LS_CONFIG, JSON.stringify(cfg));
 }
 
+// Rentang tahun ekskul dalam format "MM-YYYY".
+function getYearRange() {
+    const cfg = getConfig();
+    return { start: String(cfg.startYear || '').trim(), end: String(cfg.endYear || '').trim() };
+}
+
+function isValidMonthYear(val) {
+    if (!/^\d{2}-\d{4}$/.test(val)) return false;
+    const m = Number(val.substring(0, 2));
+    return m >= 1 && m <= 12;
+}
+
+// Konversi "MM-YYYY" menjadi "YYYY-MM" agar dapat dibandingkan secara leksikografis.
+function monthYearToYM(val) {
+    return String(val || '').substring(3, 7) + '-' + String(val || '').substring(0, 2);
+}
+
+// Apakah tanggal "yyyy-MM-dd" (atau "yyyy-MM") berada dalam rentang tahun ekskul?
+function dateInRange(dateStr, range) {
+    const m = String(dateStr || '').substring(0, 7);
+    if (!m) return true;
+    const start = range && range.start ? monthYearToYM(range.start) : '';
+    const end = range && range.end ? monthYearToYM(range.end) : '';
+    if (start && m < start) return false;
+    if (end && m > end) return false;
+    return true;
+}
+
 // URL backend: pakai yang disimpan, fallback ke URL bawaan.
 function getApiUrl() {
     const cfg = getConfig();
@@ -419,8 +447,15 @@ function applySecurityState() {
     document.getElementById('btnShowStudents').disabled = settingsLocked;
     document.getElementById('reportBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('studentBlock').classList.toggle('hidden', settingsLocked);
+    document.getElementById('startYearSetting').disabled = settingsLocked;
+    document.getElementById('endYearSetting').disabled = settingsLocked;
+    document.getElementById('btnSaveYear').disabled = settingsLocked;
+    document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
+    document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
+    document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
     if (settingsLocked) {
         document.getElementById('reportStatus').textContent = '';
+        document.getElementById('yearStatus').textContent = '';
     }
 }
 
@@ -497,6 +532,34 @@ function saveConfig() {
     testConnection();
 }
 
+function setYearStatus(msg, type) {
+    const el = document.getElementById('yearStatus');
+    el.textContent = msg || '';
+    el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
+}
+
+function saveYearRange() {
+    const start = document.getElementById('startYearSetting').value.trim();
+    const end = document.getElementById('endYearSetting').value.trim();
+    if (start && !isValidMonthYear(start)) {
+        setYearStatus('Format awal ekskul harus MM-YYYY.', 'err');
+        return;
+    }
+    if (end && !isValidMonthYear(end)) {
+        setYearStatus('Format akhir ekskul harus MM-YYYY.', 'err');
+        return;
+    }
+    if (start && end && monthYearToYM(start) > monthYearToYM(end)) {
+        setYearStatus('Awal ekskul tidak boleh lebih besar dari akhir ekskul.', 'err');
+        return;
+    }
+    const cfg = getConfig();
+    cfg.startYear = start;
+    cfg.endYear = end;
+    setConfig(cfg);
+    setYearStatus('Rentang tahun ekskul berhasil disimpan.', 'ok');
+}
+
 function testConnection() {
     const url = document.getElementById('apiUrlSetting').value.trim();
     const cfg = getConfig();
@@ -542,6 +605,11 @@ function loadReport() {
     }
     if (date > todayISO()) {
         setReportStatus('Tanggal tidak boleh melebihi hari ini.', 'err');
+        return;
+    }
+    const range = getYearRange();
+    if (!dateInRange(date, range)) {
+        setReportStatus('Tanggal di luar rentang tahun ekskul (' + (range.start || '??-????') + ' s.d. ' + (range.end || '??-????') + ').', 'err');
         return;
     }
     setReportStatus('Memuat data...', '');
@@ -774,7 +842,7 @@ function showStudentHistory(index) {
                 document.getElementById('historyStatus').textContent = res.message || 'Gagal memuat riwayat.';
                 return;
             }
-            const records = res.records || [];
+            const records = (res.records || []).filter(r => dateInRange(r.date, getYearRange()));
             document.getElementById('historyStatus').textContent = records.length + ' kali hadir';
             document.getElementById('historyEmpty').classList.toggle('hidden', records.length > 0);
 
@@ -945,6 +1013,7 @@ document.getElementById('btnLock').addEventListener('click', lockSettings);
 document.getElementById('btnChangePwd').addEventListener('click', changePassword);
 document.getElementById('btnTestConn').addEventListener('click', testConnection);
 document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
+document.getElementById('btnSaveYear').addEventListener('click', saveYearRange);
 document.getElementById('btnShowReport').addEventListener('click', loadReport);
 document.getElementById('reportDate').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') loadReport();
