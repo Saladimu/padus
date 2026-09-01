@@ -32,6 +32,8 @@ let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
 
 let settingsLocked = true;
+let settingsLockTimer = null;
+const SETTINGS_LOCK_TIMEOUT = 5 * 60 * 1000;
 let helpLoaded = false;
 
 // ==========================================
@@ -492,6 +494,22 @@ function applySecurityState() {
     }
 }
 
+function resetSettingsLockTimer() {
+    if (settingsLocked) return;
+    if (settingsLockTimer) clearTimeout(settingsLockTimer);
+    settingsLockTimer = setTimeout(function () {
+        settingsLockTimer = null;
+        lockSettings();
+    }, SETTINGS_LOCK_TIMEOUT);
+}
+
+function stopSettingsLockTimer() {
+    if (settingsLockTimer) {
+        clearTimeout(settingsLockTimer);
+        settingsLockTimer = null;
+    }
+}
+
 function unlockSettings() {
     const p = document.getElementById('unlockPwd').value;
     if (!p) {
@@ -506,12 +524,14 @@ function unlockSettings() {
         document.getElementById('unlockPwd').value = '';
         settingsLocked = false;
         applySecurityState();
+        resetSettingsLockTimer();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
 
 function lockSettings() {
     settingsLocked = true;
+    stopSettingsLockTimer();
     applySecurityState();
     document.getElementById('connStatus').textContent = '';
     showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
@@ -1120,6 +1140,15 @@ document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
 document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveConfig();
 });
+
+const settingsModalEl = document.getElementById('settingsModal');
+if (settingsModalEl) {
+    ['click', 'input', 'change', 'keydown'].forEach(function (evt) {
+        settingsModalEl.addEventListener(evt, function () {
+            resetSettingsLockTimer();
+        }, true);
+    });
+}
 
 // ==========================================
 // INISIALISASI
