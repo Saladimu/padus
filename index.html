@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831h">
+    <link rel="stylesheet" href="styles.css?v=20260831j">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,7 +16,7 @@
     </noscript>
     <script src="jspdf.umd.min.js" defer></script>
     <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260831h" defer></script>
+    <script src="app.js?v=20260831j" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -68,6 +68,7 @@
                     <input type="password" id="studentPin" required placeholder="Masukkan 4-6 digit PIN" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" inputmode="numeric">
                 </div>
                 <button type="submit" id="btnVerify" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <div id="verifyLoader" class="loader hidden"></div>
                     <span id="verifyText">Verifikasi Data</span>
                 </button>
@@ -114,8 +115,12 @@
                 </div>
 
                 <div class="flex gap-2 pt-2">
-                    <button type="button" id="btnBack" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg transition">Batal</button>
+                    <button type="button" id="btnBack" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        Batal
+                    </button>
                     <button type="submit" id="btnSubmit" class="w-2/3 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <div id="submitLoader" class="loader hidden"></div>
                         <span id="submitText">Submit Absensi</span>
                     </button>
@@ -140,7 +145,10 @@
             <div id="statusIcon" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4"></div>
             <h2 id="statusTitle" class="text-xl font-bold text-gray-800 mb-2">Status</h2>
             <p id="statusMessage" class="text-gray-600 mb-6">Pesan detail akan muncul di sini.</p>
-            <button onclick="closeStatusModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition">Lanjutkan</button>
+            <button onclick="closeStatusModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5-5 5M6 12h12"></path></svg>
+                Lanjutkan
+            </button>
         </div>
     </div>
 
@@ -160,13 +168,19 @@
                     <div id="secLocked">
                         <label for="unlockPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Admin</label>
                         <input type="password" id="unlockPwd" autocomplete="current-password" placeholder="Masukkan kata sandi admin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <button id="btnUnlock" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Buka Kunci</button>
+                        <button id="btnUnlock" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 1v1m-6 4h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z"></path></svg>
+                            Buka Kunci
+                        </button>
                         <p class="text-xs text-gray-400 mt-2">Submenu Koneksi Google Sheets, Tahun ekskul padus, Laporan Absensi, dan Daftar Siswa dikunci sampai kata sandi yang benar dimasukkan.</p>
                     </div>
 
                     <div id="secUnlocked" class="hidden">
                         <div class="flex justify-end mb-3">
-                            <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition">Kunci Pengaturan</button>
+                            <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                Kunci Pengaturan
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -178,8 +192,14 @@
                     <label for="apiUrlSetting" class="block text-sm font-medium text-gray-700 mb-1">Apps Script Web App URL</label>
                     <input type="url" id="apiUrlSetting" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                     <div class="flex gap-2 mt-3">
-                        <button id="btnTestConn" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Test Koneksi</button>
-                        <button id="btnSaveConn" class="w-1/2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Simpan</button>
+                        <button id="btnTestConn" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.07c3.9-3.9 10.23-3.9 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg>
+                            Test Koneksi
+                        </button>
+                        <button id="btnSaveConn" class="w-1/2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            Simpan
+                        </button>
                     </div>
                     <p id="connStatus" class="text-sm mt-2"></p>
                 </div>
@@ -192,7 +212,10 @@
                     <input type="text" id="startYearSetting" placeholder="MM-YYYY" maxlength="7" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
                     <label for="endYearSetting" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Akhir ekskul (MM-YYYY):</label>
                     <input type="text" id="endYearSetting" placeholder="MM-YYYY" maxlength="7" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                    <button id="btnSaveYear" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Simpan</button>
+                    <button id="btnSaveYear" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Simpan
+                    </button>
                     <p id="yearStatus" class="text-sm mt-2"></p>
                 </div>
 
@@ -202,7 +225,10 @@
                     <p class="text-xs text-gray-500 mb-3">Lihat data absensi berdasarkan tanggal.</p>
                     <label for="reportDate" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
                     <input type="date" id="reportDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                    <button id="btnShowReport" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Data</button>
+                    <button id="btnShowReport" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Lihat Data
+                    </button>
                     <p id="reportStatus" class="text-sm mt-2"></p>
                 </div>
 
@@ -210,13 +236,16 @@
                 <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 hidden" id="studentBlock">
                     <h3 class="font-bold text-sm mb-1">Daftar Siswa</h3>
                     <p class="text-xs text-gray-500 mb-3">Lihat daftar siswa dari sheet STUDENTS (PIN tidak ditampilkan).</p>
-                    <button id="btnShowStudents" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Lihat Daftar Siswa</button>
+                    <button id="btnShowStudents" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Lihat Daftar Siswa
+                    </button>
                     <p id="studentStatus" class="text-sm mt-2"></p>
                 </div>
 
                 <!-- Ganti Kata Sandi Admin -->
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hidden" id="pwdChangeBlock">
-                    <h3 class="font-bold text-sm mb-1">Ganti Kata Sandi Admin</h3>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-200 hidden" id="pwdChangeBlock">
+                    <h3 class="font-bold text-sm mb-1 text-red-700">Ganti Kata Sandi Admin</h3>
                     <p class="text-xs text-gray-500 mb-3">Ubah kata sandi admin yang digunakan untuk membuka pengaturan.</p>
                     <label for="oldPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Saat Ini</label>
                     <input type="password" id="oldPwd" autocomplete="current-password" placeholder="Kata sandi saat ini" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
@@ -224,14 +253,20 @@
                     <input type="password" id="newPwd" autocomplete="new-password" placeholder="Minimal 4 karakter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                     <label for="confirmPwd" class="block text-sm font-medium text-gray-700 mb-1 mt-3">Konfirmasi Kata Sandi Baru</label>
                     <input type="password" id="confirmPwd" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                    <button id="btnChangePwd" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md">Ganti Kata Sandi</button>
+                    <button id="btnChangePwd" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        Ganti Kata Sandi
+                    </button>
                 </div>
 
                 <!-- Setup Backend -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h3 class="font-bold text-sm mb-1">Setup Backend</h3>
                     <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
-                    <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition">Admin: Setup Google Sheets Backend</button>
+                    <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                        Admin: Setup Google Sheets Backend
+                    </button>
                 </div>
             </div>
         </div>
@@ -275,8 +310,14 @@
                 </div>
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
-                <button onclick="printReport()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
-                <button onclick="closeReportModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+                <button onclick="printReport()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-12 4h12a2 2 0 002-2v-2H4v2a2 2 0 002 2z"></path></svg>
+                    Print
+                </button>
+                <button onclick="closeReportModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -347,8 +388,14 @@
                 </div>
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
-                <button onclick="printStudents()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
-                <button onclick="closeStudentModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+                <button onclick="printStudents()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-12 4h12a2 2 0 002-2v-2H4v2a2 2 0 002 2z"></path></svg>
+                    Print
+                </button>
+                <button onclick="closeStudentModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -375,8 +422,14 @@
                 </div>
             </div>
             <div class="px-4 py-3 border-t bg-gray-50 shrink-0 flex gap-2">
-                <button onclick="printHistory()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition">Print</button>
-                <button onclick="closeHistoryModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition">Tutup</button>
+                <button onclick="printHistory()" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2m-12 4h12a2 2 0 002-2v-2H4v2a2 2 0 002 2z"></path></svg>
+                    Print
+                </button>
+                <button onclick="closeHistoryModal()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
@@ -430,7 +483,10 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <h2 class="text-lg font-bold text-gray-800">Panduan Setup Backend Google Sheets</h2>
-                <button onclick="toggleAdminModal()" class="text-gray-500 hover:text-red-500">&times; Tutup</button>
+                <button onclick="toggleAdminModal()" class="text-gray-500 hover:text-red-500 flex items-center gap-1.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Tutup
+                </button>
             </div>
             <div class="p-6 overflow-y-auto flex-1">
                 <p class="mb-4 text-sm text-gray-600">Untuk menggunakan aplikasi ini secara nyata, Anda perlu mendeploy kode di bawah ini ke Google Apps Script dan menautkannya dengan Spreadsheet Anda.</p>
