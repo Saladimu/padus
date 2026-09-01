@@ -194,7 +194,31 @@ function renderMarkdown(md) {
 // ==========================================
 // MODE MAINTENANCE TERSEMBUNYI (5x klik logo)
 // ==========================================
+function logoMaintenanceEnabled() {
+    const v = getConfig().logoMaintenance;
+    return v === undefined ? true : !!v;
+}
+
+function applyLogoMaintenanceState() {
+    const el = document.getElementById('btnLogoMaintenanceToggle');
+    if (!el) return;
+    const on = logoMaintenanceEnabled();
+    el.classList.toggle('bg-green-500', on);
+    el.classList.toggle('bg-gray-300', !on);
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+    const knob = el.querySelector('span');
+    if (knob) knob.classList.toggle('translate-x-5', on);
+}
+
+function toggleLogoMaintenanceSetting() {
+    const cfg = getConfig();
+    cfg.logoMaintenance = !logoMaintenanceEnabled();
+    setConfig(cfg);
+    applyLogoMaintenanceState();
+}
+
 function logoClick() {
+    if (!logoMaintenanceEnabled()) return;
     logoClickCount++;
     if (logoClickTimer) clearTimeout(logoClickTimer);
     logoClickTimer = setTimeout(function () { logoClickCount = 0; }, 1500);
@@ -237,6 +261,13 @@ function applyMaintenance(on) {
     btnVerify.disabled = on;
     btnVerify.classList.toggle('opacity-50', on);
     btnVerify.classList.toggle('cursor-not-allowed', on);
+    const settingsBtn = document.getElementById('btnSettings');
+    if (settingsBtn) {
+        settingsBtn.disabled = on;
+        settingsBtn.classList.toggle('opacity-40', on);
+        settingsBtn.classList.toggle('cursor-not-allowed', on);
+        settingsBtn.classList.toggle('pointer-events-none', on);
+    }
 }
 
 function initMaintenance() {
@@ -452,6 +483,7 @@ function applySecurityState() {
     document.getElementById('btnSaveYear').disabled = settingsLocked;
     document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('pwdChangeBlock').classList.toggle('hidden', settingsLocked);
+    applyLogoMaintenanceState();
     document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
     document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
     if (settingsLocked) {
@@ -1016,6 +1048,7 @@ function printHistory() {
 // MODAL PENGATURAN ADMIN
 // ==========================================
 function toggleSettingsModal() {
+    if (maintenanceMode) return;
     const modal = document.getElementById('settingsModal');
     if (modal.classList.contains('hidden')) {
         modal.classList.remove('hidden');
