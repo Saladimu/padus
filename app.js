@@ -64,6 +64,13 @@ function formatDateDisplay(dateStr) {
     return date.toLocaleDateString('id-ID', dateOptions);
 }
 
+// Ubah "yyyy-MM-dd" menjadi "DD-MM" (tanpa tahun)
+function ddmmFromIso(iso) {
+    const parts = String(iso || '').split('-');
+    if (parts.length !== 3) return iso;
+    return parts[2] + '-' + parts[1];
+}
+
 // Tanggal hari ini dalam format "yyyy-MM-dd"
 function todayISO() {
     const now = new Date();
@@ -716,11 +723,22 @@ function populateReportAbsent(res) {
     const block = document.getElementById('reportAbsentBlock');
     block.classList.toggle('hidden', absent.length === 0 || records.length === 0);
     document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
+        let lastHtml = '';
+        if (s.lastDate) {
+            let line = escapeHtml(ddmmFromIso(s.lastDate));
+            if (s.lastTime) line += ' ' + escapeHtml(s.lastTime);
+            if (s.lastType) line += ' &middot; ' + escapeHtml(s.lastType);
+            if (s.lastRemark) line += ' (' + escapeHtml(s.lastRemark) + ')';
+            lastHtml = '<div class="text-xs text-yellow-800 mt-1"><span class="font-semibold">Terakhir hadir:</span> ' + line + '</div>';
+        } else {
+            lastHtml = '<div class="text-xs text-yellow-700 italic mt-1">Belum pernah tercatat hadir</div>';
+        }
         return `<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">
             <div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
             <div class="flex-1 min-w-0">
                 <div class="font-semibold text-yellow-900 text-sm truncate">${escapeHtml(s.name)}</div>
                 <div class="text-xs text-yellow-800">${escapeHtml(s.id)} | ${escapeHtml(s.className)}</div>
+                ${lastHtml}
             </div>
         </div>`;
     }).join('');
@@ -746,13 +764,19 @@ function populateReportPrint(res) {
     const absent = res.absent || [];
     document.getElementById('printReportAbsentBlock').style.display = absent.length ? 'block' : 'none';
     document.getElementById('printReportAbsentRows').innerHTML = absent.length ? absent.map((s, i) => {
+        let lastTxt = s.lastDate ? ddmmFromIso(s.lastDate) : '';
+        if (s.lastTime) lastTxt += (lastTxt ? ' ' : '') + s.lastTime;
+        if (s.lastType) lastTxt += ' - ' + s.lastType;
+        if (s.lastRemark) lastTxt += ' (' + s.lastRemark + ')';
+        if (!lastTxt) lastTxt = 'Belum pernah hadir';
         return '<tr>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
+            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(lastTxt) + '</td>' +
             '</tr>';
-    }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="4">Tidak ada data</td></tr>';
+    }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="5">Tidak ada data</td></tr>';
 }
 
 function openReportModal() {

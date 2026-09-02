@@ -334,14 +334,47 @@ function getAttendanceReport(date) {
     date: target,
     count: records.length,
     records: records,
-    absent: getAbsentStudents(attendedIds)
+    absent: getAbsentStudents(attendedIds, data)
   };
 }
 
-function getAbsentStudents(attendedIds) {
+function getAbsentStudents(attendedIds, attendanceData) {
   const sheet = getSheet(SHEET_NAME_STUDENTS);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
+
+  // Peta ID siswa -> catatan absensi terakhir (info "terakhir hadir").
+  const lastLogMap = {};
+  if (attendanceData) {
+    for (let i = 1; i < attendanceData.length; i++) {
+      const row = attendanceData[i];
+      if (!row || row[2] === '') continue;
+      const recId = row[2] ? String(row[2]).trim().toUpperCase() : '';
+      if (!recId) continue;
+
+      let dateStr = '';
+      if (isDateValue(row[1])) dateStr = Utilities.formatDate(row[1], 'GMT+7', 'yyyy-MM-dd');
+      else dateStr = String(row[1] || '').trim().substring(0, 10);
+
+      let timeStr = '';
+      if (isDateValue(row[0])) timeStr = Utilities.formatDate(row[0], 'GMT+7', 'HH:mm');
+      else {
+        const t = String(row[0] || '').trim();
+        timeStr = t.length >= 16 ? t.substring(11, 16) : '';
+      }
+
+      const log = {
+        date: dateStr,
+        time: timeStr,
+        type: row[5] ? String(row[5]) : '',
+        remark: row[6] ? String(row[6]) : '',
+        sortKey: dateStr + ' ' + timeStr
+      };
+      const prev = lastLogMap[recId];
+      if (!prev || log.sortKey > prev.sortKey) lastLogMap[recId] = log;
+    }
+  }
+
   const absent = [];
 
   for (let i = 1; i < data.length; i++) {
@@ -353,11 +386,21 @@ function getAbsentStudents(attendedIds) {
     if (!rowId || rowStatus !== 'ACTIVE') continue;
     if (attendedIds[rowId]) continue;
 
-    absent.push({
+    const entry = {
       id: data[i][0] ? String(data[i][0]).trim() : '',
       name: data[i][1] ? String(data[i][1]).trim() : '',
       className: data[i][2] ? String(data[i][2]).trim() : ''
-    });
+    };
+
+    const last = lastLogMap[rowId];
+    if (last) {
+      entry.lastDate = last.date;
+      entry.lastTime = last.time;
+      entry.lastType = last.type;
+      entry.lastRemark = last.remark;
+    }
+
+    absent.push(entry);
   }
 
   absent.sort(function (a, b) {
