@@ -21,9 +21,11 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Caching (Service Worker)
 
-`sw.js` meng-cache aset statis (CSS, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-v5`); versi lama otomatis dibersihkan saat aktivasi, dan jumlah entri dibatasi agar cache tetap cukup besar namun tidak membengkak.
+`sw.js` meng-cache aset statis (CSS, JS, `Absensi.md`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **network-first** untuk navigasi halaman (selalu mengambil versi terbaru saat online), **cache-first** untuk aset statis. Cache diberi versi (`choir-absensi-v6`); versi lama otomatis dibersihkan saat aktivasi, varian aset `app.js`/`styles.css` yang sudah tidak dipakai ikut dihapus (cache tetap ramping), dan jumlah entri dibatasi (100).
 
 Karena aset statis memakai strategi cache-first, setiap rilis memakai **cache-busting berbasis tanggal** pada `app.js` dan `styles.css` (contoh `?v=20260831`) agar browser mengambil file versi terbaru — URL baru = cache miss = unduh ulang, lalu di-cache. Bila ada beberapa deploy dalam satu hari, tambahkan akhiran (contoh `?v=20260831b`, `?v=20260831c`). Jangan pernah memakai tanggal lama lagi (risiko cache basi).
+
+Saat deploy, selain mengganti `?v=` di `index.html`, perbarui juga `ASSET_VERSION` di `sw.js` (harus sama dengan versi `app.js`/`styles.css`) dan naikkan `CACHE_NAME` (mis. `choir-absensi-v7`) agar cache lama klien dibersihkan saat SW aktif. Service worker didaftarkan dengan `updateViaCache: 'none'` sehingga pemeriksaan pembaruan SW tidak terhalang cache HTTP browser. `CORE_ASSETS` di `sw.js` meng-precache file ber-`?v=` terkini, sehingga versi rilis langsung tersedia tanpa menunggu unduhan pertama.
 
 ## Fitur
 

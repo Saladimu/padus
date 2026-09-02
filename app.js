@@ -7,7 +7,7 @@
 // Daftarkan Service Worker lebih awal agar
 // cache aset tersedia sesegera mungkin.
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(function () {});
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {});
 }
 
 // ==========================================

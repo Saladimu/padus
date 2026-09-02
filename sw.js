@@ -2,15 +2,18 @@
    Strategi:
    - Navigation (HTML): network-first, fallback ke cache (offline).
    - Aset statis (CSS, JS, gambar, ikon): cache-first agar akses cepat.
-   - Cache diberi versi dan dibatasi jumlah entri agar tetap cukup besar
-     namun tidak membengkak tak terkendali.
+   - Cache diberi versi; saat aktivasi, cache lama dihapus dan varian
+     aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
+     cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v5';
+var CACHE_NAME = 'choir-absensi-v6';
+var ASSET_VERSION = '20260831n';
 var CORE_ASSETS = [
   './',
   './index.html',
-  './app.js',
-  './styles.css',
+  './app.js?v=' + ASSET_VERSION,
+  './styles.css?v=' + ASSET_VERSION,
+  './Absensi.md',
   './favicon.png',
   './choir-icon-128.png',
   './choir-icon-128.webp'
@@ -27,12 +30,28 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(
-    caches.keys()
-      .then(function (keys) {
-        return Promise.all(
-          keys.filter(function (key) { return key !== CACHE_NAME; })
-              .map(function (key) { return caches.delete(key); })
-        );
+    caches.open(CACHE_NAME)
+      .then(function (cache) {
+        return cache.keys().then(function (keys) {
+          return Promise.all(
+            keys.filter(function (req) {
+              var url = req.url;
+              var isAppJs = /\/app\.js(?:\?|$)/.test(url);
+              var isStylesCss = /\/styles\.css(?:\?|$)/.test(url);
+              var isCurrent = url.indexOf('app.js?v=' + ASSET_VERSION) !== -1 ||
+                              url.indexOf('styles.css?v=' + ASSET_VERSION) !== -1;
+              return (isAppJs || isStylesCss) && !isCurrent;
+            }).map(function (req) { return cache.delete(req); })
+          );
+        });
+      })
+      .then(function () {
+        return caches.keys().then(function (keys) {
+          return Promise.all(
+            keys.filter(function (key) { return key !== CACHE_NAME; })
+                .map(function (key) { return caches.delete(key); })
+          );
+        });
       })
       .then(function () { return self.clients.claim(); })
   );
