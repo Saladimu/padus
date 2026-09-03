@@ -334,16 +334,16 @@ function getAttendanceReport(date) {
     date: target,
     count: records.length,
     records: records,
-    absent: getAbsentStudents(attendedIds, data)
+    absent: getAbsentStudents(attendedIds, data, target)
   };
 }
 
-function getAbsentStudents(attendedIds, attendanceData) {
+function getAbsentStudents(attendedIds, attendanceData, targetDate) {
   const sheet = getSheet(SHEET_NAME_STUDENTS);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
 
-  // Peta ID siswa -> catatan absensi terakhir (info "terakhir hadir").
+  // Peta ID siswa -> catatan absensi terakhir SEBELUM tanggal laporan.
   const lastLogMap = {};
   if (attendanceData) {
     for (let i = 1; i < attendanceData.length; i++) {
@@ -355,6 +355,8 @@ function getAbsentStudents(attendedIds, attendanceData) {
       let dateStr = '';
       if (isDateValue(row[1])) dateStr = Utilities.formatDate(row[1], 'GMT+7', 'yyyy-MM-dd');
       else dateStr = String(row[1] || '').trim().substring(0, 10);
+      if (!dateStr) continue;
+      if (targetDate && dateStr >= String(targetDate)) continue;
 
       let timeStr = '';
       if (isDateValue(row[0])) timeStr = Utilities.formatDate(row[0], 'GMT+7', 'HH:mm');

@@ -731,7 +731,7 @@ function populateReportAbsent(res) {
             if (s.lastRemark) line += ' (' + escapeHtml(s.lastRemark) + ')';
             lastHtml = '<div class="text-xs text-yellow-800 mt-1"><span class="font-semibold">Terakhir hadir:</span> ' + line + '</div>';
         } else {
-            lastHtml = '<div class="text-xs text-yellow-700 italic mt-1">Belum pernah tercatat hadir</div>';
+            lastHtml = '<div class="text-xs text-yellow-800 mt-1"><span class="font-semibold">Terakhir hadir:</span> -</div>';
         }
         return `<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">
             <div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
@@ -768,7 +768,6 @@ function populateReportPrint(res) {
         if (s.lastTime) lastTxt += (lastTxt ? ' ' : '') + s.lastTime;
         if (s.lastType) lastTxt += ' - ' + s.lastType;
         if (s.lastRemark) lastTxt += ' (' + s.lastRemark + ')';
-        if (!lastTxt) lastTxt = 'Belum pernah hadir';
         return '<tr>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
