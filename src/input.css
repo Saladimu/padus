@@ -168,6 +168,8 @@ body {
     #printHistoryTable th:nth-child(4) { width: 20% !important; }
     #printHistoryTable th:nth-child(5) { width: 25% !important; }
     #printHistoryTable th:nth-child(6) { width: 10% !important; }
+    #printHistoryTable td:nth-child(4),
+    #printHistoryTable td:nth-child(5) { text-align: left !important; }
     #printReportTable th:nth-child(1) { width: 5% !important; }
     #printReportTable th:nth-child(2) { width: 22% !important; }
     #printReportTable th:nth-child(3) { width: 8% !important; }
@@ -181,6 +183,7 @@ body {
     #printReportAbsentTable th:nth-child(3) { width: 10% !important; }
     #printReportAbsentTable th:nth-child(4) { width: 12% !important; }
     #printReportAbsentTable th:nth-child(5) { width: 42% !important; }
+    #printReportAbsentTable td:nth-child(5) { text-align: left !important; }
     #printStudentTable th:nth-child(1) { width: 8% !important; }
     #printStudentTable th:nth-child(2) { width: 52% !important; }
     #printStudentTable th:nth-child(3) { width: 12% !important; }
