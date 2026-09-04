@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831s">
+    <link rel="stylesheet" href="styles.css?v=20260831t">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,7 +16,7 @@
     </noscript>
     <script src="jspdf.umd.min.js" defer></script>
     <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260831s" defer></script>
+    <script src="app.js?v=20260831t" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -131,7 +131,7 @@
 
     <!-- Footer -->
     <footer class="mt-4 text-center text-xs text-gray-400">
-        <p>Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II</p>
+        <p onclick="toggleQrModal()" class="cursor-pointer hover:text-gray-500 transition" title="Tampilkan QR Paduan Suara">Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II</p>
     </footer>
 
     <!-- Tombol Admin (Setup) - dinonaktifkan -->
@@ -277,6 +277,26 @@
                         Admin: Setup Google Sheets Backend
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal QR Paduan Suara -->
+    <div id="qrModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xs w-full flex flex-col overflow-hidden">
+            <div class="px-5 py-4 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-blue-700">
+                <h2 class="text-sm font-bold text-white">QR Ekskul Paduan Suara</h2>
+                <button onclick="toggleQrModal()" class="text-white/80 hover:text-white text-2xl leading-none" aria-label="Tutup">&times;</button>
+            </div>
+            <div class="p-5 flex flex-col items-center">
+                <img src="qrpadus.png" alt="QR Paduan Suara" class="w-52 h-52 object-contain rounded-lg">
+                <p class="text-xs text-gray-500 mt-3 text-center">Scan kode QR untuk mengakses informasi ekskul Paduan Suara SMA Kemurnian II.</p>
+            </div>
+            <div class="px-4 py-3 border-t bg-gray-50 shrink-0">
+                <button onclick="toggleQrModal()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Tutup
+                </button>
             </div>
         </div>
     </div>

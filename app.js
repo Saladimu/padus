@@ -1142,6 +1142,21 @@ function toggleHelpModal() {
     }
 }
 
+function toggleQrModal() {
+    const modal = document.getElementById('qrModal');
+    if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    } else {
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+}
+
 // ==========================================
 // EVENT LISTENERS
 // ==========================================

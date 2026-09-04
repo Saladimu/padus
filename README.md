@@ -15,6 +15,7 @@ favicon.png           Ikon tab (32x32)
 choir-icon-128.png    Logo header (128px, PNG fallback)
 choir-icon-128.webp   Logo header (128px, WebP - digunakan bila didukung)
 choir-icon.png        Logo sumber asli 512x512
+qrpadus.png           Kode QR ekskul (ditampilkan saat footer diklik)
 appsscript/code.gs    Backend Google Apps Script
 appsscript/readme.md  Panduan deploy backend
 ```
@@ -41,6 +42,7 @@ Saat deploy, selain mengganti `?v=` di `index.html`, perbarui juga `ASSET_VERSIO
 - **Ikon pada tombol**: setiap tombol aksi dilengkapi ikon SVG inline (mis. printer untuk **Print**, gembok untuk kunci/buka kunci, kunci kecil untuk Ganti Kata Sandi, jam untuk **Riwayat**) agar tampilan aplikasi lebih informatif.
 - **Bantuan / Panduan**: tombol ikon `?` di kiri atas membuka modal berisi panduan penggunaan yang dirender dari `Absensi.md` (Markdown) lewat renderer Markdown ringan di `app.js`.
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
+- **QR Paduan Suara**: klik teks footer "Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II" untuk membuka modal berisi kode QR ekskul (`qrpadus.png`).
 
 ## Cara Kerja
 
