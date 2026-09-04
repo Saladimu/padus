@@ -11,8 +11,8 @@ Sistem ini dibuat agar setiap siswa dapat melakukan absensi sendiri dengan mudah
 1. **Siapkan Nama / Student ID dan PIN** kamu.
 2. Masukkan data tersebut pada halaman absensi.
 3. Pastikan **nama dan data yang muncul benar**.
-4. Pilih jenis latihan atau keperluan kehadiran.
-5. Tambahkan catatan jika diperlukan.
+4. Pilih jenis latihan atau keperluan kehadiran (misalnya **Latihan Rutin**, **Persiapan Lomba**, atau **Izin** bila tidak dapat hadir).
+5. Tambahkan catatan jika diperlukan. Khusus untuk **Izin**, catatan wajib diisi (misalnya alasan dan siapa yang mengetahui izinmu).
 6. Periksa kembali data absensimu.
 7. Kirim absensi dan pastikan proses berhasil.
 

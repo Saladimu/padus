@@ -401,6 +401,24 @@ attendanceForm.addEventListener('submit', async (e) => {
     }
 });
 
+// Jenis "Izin": ubah status keterangan remark + pernyataan disclaimer
+function updateJenisMode() {
+    const isIzin = document.getElementById('jenisLatihan').value === 'Izin';
+    document.getElementById('remarkOptional').classList.toggle('hidden', isIzin);
+    document.getElementById('remarkRequiredLabel').classList.toggle('hidden', !isIzin);
+    document.getElementById('disclaimerPresent').classList.toggle('hidden', isIzin);
+    document.getElementById('disclaimerIzin').classList.toggle('hidden', !isIzin);
+    const remark = document.getElementById('remark');
+    remark.required = isIzin;
+    if (isIzin) {
+        remark.placeholder = 'Contoh: izin karena acara keluarga, sakit, dll.';
+    } else {
+        remark.placeholder = 'Tulis catatan jika ada...';
+    }
+}
+
+document.getElementById('jenisLatihan').addEventListener('change', updateJenisMode);
+
 // Tombol Batal / Kembali ke Tahap 1
 btnBack.addEventListener('click', resetForm);
 
@@ -409,6 +427,7 @@ function resetForm() {
     currentStudentPin = null;
     verifyForm.reset();
     attendanceForm.reset();
+    updateJenisMode();
     document.getElementById('displayStudentId').textContent = '-';
     document.getElementById('displayLoginTime').textContent = '-';
     attendanceForm.classList.add('hidden');
@@ -686,6 +705,10 @@ function loadReport() {
         .catch(() => setReportStatus('Koneksi gagal. Periksa backend.', 'err'));
 }
 
+function statusClass(status) {
+    return String(status || '').toUpperCase() === 'IZIN' ? 'text-yellow-600' : 'text-green-600';
+}
+
 function renderReport(res) {
     document.getElementById('reportDateDisplay').textContent = formatDateDisplay(res.date) || res.date;
     const records = res.records || [];
@@ -702,7 +725,7 @@ function renderReport(res) {
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                     <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)}</span>
-                    <span class="text-xs font-semibold text-green-600 shrink-0">${escapeHtml(r.status)}</span>
+                    <span class="text-xs font-semibold ${statusClass(r.status)} shrink-0">${escapeHtml(r.status)}</span>
                 </div>
                 <div class="text-xs text-gray-500">${escapeHtml(r.id)} | ${escapeHtml(r.className)}</div>
                 <div class="text-xs text-gray-500">${escapeHtml(r.type)}</div>
@@ -1008,7 +1031,7 @@ function showStudentHistory(index) {
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(formatDateDisplay(r.date) || r.date)}</span>
-                            <span class="text-xs font-semibold text-green-600 shrink-0">${escapeHtml(r.status)}</span>
+                            <span class="text-xs font-semibold ${statusClass(r.status)} shrink-0">${escapeHtml(r.status)}</span>
                         </div>
                         <div class="text-xs text-gray-500">${escapeHtml(r.type)}</div>
                         ${remark}

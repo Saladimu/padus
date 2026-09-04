@@ -13,7 +13,7 @@ const PIN_SALT = 'choir-absensi-salt';
 const VALID_TYPES = [
   'Latihan Rutin', 'Latihan Vokal', 'Latihan Lagu',
   'Persiapan Lomba', 'Persiapan Pentas', 'Gladi Bersih',
-  'Latihan Tambahan', 'Lainnya'
+  'Latihan Tambahan', 'Lainnya', 'Izin'
 ];
 
 // Rate limit verifikasi untuk mencegah brute-force PIN
@@ -531,6 +531,11 @@ function submitAttendance(payload) {
     }
 
     const sanitizedRemark = (remark || '').toString().substring(0, 200);
+    if (type === 'Izin' && sanitizedRemark === '') {
+      return { success: false, message: 'Alasan / keterangan izin wajib diisi.' };
+    }
+
+    const status = type === 'Izin' ? 'Izin' : 'Hadir';
 
     sheet.appendRow([
       timestampString,
@@ -540,12 +545,16 @@ function submitAttendance(payload) {
       student.className,
       type,
       sanitizedRemark,
-      'Hadir'
+      status
     ]);
+
+    const confirmation = type === 'Izin'
+      ? `Terima kasih, ${student.name}. Izin Anda pada ${dateString} telah tercatat.`
+      : `Terima kasih, ${student.name}. Kehadiran Anda pada ${dateString} telah tercatat.`;
 
     return {
       success: true,
-      message: `Terima kasih, ${student.name}. Kehadiran Anda pada ${dateString} telah tercatat.`
+      message: confirmation
     };
   } finally {
     lock.releaseLock();
