@@ -71,6 +71,16 @@ function ddmmFromIso(iso) {
     return parts[2] + '-' + parts[1];
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Ubah "yyyy-MM-dd" menjadi "DD-Mon" (tanpa tahun), contoh "05-Sep"
+function ddMonFromIso(iso) {
+    const parts = String(iso || '').split('-');
+    if (parts.length !== 3) return iso;
+    const monthIndex = Number(parts[1]) - 1;
+    return parts[2] + '-' + (MONTHS[monthIndex] || parts[1]);
+}
+
 // Tanggal hari ini dalam format "yyyy-MM-dd"
 function todayISO() {
     const now = new Date();
@@ -749,7 +759,7 @@ function populateReportAbsent(res) {
     document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
         let lastHtml = '';
         if (s.lastDate) {
-            let line = escapeHtml(ddmmFromIso(s.lastDate));
+            let line = escapeHtml(ddMonFromIso(s.lastDate));
             if (s.lastTime) line += ' ' + escapeHtml(s.lastTime);
             if (s.lastType) line += ' &middot; ' + escapeHtml(s.lastType);
             if (s.lastRemark) line += ' (' + escapeHtml(s.lastRemark) + ')';
@@ -788,7 +798,7 @@ function populateReportPrint(res) {
     const absent = res.absent || [];
     document.getElementById('printReportAbsentBlock').style.display = absent.length ? 'block' : 'none';
     document.getElementById('printReportAbsentRows').innerHTML = absent.length ? absent.map((s, i) => {
-        let lastTxt = s.lastDate ? ddmmFromIso(s.lastDate) : '';
+        let lastTxt = s.lastDate ? ddMonFromIso(s.lastDate) : '';
         if (s.lastTime) lastTxt += (lastTxt ? ' ' : '') + s.lastTime;
         if (s.lastType) lastTxt += ' - ' + s.lastType;
         if (s.lastRemark) lastTxt += ' (' + s.lastRemark + ')';
