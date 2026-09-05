@@ -415,6 +415,7 @@ function updateJenisMode() {
     } else {
         remark.placeholder = 'Tulis catatan jika ada...';
     }
+    document.getElementById('submitText').textContent = isIzin ? 'Submit Izin' : 'Submit Absensi';
 }
 
 document.getElementById('jenisLatihan').addEventListener('change', updateJenisMode);
