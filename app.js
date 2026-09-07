@@ -1093,7 +1093,7 @@ function showStudentHistory(index) {
                 return html;
             }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="6">Tidak ada data</td></tr>';
 
-            const summaryGroups = monthGroups.slice().sort((a, b) => String(a.key).localeCompare(String(b.key)));
+            const summaryGroups = monthGroups.slice().sort((a, b) => String(b.key).localeCompare(String(a.key)));
             document.getElementById('printHistorySummary').innerHTML = records.length ? '<div style="font-weight:bold; margin-bottom:2px;">- Summary Absensi Siswa -</div>' + summaryGroups.map(g => {
                 const parts = g.key.split('-');
                 let label = g.key;
