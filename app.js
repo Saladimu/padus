@@ -756,16 +756,22 @@ function populateReportAbsent(res) {
     const records = res.records || [];
     const block = document.getElementById('reportAbsentBlock');
     block.classList.toggle('hidden', absent.length === 0 || records.length === 0);
+    document.getElementById('reportAbsentCount').textContent = absent.length;
     document.getElementById('reportAbsentList').innerHTML = absent.map((s, i) => {
         let lastHtml = '';
         if (s.lastDate) {
-            let line = escapeHtml(ddMonFromIso(s.lastDate));
-            if (s.lastTime) line += ' ' + escapeHtml(s.lastTime);
+            let line = '📅->';
+            line += ' ' + escapeHtml(ddMonFromIso(s.lastDate));
+            if (s.lastTime) line += ' <span class="font-semibold">(' + escapeHtml(s.lastTime) + ')</span>';
             if (s.lastType) line += ' &middot; ' + escapeHtml(s.lastType);
             if (s.lastRemark) line += ' (' + escapeHtml(s.lastRemark) + ')';
-            lastHtml = '<div class="text-xs text-yellow-800 mt-1"><span class="font-semibold">Terakhir hadir:</span> ' + line + '</div>';
+            lastHtml = '<div class="flex items-center gap-1.5 text-xs text-yellow-800 mt-1">' +
+                '<span>' + line + '</span>' +
+                '</div>';
         } else {
-            lastHtml = '<div class="text-xs text-yellow-800 mt-1"><span class="font-semibold">Terakhir hadir:</span> -</div>';
+            lastHtml = '<div class="flex items-center gap-1.5 text-xs text-yellow-800 mt-1">' +
+                '<span>📅-> -</span>' +
+                '</div>';
         }
         return `<div class="flex items-start gap-3 bg-yellow-500 p-3 rounded-xl border border-yellow-600">
             <div class="w-10 h-10 rounded-full bg-white text-yellow-600 flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
