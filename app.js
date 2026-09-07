@@ -741,7 +741,13 @@ function renderReport(res) {
                 <div class="text-xs text-gray-500">${escapeHtml(r.id)} | ${escapeHtml(r.className)}</div>
                 <div class="text-xs text-gray-500">${escapeHtml(r.type)}</div>
                 ${remark}
-                <div class="text-xs text-gray-400 mt-1">${escapeHtml(r.timestamp)}</div>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="text-xs text-gray-400 mt-1">${escapeHtml(r.timestamp)}</div>
+                    <button onclick="showReportStudentHistory(${i})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Riwayat
+                    </button>
+                </div>
             </div>
         </div>`;
     }).join('');
@@ -996,7 +1002,12 @@ function closeStudentModal() {
 // RIWAYAT ABSENSI PER SISWA
 // ==========================================
 function showStudentHistory(index) {
-    const student = currentStudentList[index];
+    let student = null;
+    if (typeof index === 'object' && index !== null) {
+        student = index;
+    } else if (currentStudentList[index]) {
+        student = currentStudentList[index];
+    }
     if (!student) return;
     const modal = document.getElementById('historyModal');
     modal.classList.remove('hidden');
@@ -1106,6 +1117,13 @@ function showStudentHistory(index) {
         .catch(() => {
             document.getElementById('historyStatus').textContent = 'Koneksi gagal. Periksa backend.';
         });
+}
+
+function showReportStudentHistory(index) {
+    const records = (currentReportData && currentReportData.records) || [];
+    const r = records[index];
+    if (!r) return;
+    showStudentHistory({ id: r.id, name: r.name, className: r.className });
 }
 
 function closeHistoryModal() {
