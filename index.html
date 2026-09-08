@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831y">
+    <link rel="stylesheet" href="styles.css?v=20260831z">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,7 +16,7 @@
     </noscript>
     <script src="jspdf.umd.min.js" defer></script>
     <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260831y" defer></script>
+    <script src="app.js?v=20260831z" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -360,6 +360,9 @@
     <div id="peekModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white text-center relative shrink-0">
+                <button onclick="refreshPeek()" class="absolute top-3 left-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Muat Ulang" aria-label="Muat Ulang">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </button>
                 <button onclick="closePeekModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
                 <div class="flex justify-center mb-2">
                     <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">

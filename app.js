@@ -944,18 +944,41 @@ function peekLaporanToday() {
             if (peekCache.date !== date) return;
             const modalHidden = document.getElementById('peekModal').classList.contains('hidden');
             if (modalHidden) return;
-            if (res.success) {
-                renderPeekRecords(res.records || []);
-                renderPeekMessage('', false);
-            } else {
-                renderPeekMessage(res.message || 'Gagal memuat laporan.', true);
-            }
+            applyPeekResult(res);
         });
     }
 }
 
 function invalidatePeekCache() {
     peekCache = null;
+}
+
+function applyPeekResult(res) {
+    if (!res.success) {
+        renderPeekMessage(res.message || 'Gagal memuat laporan.', true);
+        return;
+    }
+    renderPeekRecords(res.records || []);
+    renderPeekMessage('', false);
+}
+
+function refreshPeek() {
+    const date = todayISO();
+    const range = getYearRange();
+    if (!dateInRange(date, range)) {
+        renderPeekMessage('Hari ini di luar rentang tahun ekskul (' + (range.start || '??-????') + ' s.d. ' + (range.end || '??-????') + ').', true);
+        return;
+    }
+    document.getElementById('peekCountDisplay').textContent = '';
+    document.getElementById('peekList').innerHTML = '';
+    document.getElementById('peekEmpty').classList.add('hidden');
+    renderPeekMessage('Memuat ulang data...', false);
+    invalidatePeekCache();
+    fetchPeekToday().then(res => {
+        if (peekCache.date !== date) return;
+        if (document.getElementById('peekModal').classList.contains('hidden')) return;
+        applyPeekResult(res);
+    });
 }
 
 function closePeekModal() {
