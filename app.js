@@ -36,6 +36,10 @@ let settingsLockTimer = null;
 const SETTINGS_LOCK_TIMEOUT = 5 * 60 * 1000;
 let helpLoaded = false;
 
+// Cache peek laporan absensi hari ini agar membuka modal lebih cepat
+const PEEK_CACHE_TTL = 30000;
+let peekCache = null;
+
 // ==========================================
 // REFERENSI ELEMEN DOM
 // ==========================================
@@ -398,6 +402,8 @@ attendanceForm.addEventListener('submit', async (e) => {
         if (result.success) {
             showStatusModal("Berhasil!", result.message, true);
             resetForm();
+            invalidatePeekCache();
+            setTimeout(fetchPeekToday, 1000);
         } else {
             showStatusModal("Gagal", result.message || "Gagal menyimpan absensi.", false);
         }
@@ -853,6 +859,115 @@ function closeReportModal() {
 }
 
 // ==========================================
+// PEEK LAPORAN ABSENSI HARI INI (klik tanggal di header)
+// ==========================================
+function renderPeekRecords(records) {
+    document.getElementById('peekCountDisplay').textContent = records.length + ' siswa tercatat';
+    document.getElementById('peekEmpty').classList.toggle('hidden', records.length > 0);
+    document.getElementById('peekList').innerHTML = records.map((r, i) => {
+        const ts = String(r.timestamp || '');
+        const time = ts.length >= 16 ? ts.substring(11, 16) : ts;
+        const izinTag = String(r.status || '').toUpperCase() === 'IZIN'
+            ? '<span class="text-xs font-semibold" style="color:#f97316;">(Izin)</span>'
+            : '';
+        return `<div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)}</span>
+                    ${izinTag}
+                </div>
+                <div class="text-xs text-gray-500">${escapeHtml(r.id)}</div>
+            </div>
+            <div class="text-xs text-gray-600 shrink-0">Login ${escapeHtml(time)}</div>
+        </div>`;
+    }).join('');
+}
+
+function renderPeekMessage(msg, isError) {
+    const statusEl = document.getElementById('peekStatus');
+    statusEl.textContent = msg || '';
+    statusEl.className = 'text-sm mt-1 ' + (isError ? 'text-red-500' : 'text-gray-500');
+}
+
+function fetchPeekToday() {
+    const date = todayISO();
+    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date }) })
+        .then(r => r.json())
+        .then(res => {
+            peekCache = { date: date, ts: Date.now(), res: res };
+            return res;
+        })
+        .catch(err => {
+            peekCache = { date: date, ts: Date.now(), res: { success: false, message: 'Koneksi gagal. Periksa backend.' } };
+            return peekCache.res;
+        });
+}
+
+function peekLaporanToday() {
+    const modal = document.getElementById('peekModal');
+    const date = todayISO();
+    const dateText = new Date().toLocaleDateString('id-ID', dateOptions);
+
+    document.getElementById('peekDateDisplay').textContent = dateText;
+    document.getElementById('peekCountDisplay').textContent = '';
+    document.getElementById('peekList').innerHTML = '';
+    document.getElementById('peekEmpty').classList.add('hidden');
+    renderPeekMessage('Memuat data...', false);
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('peekScroll').scrollTop = 0;
+    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+    const range = getYearRange();
+    if (!dateInRange(date, range)) {
+        renderPeekMessage('Hari ini di luar rentang tahun ekskul (' + (range.start || '??-????') + ' s.d. ' + (range.end || '??-????') + ').', true);
+        return;
+    }
+
+    const cached = peekCache && peekCache.date === date ? peekCache.res : null;
+    const isFresh = cached && (Date.now() - peekCache.ts) < PEEK_CACHE_TTL;
+
+    if (cached) {
+        if (cached.success) {
+            renderPeekRecords(cached.records || []);
+            renderPeekMessage('', false);
+        } else {
+            renderPeekMessage(cached.message || 'Gagal memuat laporan.', true);
+        }
+    }
+
+    // Muat ulang di latar belakang bila cache tidak ada atau sudah basi
+    if (!isFresh) {
+        fetchPeekToday().then(res => {
+            if (peekCache.date !== date) return;
+            const modalHidden = document.getElementById('peekModal').classList.contains('hidden');
+            if (modalHidden) return;
+            if (res.success) {
+                renderPeekRecords(res.records || []);
+                renderPeekMessage('', false);
+            } else {
+                renderPeekMessage(res.message || 'Gagal memuat laporan.', true);
+            }
+        });
+    }
+}
+
+function invalidatePeekCache() {
+    peekCache = null;
+}
+
+function closePeekModal() {
+    const modal = document.getElementById('peekModal');
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// ==========================================
 // DAFTAR SISWA
 // ==========================================
 function setStudentStatus(msg, type) {
@@ -1253,3 +1368,6 @@ document.getElementById('currentDateDisplay').textContent = new Date().toLocaleD
 document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
+
+// Panaskan cache peek laporan hari ini agar klik pertama terasa instan
+setTimeout(fetchPeekToday, 2000);
