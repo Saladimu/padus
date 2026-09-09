@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260831z">
+    <link rel="stylesheet" href="styles.css?v=20260907a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
@@ -16,7 +16,7 @@
     </noscript>
     <script src="jspdf.umd.min.js" defer></script>
     <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260831z" defer></script>
+    <script src="app.js?v=20260907a" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -425,6 +425,7 @@
                 <tbody id="printReportAbsentRows"></tbody>
             </table>
         </div>
+        <div id="printFootnoteReport" style="text-align:right; font-size:10px; color:#333; margin-top:8px;"></div>
     </div>
 
     <!-- Modal Daftar Siswa -->
@@ -523,6 +524,7 @@
             <tbody id="printHistoryRows"></tbody>
         </table>
         <div id="printHistorySummary" style="margin-top:8px; font-size:10px; color:#333; text-align:right; line-height:1.4;"></div>
+        <div id="printFootnoteHistory" style="text-align:right; font-size:10px; color:#333; margin-top:4px;"></div>
     </div>
 
     <div id="studentPrintArea" class="hidden">
@@ -544,6 +546,7 @@
             </thead>
             <tbody id="printStudentRows"></tbody>
         </table>
+        <div id="printFootnoteStudent" style="text-align:right; font-size:10px; color:#333; margin-top:8px;"></div>
     </div>
 
     <!-- Modal Setup Admin (Google Apps Script Code) -->

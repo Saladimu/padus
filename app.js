@@ -838,9 +838,31 @@ function openReportModal() {
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
 }
 
+// Format "MM-YYYY" menjadi "Mmm-YY" (mis. "08-2026" -> "Aug-26")
+function monthYearToMmmYY(val) {
+    const parts = String(val || '').trim().split('-');
+    if (parts.length !== 2) return String(val || '').trim();
+    const mIdx = Number(parts[0]) - 1;
+    const month = MONTHS[mIdx] || parts[0];
+    const yy = String(parts[1] || '').slice(-2);
+    return month + '-' + yy;
+}
+
+function setPrintFootnotes() {
+    const range = getYearRange();
+    const start = range.start ? monthYearToMmmYY(range.start) : '';
+    const end = range.end ? monthYearToMmmYY(range.end) : '';
+    const text = (start && end) ? 'Tahun ekskul: ' + start + ' s/d ' + end : '';
+    ['printFootnoteReport', 'printFootnoteStudent', 'printFootnoteHistory'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    });
+}
+
 function printReport() {
     if (!currentReportData) return;
     populateReportPrint(currentReportData);
+    setPrintFootnotes();
     const prevTitle = document.title;
     document.title = 'Absensi+' + (currentReportData.date || '');
     document.body.classList.add('printing-report');
@@ -1119,6 +1141,7 @@ function openStudentModal() {
 }
 
 function printStudents() {
+    setPrintFootnotes();
     const prevTitle = document.title;
     document.title = 'Students+' + todayISO();
     document.body.classList.add('printing-students');
@@ -1274,6 +1297,7 @@ function closeHistoryModal() {
 }
 
 function printHistory() {
+    setPrintFootnotes();
     const prevTitle = document.title;
     const studentName = (document.getElementById('printHistoryStudent').textContent || '').trim();
     document.title = 'History+' + (studentName || todayISO());
