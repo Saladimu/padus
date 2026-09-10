@@ -38,7 +38,12 @@ let helpLoaded = false;
 
 // Cache peek laporan absensi hari ini agar membuka modal lebih cepat
 const PEEK_CACHE_TTL = 30000;
+const PEEK_CACHE_KEY = 'choir_peek_cache_v1';
 let peekCache = null;
+
+// Cache status maintenance agar input tidak menunggu jaringan saat muat awal
+const MAINTENANCE_CACHE_KEY = 'choir_maintenance_cache_v1';
+const MAINTENANCE_CACHE_TTL = 5 * 60 * 1000;
 
 // ==========================================
 // REFERENSI ELEMEN DOM
@@ -276,7 +281,7 @@ function toggleMaintenance() {
         .finally(() => { maintenanceSyncInFlight = false; });
 }
 
-function applyMaintenance(on) {
+function applyMaintenance(on, persist) {
     maintenanceMode = on;
     document.getElementById('maintenanceWindow').classList.toggle('hidden', !on);
     document.getElementById('studentIdentity').disabled = on;
@@ -291,9 +296,25 @@ function applyMaintenance(on) {
         settingsBtn.classList.toggle('cursor-not-allowed', on);
         settingsBtn.classList.toggle('pointer-events-none', on);
     }
+    if (persist === false) return;
+    try {
+        localStorage.setItem(MAINTENANCE_CACHE_KEY, JSON.stringify({ value: on, ts: Date.now() }));
+    } catch (e) { /* localStorage tidak tersedia */ }
+}
+
+function applyCachedMaintenance() {
+    try {
+        const raw = localStorage.getItem(MAINTENANCE_CACHE_KEY);
+        if (!raw) return;
+        const entry = JSON.parse(raw);
+        if (entry && typeof entry.value === 'boolean' && (Date.now() - entry.ts) < MAINTENANCE_CACHE_TTL) {
+            applyMaintenance(entry.value, false);
+        }
+    } catch (e) { /* abaikan data rusak */ }
 }
 
 function initMaintenance() {
+    applyCachedMaintenance();
     fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
         .then(r => r.json())
         .then(res => {
@@ -838,20 +859,20 @@ function openReportModal() {
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
 }
 
-// Format "MM-YYYY" menjadi "Mmm-YY" (mis. "08-2026" -> "Aug-26")
-function monthYearToMmmYY(val) {
+// Format "MM-YYYY" menjadi "Mmm-YYYY" (mis. "08-2026" -> "Aug-2026")
+function monthYearToMmmYYYY(val) {
     const parts = String(val || '').trim().split('-');
     if (parts.length !== 2) return String(val || '').trim();
     const mIdx = Number(parts[0]) - 1;
     const month = MONTHS[mIdx] || parts[0];
-    const yy = String(parts[1] || '').slice(-2);
-    return month + '-' + yy;
+    const year = parts[1] || '';
+    return month + '-' + year;
 }
 
 function setPrintFootnotes() {
     const range = getYearRange();
-    const start = range.start ? monthYearToMmmYY(range.start) : '';
-    const end = range.end ? monthYearToMmmYY(range.end) : '';
+    const start = range.start ? monthYearToMmmYYYY(range.start) : '';
+    const end = range.end ? monthYearToMmmYYYY(range.end) : '';
     const text = (start && end) ? 'Tahun ekskul: ' + start + ' s/d ' + end : '';
     ['printFootnoteReport', 'printFootnoteStudent', 'printFootnoteHistory'].forEach(id => {
         const el = document.getElementById(id);
@@ -914,16 +935,44 @@ function renderPeekMessage(msg, isError) {
 
 function fetchPeekToday() {
     const date = todayISO();
-    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date }) })
+    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date, lean: true }) })
         .then(r => r.json())
         .then(res => {
             peekCache = { date: date, ts: Date.now(), res: res };
+            savePersistedPeekCache(peekCache);
             return res;
         })
         .catch(err => {
             peekCache = { date: date, ts: Date.now(), res: { success: false, message: 'Koneksi gagal. Periksa backend.' } };
             return peekCache.res;
         });
+}
+
+function savePersistedPeekCache(entry) {
+    try {
+        if (entry && entry.res && entry.res.success) {
+            localStorage.setItem(PEEK_CACHE_KEY, JSON.stringify(entry));
+        }
+    } catch (e) { /* localStorage tidak tersedia */ }
+}
+
+function loadPersistedPeekCache() {
+    try {
+        const raw = localStorage.getItem(PEEK_CACHE_KEY);
+        if (!raw) return;
+        const entry = JSON.parse(raw);
+        if (entry && entry.date === todayISO() && entry.res && entry.res.success) {
+            peekCache = entry;
+        }
+    } catch (e) { /* abaikan data rusak */ }
+}
+
+function schedulePeekPrefetch() {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (conn && conn.saveData) return;
+    const date = todayISO();
+    if (peekCache && peekCache.date === date && (Date.now() - peekCache.ts) < PEEK_CACHE_TTL) return;
+    setTimeout(function () { fetchPeekToday(); }, 2000);
 }
 
 function peekLaporanToday() {
@@ -973,6 +1022,7 @@ function peekLaporanToday() {
 
 function invalidatePeekCache() {
     peekCache = null;
+    try { localStorage.removeItem(PEEK_CACHE_KEY); } catch (e) { /* abaikan */ }
 }
 
 function applyPeekResult(res) {
@@ -1332,7 +1382,7 @@ function toggleSettingsModal() {
 function loadHelpContent() {
     const content = document.getElementById('helpContent');
     content.innerHTML = '<p class="text-sm text-gray-500">Memuat panduan...</p>';
-    fetch('Absensi.md', { cache: 'no-store' })
+    fetch('Absensi.md')
         .then(r => {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.text();
@@ -1417,4 +1467,5 @@ initMaintenance();
 applySecurityState();
 
 // Panaskan cache peek laporan hari ini agar klik pertama terasa instan
-setTimeout(fetchPeekToday, 2000);
+loadPersistedPeekCache();
+schedulePeekPrefetch();

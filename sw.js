@@ -1,13 +1,15 @@
 /* Service Worker Absensi Paduan Suara
    Strategi:
-   - Navigation (HTML): network-first, fallback ke cache (offline).
-   - Aset statis (CSS, JS, gambar, ikon): cache-first agar akses cepat.
+   - Navigation (HTML): stale-while-revalidate, tampilkan cache segera lalu
+     perbarui di latar belakang; fallback ke cache saat offline.
+   - Aset statis same-origin (CSS, JS, gambar, ikon): cache-first agar akses cepat.
+   - Font Google (lintas-origin): stale-while-revalidate agar muat berikutnya instan.
    - Cache diberi versi; saat aktivasi, cache lama dihapus dan varian
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v19';
-var ASSET_VERSION = '20260907a';
+var CACHE_NAME = 'choir-absensi-v21';
+var ASSET_VERSION = '20260907c';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -62,17 +64,40 @@ self.addEventListener('fetch', function (event) {
   var request = event.request;
   if (request.method !== 'GET') return;
 
-  // Navigasi halaman: selalu ambil versi terbaru, fallback cache saat offline.
+  // Navigasi halaman: stale-while-revalidate, fallback cache saat offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).then(function (response) {
-        var copy = response.clone();
-        caches.open(CACHE_NAME).then(function (cache) {
-          cache.put('./index.html', copy);
-        });
-        return response;
-      }).catch(function () {
-        return caches.match('./index.html');
+      caches.match('./index.html').then(function (cached) {
+        var network = fetch(request).then(function (response) {
+          if (response && response.status === 200) {
+            var copy = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) {
+              cache.put('./index.html', copy);
+            });
+          }
+          return response;
+        }).catch(function () { return cached; });
+        return cached || network;
+      })
+    );
+    return;
+  }
+
+  // Font Google lintas-origin: stale-while-revalidate.
+  if (request.url.indexOf('https://fonts.googleapis.com') === 0 ||
+      request.url.indexOf('https://fonts.gstatic.com') === 0) {
+    event.respondWith(
+      caches.match(request).then(function (cached) {
+        var network = fetch(request).then(function (response) {
+          if (response && (response.status === 200 || response.type === 'opaque')) {
+            var copy = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) {
+              cache.put(request, copy);
+            });
+          }
+          return response;
+        }).catch(function () { return cached; });
+        return cached || network;
       })
     );
     return;

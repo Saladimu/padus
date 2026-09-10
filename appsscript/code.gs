@@ -88,7 +88,7 @@ function doPost(e) {
     } else if (action === 'ping') {
       return respond({ success: true, message: 'pong' });
     } else if (action === 'report') {
-      return respond(getAttendanceReport(data.date));
+      return respond(getAttendanceReport(data.date, data.lean === true));
     } else if (action === 'students') {
       return respond(getStudentList());
     } else if (action === 'history') {
@@ -289,7 +289,7 @@ function verifyStudent(id, pin) {
   return { success: false, message: 'Student ID atau Nama tidak terdaftar. Silakan hubungi guru pembimbing.' };
 }
 
-function getAttendanceReport(date) {
+function getAttendanceReport(date, lean) {
   const sheet = getSheet(SHEET_NAME_ATTENDANCE);
   if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
   if (!date) return { success: false, message: 'Tanggal wajib diisi.' };
@@ -334,7 +334,7 @@ function getAttendanceReport(date) {
     date: target,
     count: records.length,
     records: records,
-    absent: getAbsentStudents(attendedIds, data, target)
+    absent: lean ? [] : getAbsentStudents(attendedIds, data, target)
   };
 }
 

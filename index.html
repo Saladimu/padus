@@ -7,16 +7,14 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260907a">
+    <link rel="stylesheet" href="styles.css?v=20260907c">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     </noscript>
-    <script src="jspdf.umd.min.js" defer></script>
-    <script src="html2canvas.min.js" defer></script>
-    <script src="app.js?v=20260907a" defer></script>
+    <script src="app.js?v=20260907c" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -48,7 +46,10 @@
                 </button>
             </div>
             <div class="flex justify-center mb-2">
-                <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain cursor-pointer" id="centerLogo" onclick="logoClick()" title="Logo Paduan Suara">
+                <picture>
+                    <source srcset="choir-icon-128.webp" type="image/webp">
+                    <img src="choir-icon-128.png" alt="Logo Paduan Suara" class="w-14 h-14 rounded-full bg-white/20 p-1.5 object-contain cursor-pointer" id="centerLogo" onclick="logoClick()" title="Logo Paduan Suara">
+                </picture>
             </div>
             <h1 class="text-xl font-bold tracking-wide">ABSENSI PADUAN SUARA</h1>
             <p class="text-sm text-blue-200 mt-1 cursor-pointer hover:text-white transition select-none" id="currentDateDisplay" onclick="peekLaporanToday()" title="Lihat laporan absensi hari ini">Memuat tanggal...</p>
@@ -325,7 +326,10 @@
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-5 text-white text-center relative shrink-0">
                 <button onclick="closeReportModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
                 <div class="flex justify-center mb-2">
-                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    <picture>
+                        <source srcset="choir-icon-128.webp" type="image/webp">
+                        <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI</h2>
                 <p class="text-sm text-blue-200 mt-1" id="reportDateDisplay">-</p>
@@ -365,7 +369,10 @@
                 </button>
                 <button onclick="closePeekModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
                 <div class="flex justify-center mb-2">
-                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    <picture>
+                        <source srcset="choir-icon-128.webp" type="image/webp">
+                        <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI HARI INI</h2>
                 <p class="text-sm text-blue-200 mt-1" id="peekDateDisplay">-</p>
@@ -434,7 +441,10 @@
             <div class="bg-gradient-to-r from-green-600 to-green-700 p-5 text-white text-center relative shrink-0">
                 <button onclick="closeStudentModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
                 <div class="flex justify-center mb-2">
-                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    <picture>
+                        <source srcset="choir-icon-128.webp" type="image/webp">
+                        <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">DAFTAR SISWA</h2>
                 <p class="text-sm text-green-200 mt-1">Sheet: STUDENTS</p>
@@ -475,7 +485,10 @@
             <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 p-5 text-white text-center relative shrink-0">
                 <button onclick="closeHistoryModal()" class="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition text-2xl leading-none" aria-label="Tutup">&times;</button>
                 <div class="flex justify-center mb-2">
-                    <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    <picture>
+                        <source srcset="choir-icon-128.webp" type="image/webp">
+                        <img src="choir-icon-128.png" alt="Logo" class="w-12 h-12 rounded-full bg-white/20 p-1 object-contain">
+                    </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">RIWAYAT ABSENSI</h2>
                 <p class="text-sm text-indigo-200 mt-1" id="historyNameDisplay">-</p>
