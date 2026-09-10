@@ -137,7 +137,7 @@ function respond(obj) {
 function debugCheck(studentId) {
   const sheet = getSheet(SHEET_NAME_ATTENDANCE);
   if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
-  const rows = sheet.getDataRange().getValues();
+  const rows = getAttendanceData(sheet);
   const now = new Date();
   const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
   const target = String(studentId || '').trim().toUpperCase();
@@ -164,6 +164,39 @@ function debugCheck(studentId) {
 
 function getSheet(name) {
   return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+}
+
+// Ambil nilai sheet dibatasi getLastRow()/getLastColumn() agar tidak memindai
+// baris kosong di ekor sheet. Baris pertama (header) tetap disertakan sehingga
+// loop pemanggil yang mulai dari indeks 1 tidak perlu diubah.
+function getBoundedValues(sheet, minCols) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 1) return [];
+  const lastCol = Math.max(sheet.getLastColumn(), minCols || 1);
+  return sheet.getRange(1, 1, lastRow, lastCol).getValues();
+}
+
+function getAttendanceData(sheet) {
+  return getBoundedValues(sheet, 8);
+}
+
+// Cache daftar siswa (ID/Nama/Kelas/PIN/Status). STUDENTS jarang berubah dan
+// selalu dibaca saat verify/report/students/history. TTL singkat agar
+// perubahan manual di sheet tetap terbaca.
+const STUDENTS_CACHE_KEY = 'students:list:v1';
+const STUDENTS_CACHE_TTL = 120;
+
+function getStudentsData() {
+  const cache = getVerifyCache();
+  const cached = cache.get(STUDENTS_CACHE_KEY);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (e) { /* cache rusak, muat ulang */ }
+  }
+  const sheet = getSheet(SHEET_NAME_STUDENTS);
+  if (!sheet) return null;
+  const data = getBoundedValues(sheet, 5);
+  try { cache.put(STUDENTS_CACHE_KEY, JSON.stringify(data), STUDENTS_CACHE_TTL); } catch (e) { /* data terlalu besar untuk cache */ }
+  return data;
 }
 
 function hashPin(pin) {
@@ -209,7 +242,7 @@ function matchesToday(cellValue, todayString) {
 function getTodayRecord(studentId) {
   const sheet = getSheet(SHEET_NAME_ATTENDANCE);
   if (!sheet) return null;
-  const data = sheet.getDataRange().getValues();
+  const data = getAttendanceData(sheet);
   const now = new Date();
   const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
 
@@ -243,9 +276,8 @@ function verifyStudent(id, pin) {
     return { success: false, message: 'Terlalu banyak percobaan gagal. Coba lagi dalam ' + blockedMin + ' menit.' };
   }
 
-  const sheet = getSheet(SHEET_NAME_STUDENTS);
-  if (!sheet) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
-  const data = sheet.getDataRange().getValues();
+  const data = getStudentsData();
+  if (!data) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
   const input = idKey;
 
   for (let i = 1; i < data.length; i++) {
@@ -297,7 +329,7 @@ function getAttendanceReport(date, lean) {
   const target = String(date).trim();
   const todayStr = Utilities.formatDate(new Date(), 'GMT+7', 'yyyy-MM-dd');
   if (target > todayStr) return { success: false, message: 'Tanggal tidak boleh melebihi hari ini.' };
-  const data = sheet.getDataRange().getValues();
+  const data = getAttendanceData(sheet);
   const records = [];
   const attendedIds = {};
 
@@ -339,9 +371,8 @@ function getAttendanceReport(date, lean) {
 }
 
 function getAbsentStudents(attendedIds, attendanceData, targetDate) {
-  const sheet = getSheet(SHEET_NAME_STUDENTS);
-  if (!sheet) return [];
-  const data = sheet.getDataRange().getValues();
+  const data = getStudentsData();
+  if (!data) return [];
 
   // Peta ID siswa -> catatan absensi terakhir SEBELUM tanggal laporan.
   const lastLogMap = {};
@@ -413,9 +444,8 @@ function getAbsentStudents(attendedIds, attendanceData, targetDate) {
 }
 
 function getStudentList() {
-  const sheet = getSheet(SHEET_NAME_STUDENTS);
-  if (!sheet) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
-  const data = sheet.getDataRange().getValues();
+  const data = getStudentsData();
+  if (!data) return { success: false, message: 'Sheet STUDENTS tidak ditemukan.' };
   const students = [];
 
   for (let i = 1; i < data.length; i++) {
@@ -442,14 +472,13 @@ function getStudentHistory(studentId) {
   if (!studentId) return { success: false, message: 'ID siswa wajib diisi.' };
 
   const target = String(studentId).trim().toUpperCase();
-  const data = sheet.getDataRange().getValues();
+  const data = getAttendanceData(sheet);
   const records = [];
   let studentName = '';
   let className = '';
 
-  const stuSheet = getSheet(SHEET_NAME_STUDENTS);
-  if (stuSheet) {
-    const stuData = stuSheet.getDataRange().getValues();
+  const stuData = getStudentsData();
+  if (stuData) {
     for (let i = 1; i < stuData.length; i++) {
       if (!stuData[i]) continue;
       const sid = stuData[i][0] ? String(stuData[i][0]).trim().toUpperCase() : '';
@@ -514,7 +543,7 @@ function submitAttendance(payload) {
   try {
     const sheet = getSheet(SHEET_NAME_ATTENDANCE);
     if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
-    const data = sheet.getDataRange().getValues();
+    const data = getAttendanceData(sheet);
 
     const now = new Date();
     const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
