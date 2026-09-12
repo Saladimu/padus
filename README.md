@@ -22,7 +22,7 @@ appsscript/readme.md  Panduan deploy backend
 
 ## Caching (Service Worker)
 
-`sw.js` meng-cache aset statis (CSS, JS, `Absensi.md`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **stale-while-revalidate** untuk navigasi halaman (HTML dari cache ditampilkan segera, versi terbaru diunduh di latar belakang; fallback cache saat offline), **cache-first** untuk aset statis same-origin, dan **stale-while-revalidate** untuk font Google lintas-origin. Cache diberi versi (`choir-absensi-v22`); versi lama otomatis dibersihkan saat aktivasi, varian aset `app.js`/`styles.css` yang sudah tidak dipakai ikut dihapus (cache tetap ramping), dan jumlah entri dibatasi (100).
+`sw.js` meng-cache aset statis (CSS, JS, `Absensi.md`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **stale-while-revalidate** untuk navigasi halaman (HTML dari cache ditampilkan segera, versi terbaru diunduh di latar belakang; fallback cache saat offline), **cache-first** untuk aset statis same-origin, dan **stale-while-revalidate** untuk font Google lintas-origin. Cache diberi versi (`choir-absensi-v23`); versi lama otomatis dibersihkan saat aktivasi, varian aset `app.js`/`styles.css` yang sudah tidak dipakai ikut dihapus (cache tetap ramping), dan jumlah entri dibatasi (100).
 
 Karena aset statis memakai strategi cache-first, setiap rilis memakai **cache-busting berbasis tanggal** pada `app.js` dan `styles.css` (contoh `?v=20260831`) agar browser mengambil file versi terbaru — URL baru = cache miss = unduh ulang, lalu di-cache. Bila ada beberapa deploy dalam satu hari, tambahkan akhiran (contoh `?v=20260831b`, `?v=20260831c`). Jangan pernah memakai tanggal lama lagi (risiko cache basi).
 
@@ -45,6 +45,7 @@ Saat deploy, selain mengganti `?v=` di `index.html`, perbarui juga `ASSET_VERSIO
 - **Tombol refresh**: memuat ulang aplikasi langsung dari header.
 - **QR Paduan Suara**: klik teks footer "Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II" untuk membuka modal berisi kode QR ekskul (`qrpadus.png`).
 - **Peek Laporan Absensi Hari Ini**: klik/mengetuk tanggal di header (di bawah judul "ABSENSI PADUAN SUARA") membuka modal ringkas berisi daftar siswa yang sudah tercatat hari ini dengan **No**, **Nama**, dan **jam log-in** (waktu submit, format HH:MM) plus jumlah siswa tercatat. Siswa berstatus **Izin** ditandai teks **"(Izin)"** berwarna oranye di samping namanya. Data diambil dari action `report` untuk tanggal hari ini dan mengikuti rentang tahun ekskul (di luar rentang akan ditampilkan peringatan).
+- **Backup Data (Admin)**: submenu **Backup Data** di Pengaturan Admin (setelah Daftar Siswa) memiliki tombol **Buat Backup Sekarang** yang memanggil action `backup`. Backend menduplikasi sheet `STUDENTS` dan `ATTENDANCE` menjadi sheet baru di spreadsheet yang sama dengan nama `STUDENTS<DDMMYY>` dan `ATTENDANCE<DDMMYY>` (mis. `STUDENTS110926`). Bila salinan bertanggal sama sudah ada, salinan lama diganti agar tidak terjadi duplikasi nama.
 
 ## Cara Kerja
 
@@ -171,3 +172,4 @@ NODE_PATH=$(npm root -g) node "$(npm root -g)/@tailwindcss/cli/dist/index.mjs" -
 - **Cache daftar siswa di backend**: `getStudentsData()` menyimpan isi sheet `STUDENTS` di `CacheService` (kunci `students:list:v1`, TTL 120 detik) dan dipakai ulang oleh `verifyStudent()`, `getAbsentStudents()`, `getStudentList()`, dan `getStudentHistory()`, sehingga sheet siswa tidak dibaca ulang pada setiap request. Perubahan manual pada sheet `STUDENTS` baru terbaca setelah cache kedaluwarsa (maksimal ~2 menit).
 - **Baca sheet dibatasi**: helper `getBoundedValues()`/`getAttendanceData()` memakai `getLastRow()`/`getLastColumn()` (bukan `getDataRange()`) agar baris kosong di ekor sheet tidak ikut dipindai.
 - **Bobot font dikurangi**: tautan Google Fonts kini hanya memuat bobot yang benar-benar dipakai (`400;500;600;700`); bobot `300` (light) yang tidak terpakai dihapus.
+- **Backup sheet dari Pengaturan Admin**: action `backup` memanggil `backupSheets()` di `code.gs` untuk menduplikasi sheet `STUDENTS` dan `ATTENDANCE` menjadi sheet bertanggal `DDMMYY` di spreadsheet yang sama (mengganti salinan hari yang sama bila ada). Tombol **Buat Backup Sekarang** ada di submenu **Backup Data**, terkunci bersama submenu admin lainnya.

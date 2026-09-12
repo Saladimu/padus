@@ -91,6 +91,8 @@ function doPost(e) {
       return respond(getAttendanceReport(data.date, data.lean === true));
     } else if (action === 'students') {
       return respond(getStudentList());
+    } else if (action === 'backup') {
+      return respond(backupSheets());
     } else if (action === 'history') {
       return respond(getStudentHistory(data.id));
     } else if (action === 'maintenance') {
@@ -588,4 +590,46 @@ function submitAttendance(payload) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ==========================================
+// BACKUP SHEET (duplikat di spreadsheet yang sama)
+// ==========================================
+// Menyalin sheet STUDENTS dan ATTENDANCE menjadi sheet baru bertanggal
+// "<NamaSheet>DDMMYY" (mis. STUDENTS110926). Bila salinan hari itu sudah ada,
+// salinan lama diganti agar tidak terjadi duplikat nama.
+function backupSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
+
+  const stamp = Utilities.formatDate(new Date(), 'GMT+7', 'ddMMyy');
+  const targets = [SHEET_NAME_STUDENTS, SHEET_NAME_ATTENDANCE];
+  const created = [];
+  const replaced = [];
+  const missing = [];
+
+  targets.forEach(function (name) {
+    const sheet = ss.getSheetByName(name);
+    if (!sheet) {
+      missing.push(name);
+      return;
+    }
+    const backupName = name + stamp;
+    const existing = ss.getSheetByName(backupName);
+    if (existing) {
+      ss.deleteSheet(existing);
+      replaced.push(backupName);
+    }
+    sheet.copyTo(ss).setName(backupName);
+    created.push(backupName);
+  });
+
+  if (created.length === 0) {
+    return { success: false, message: 'Sheet yang akan dibackup tidak ditemukan: ' + missing.join(', ') + '.' };
+  }
+
+  let message = 'Backup dibuat: ' + created.join(', ') + '.';
+  if (replaced.length) message += ' Salinan hari ini sebelumnya diganti.';
+  if (missing.length) message += ' Tidak ditemukan: ' + missing.join(', ') + '.';
+  return { success: true, message: message };
 }

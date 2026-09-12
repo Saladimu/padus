@@ -7,14 +7,14 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260907d">
+    <link rel="stylesheet" href="styles.css?v=20260907e">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="app.js?v=20260907d" defer></script>
+    <script src="app.js?v=20260907e" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -178,7 +178,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 1v1m-6 4h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z"></path></svg>
                             Buka Kunci
                         </button>
-                        <p class="text-xs text-gray-400 mt-2">Submenu Koneksi Google Sheets, Tahun ekskul padus, Laporan Absensi, dan Daftar Siswa dikunci sampai kata sandi yang benar dimasukkan.</p>
+                        <p class="text-xs text-gray-400 mt-2">Submenu Koneksi Google Sheets, Tahun ekskul padus, Laporan Absensi, Daftar Siswa, dan Backup Data dikunci sampai kata sandi yang benar dimasukkan.</p>
                     </div>
 
                     <div id="secUnlocked" class="hidden">
@@ -247,6 +247,17 @@
                         Lihat Daftar Siswa
                     </button>
                     <p id="studentStatus" class="text-sm mt-2"></p>
+                </div>
+
+                <!-- Backup Data -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hidden" id="backupBlock">
+                    <h3 class="font-bold text-sm mb-1">Backup Data</h3>
+                    <p class="text-xs text-gray-500 mb-3">Salin sheet STUDENTS dan ATTENDANCE menjadi sheet bertanggal (mis. STUDENTS110926) di spreadsheet yang sama.</p>
+                    <button id="btnShowBackup" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                        Buat Backup Sekarang
+                    </button>
+                    <p id="backupStatus" class="text-sm mt-2"></p>
                 </div>
 
                 <!-- Ganti Kata Sandi Admin -->

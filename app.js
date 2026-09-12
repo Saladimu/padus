@@ -544,6 +544,8 @@ function applySecurityState() {
     document.getElementById('btnShowStudents').disabled = settingsLocked;
     document.getElementById('reportBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('studentBlock').classList.toggle('hidden', settingsLocked);
+    document.getElementById('btnShowBackup').disabled = settingsLocked;
+    document.getElementById('backupBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('startYearSetting').disabled = settingsLocked;
     document.getElementById('endYearSetting').disabled = settingsLocked;
     document.getElementById('btnSaveYear').disabled = settingsLocked;
@@ -555,6 +557,7 @@ function applySecurityState() {
     if (settingsLocked) {
         document.getElementById('reportStatus').textContent = '';
         document.getElementById('yearStatus').textContent = '';
+        document.getElementById('backupStatus').textContent = '';
     }
 }
 
@@ -599,6 +602,29 @@ function lockSettings() {
     applySecurityState();
     document.getElementById('connStatus').textContent = '';
     showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
+}
+
+function setBackupStatus(msg, type) {
+    const el = document.getElementById('backupStatus');
+    el.textContent = msg || '';
+    el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
+}
+
+function backupSheets() {
+    const btn = document.getElementById('btnShowBackup');
+    btn.disabled = true;
+    setBackupStatus('Membuat backup...', '');
+    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'backup' }) })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) {
+                setBackupStatus(res.message || 'Gagal membuat backup.', 'err');
+                return;
+            }
+            setBackupStatus(res.message || 'Backup berhasil dibuat.', 'ok');
+        })
+        .catch(() => setBackupStatus('Koneksi gagal. Periksa backend.', 'err'))
+        .finally(() => { btn.disabled = settingsLocked; });
 }
 
 function changePassword() {
@@ -1441,6 +1467,7 @@ document.getElementById('reportDate').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') loadReport();
 });
 document.getElementById('btnShowStudents').addEventListener('click', loadStudents);
+document.getElementById('btnShowBackup').addEventListener('click', backupSheets);
 document.getElementById('studentStatusFilter').addEventListener('change', renderStudentList);
 document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockSettings();
