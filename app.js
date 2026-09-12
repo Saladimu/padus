@@ -592,6 +592,7 @@ function unlockSettings() {
         settingsLocked = false;
         applySecurityState();
         resetSettingsLockTimer();
+        loadBackupList();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
@@ -610,6 +611,46 @@ function setBackupStatus(msg, type) {
     el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
 }
 
+function formatBackupStamp(stamp) {
+    const s = String(stamp || '');
+    if (!/^\d{6}$/.test(s)) return s;
+    const day = s.substring(0, 2);
+    const month = MONTHS[parseInt(s.substring(2, 4), 10) - 1] || '?';
+    const yy = s.substring(4, 6);
+    return day + '-' + month + '-20' + yy;
+}
+
+function renderBackupList(backups, keep) {
+    const listEl = document.getElementById('backupList');
+    if (keep) document.getElementById('backupKeepLabel').textContent = keep;
+    const items = backups || [];
+    if (items.length === 0) {
+        listEl.innerHTML = '<span class="text-gray-400">Belum ada backup.</span>';
+        return;
+    }
+    listEl.innerHTML = items.map(function (b) {
+        return `<div class="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
+            <span class="font-medium text-gray-700">${escapeHtml(b.name)}</span>
+            <span class="text-gray-500">${escapeHtml(formatBackupStamp(b.stamp))} &middot; ${Number(b.rows) || 0} baris</span>
+        </div>`;
+    }).join('');
+}
+
+function loadBackupList() {
+    const listEl = document.getElementById('backupList');
+    listEl.innerHTML = '<span class="text-gray-400">Memuat...</span>';
+    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'backuplist' }) })
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success) {
+                listEl.innerHTML = '<span class="text-red-500">' + escapeHtml(res.message || 'Gagal memuat daftar backup.') + '</span>';
+                return;
+            }
+            renderBackupList(res.backups, res.keep);
+        })
+        .catch(() => { listEl.innerHTML = '<span class="text-red-500">Koneksi gagal. Periksa backend.</span>'; });
+}
+
 function backupSheets() {
     const btn = document.getElementById('btnShowBackup');
     btn.disabled = true;
@@ -619,9 +660,11 @@ function backupSheets() {
         .then(res => {
             if (!res.success) {
                 setBackupStatus(res.message || 'Gagal membuat backup.', 'err');
+                loadBackupList();
                 return;
             }
             setBackupStatus(res.message || 'Backup berhasil dibuat.', 'ok');
+            renderBackupList(res.backups, res.keep);
         })
         .catch(() => setBackupStatus('Koneksi gagal. Periksa backend.', 'err'))
         .finally(() => { btn.disabled = settingsLocked; });
@@ -1393,6 +1436,7 @@ function toggleSettingsModal() {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        if (!settingsLocked) loadBackupList();
     } else {
         modal.classList.add('opacity-0');
         setTimeout(() => {

@@ -10,7 +10,8 @@ Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web*
 | `ping` | Kesehatan koneksi; mengembalikan `{ success: true }`. Dipakai oleh menu **Test Koneksi** di Pengaturan Admin. |
 | `report` | Mengembalikan rekap absensi untuk tanggal tertentu (`date` format `yyyy-MM-dd`) dari sheet `ATTENDANCE`, diurutkan berdasarkan timestamp. Dipakai oleh menu **Laporan Absensi**. |
 | `submit` | Validasi ulang identitas, cek duplikasi per hari, lalu menulis baris ke sheet `ATTENDANCE`. |
-| `backup` | Menduplikasi sheet `STUDENTS` dan `ATTENDANCE` menjadi sheet bertanggal `DDMMYY` di spreadsheet yang sama (lihat `backupSheets()`). Dipakai oleh submenu **Backup Data**. |
+| `backup` | Menduplikasi sheet `STUDENTS` dan `ATTENDANCE` menjadi sheet bertanggal `DDMMYY` di spreadsheet yang sama, lalu menyimpan maksimal `BACKUP_KEEP` (6) backup terbaru per sheet (lihat `backupSheets()`). Dipakai oleh submenu **Backup Data**. |
+| `backuplist` | Mengembalikan daftar backup tersimpan (`name`, `base`, `stamp`, `rows`) beserta nilai `keep`, dipakai untuk menampilkan daftar di submenu **Backup Data** (lihat `listBackups()`). |
 
 ## Struktur Sheet
 

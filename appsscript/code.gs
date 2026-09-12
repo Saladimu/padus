@@ -93,6 +93,8 @@ function doPost(e) {
       return respond(getStudentList());
     } else if (action === 'backup') {
       return respond(backupSheets());
+    } else if (action === 'backuplist') {
+      return respond(listBackups());
     } else if (action === 'history') {
       return respond(getStudentHistory(data.id));
     } else if (action === 'maintenance') {
@@ -596,8 +598,62 @@ function submitAttendance(payload) {
 // BACKUP SHEET (duplikat di spreadsheet yang sama)
 // ==========================================
 // Menyalin sheet STUDENTS dan ATTENDANCE menjadi sheet baru bertanggal
-// "<NamaSheet>DDMMYY" (mis. STUDENTS110926). Bila salinan hari itu sudah ada,
+// "<NamaSheet>DDMMYY" (mis. STUDENTS110926), lalu menyimpan hanya
+// BACKUP_KEEP salinan terbaru per sheet. Bila salinan hari itu sudah ada,
 // salinan lama diganti agar tidak terjadi duplikat nama.
+const BACKUP_KEEP = 6;
+
+// Ubah stempel DDMMYY menjadi kunci urut YYMMDD agar pengurutan kronologis.
+function backupSortKey(stamp) {
+  return stamp.substring(4, 6) + stamp.substring(2, 4) + stamp.substring(0, 2);
+}
+
+// Daftar sheet backup milik satu sheet sumber, terbaru lebih dulu.
+function getBackupSheets(baseName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const list = [];
+  ss.getSheets().forEach(function (sheet) {
+    const name = sheet.getName();
+    if (name.indexOf(baseName) !== 0) return;
+    const stamp = name.substring(baseName.length);
+    if (!/^\d{6}$/.test(stamp)) return;
+    list.push({ sheet: sheet, name: name, stamp: stamp, key: backupSortKey(stamp) });
+  });
+  list.sort(function (a, b) { return b.key.localeCompare(a.key); });
+  return list;
+}
+
+// Hapus backup lama sehingga hanya BACKUP_KEEP terbaru yang tersisa.
+function pruneBackups(baseName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const removed = [];
+  getBackupSheets(baseName).slice(BACKUP_KEEP).forEach(function (item) {
+    ss.deleteSheet(item.sheet);
+    removed.push(item.name);
+  });
+  return removed;
+}
+
+// Daftar seluruh backup (STUDENTS + ATTENDANCE) untuk ditampilkan di UI.
+function listBackups() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
+
+  const items = [];
+  [SHEET_NAME_STUDENTS, SHEET_NAME_ATTENDANCE].forEach(function (base) {
+    getBackupSheets(base).forEach(function (item) {
+      items.push({
+        name: item.name,
+        base: base,
+        stamp: item.stamp,
+        rows: Math.max(0, item.sheet.getLastRow() - 1)
+      });
+    });
+  });
+
+  return { success: true, keep: BACKUP_KEEP, count: items.length, backups: items };
+}
+
 function backupSheets() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
@@ -628,8 +684,14 @@ function backupSheets() {
     return { success: false, message: 'Sheet yang akan dibackup tidak ditemukan: ' + missing.join(', ') + '.' };
   }
 
+  pruneBackups(SHEET_NAME_STUDENTS);
+  pruneBackups(SHEET_NAME_ATTENDANCE);
+
+  const listed = listBackups();
   let message = 'Backup dibuat: ' + created.join(', ') + '.';
   if (replaced.length) message += ' Salinan hari ini sebelumnya diganti.';
   if (missing.length) message += ' Tidak ditemukan: ' + missing.join(', ') + '.';
-  return { success: true, message: message };
+  message += ' Menyimpan maksimal ' + BACKUP_KEEP + ' backup terbaru per sheet.';
+
+  return { success: true, message: message, keep: BACKUP_KEEP, backups: listed.backups || [] };
 }
