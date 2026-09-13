@@ -713,6 +713,13 @@ function formatBackupStamp(stamp) {
     return day + '-' + month + '-20' + yy;
 }
 
+// Stempel DDMMYY -> kunci urut YYMMDD agar pengurutan kronologis.
+function backupStampKey(stamp) {
+    const s = String(stamp || '');
+    if (!/^\d{6}$/.test(s)) return s;
+    return s.substring(4, 6) + s.substring(2, 4) + s.substring(0, 2);
+}
+
 function renderBackupList(backups, keep) {
     const listEl = document.getElementById('backupList');
     if (keep) document.getElementById('backupKeepLabel').textContent = keep;
@@ -721,9 +728,15 @@ function renderBackupList(backups, keep) {
         listEl.innerHTML = '<span class="text-gray-400">Belum ada backup.</span>';
         return;
     }
-    listEl.innerHTML = items.map(function (b) {
+    const sorted = items.slice().sort(function (a, b) {
+        const ka = backupStampKey(a.stamp);
+        const kb = backupStampKey(b.stamp);
+        if (ka !== kb) return kb.localeCompare(ka);
+        return String(a.name).localeCompare(String(b.name));
+    });
+    listEl.innerHTML = sorted.map(function (b) {
         return `<div class="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
-            <span class="font-medium text-gray-700">${escapeHtml(b.name)}</span>
+            <code class="bg-gray-100 text-gray-800 rounded" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:1px 5px;">${escapeHtml(b.name)}</code>
             <span class="text-gray-500">${escapeHtml(formatBackupStamp(b.stamp))} &middot; ${Number(b.rows) || 0} records</span>
         </div>`;
     }).join('');
