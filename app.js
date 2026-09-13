@@ -528,6 +528,33 @@ function toggleAdminModal() {
 // ==========================================
 // SETTINGS ADMIN (KATA SANDI & KEAMANAN)
 // ==========================================
+function toggleSettingsSection(bodyId, btn) {
+    const body = document.getElementById(bodyId);
+    if (!body) return;
+    const willOpen = body.classList.contains('hidden');
+    body.classList.toggle('hidden', !willOpen);
+    if (btn) {
+        btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        const icon = btn.querySelector('svg');
+        if (icon) {
+            icon.style.transition = 'transform 0.2s';
+            icon.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    }
+}
+
+function collapseSettingsSections() {
+    ['connBody', 'backupBody', 'pwdBody'].forEach(function (id) {
+        const body = document.getElementById(id);
+        if (body) body.classList.add('hidden');
+    });
+    document.querySelectorAll('#settingsModal button[aria-expanded]').forEach(function (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        const icon = btn.querySelector('svg');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+    });
+}
+
 function applySecurityState() {
     const secLocked = document.getElementById('secLocked');
     const secUnlocked = document.getElementById('secUnlocked');
@@ -558,6 +585,7 @@ function applySecurityState() {
         document.getElementById('reportStatus').textContent = '';
         document.getElementById('yearStatus').textContent = '';
         document.getElementById('backupStatus').textContent = '';
+        collapseSettingsSections();
     }
 }
 
@@ -631,7 +659,7 @@ function renderBackupList(backups, keep) {
     listEl.innerHTML = items.map(function (b) {
         return `<div class="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
             <span class="font-medium text-gray-700">${escapeHtml(b.name)}</span>
-            <span class="text-gray-500">${escapeHtml(formatBackupStamp(b.stamp))} &middot; ${Number(b.rows) || 0} baris</span>
+            <span class="text-gray-500">${escapeHtml(formatBackupStamp(b.stamp))} &middot; ${Number(b.rows) || 0} records</span>
         </div>`;
     }).join('');
 }
