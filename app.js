@@ -30,6 +30,9 @@ let maintenanceMode = false;
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
+let maintenanceRefreshPromise = null;
+let maintenanceLastCheck = 0;
+const MAINTENANCE_CHECK_MIN_INTERVAL = 10000;
 
 let settingsLocked = true;
 let settingsLockTimer = null;
@@ -313,21 +316,62 @@ function applyCachedMaintenance() {
     } catch (e) { /* abaikan data rusak */ }
 }
 
-function initMaintenance() {
-    applyCachedMaintenance();
-    fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
+function fetchMaintenance() {
+    return fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
         .then(r => r.json())
         .then(res => {
-            if (res && res.success) applyMaintenance(!!res.maintenance);
+            if (res && res.success) {
+                const on = !!res.maintenance;
+                applyMaintenance(on);
+                return on;
+            }
+            return maintenanceMode;
         })
-        .catch(() => {});
+        .catch(() => maintenanceMode);
+}
+
+// Ambil ulang status maintenance dari server. `force` menembus throttle;
+// pemanggilan dari interaksi pengguna di-throttle agar tidak spam jaringan.
+function refreshMaintenance(force) {
+    const now = Date.now();
+    if (!force && (now - maintenanceLastCheck) < MAINTENANCE_CHECK_MIN_INTERVAL) {
+        return Promise.resolve(maintenanceMode);
+    }
+    if (maintenanceRefreshPromise) return maintenanceRefreshPromise;
+    maintenanceLastCheck = now;
+    maintenanceRefreshPromise = fetchMaintenance().finally(() => {
+        maintenanceRefreshPromise = null;
+    });
+    return maintenanceRefreshPromise;
+}
+
+// Cek mode maintenance saat siswa hendak mengetuk/mengisi identitas.
+// Jika server baru saja mengaktifkannya, kunci form dan kembalikan ke tahap 1.
+function guardMaintenanceInteraction() {
+    refreshMaintenance().then(on => {
+        if (on) resetForm();
+    });
+}
+
+function initMaintenance() {
+    applyCachedMaintenance();
+    refreshMaintenance(true);
 }
 
 // ==========================================
 // TAHAP 1: VERIFIKASI SISWA (POST)
 // ==========================================
+document.getElementById('studentIdentity').addEventListener('focus', guardMaintenanceInteraction);
+document.getElementById('studentIdentity').addEventListener('click', guardMaintenanceInteraction);
+
 verifyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (await refreshMaintenance()) {
+        resetForm();
+        return;
+    }
+
     const studentIdentity = document.getElementById('studentIdentity').value.trim();
     const studentPin = document.getElementById('studentPin').value.trim();
 
@@ -349,6 +393,14 @@ verifyForm.addEventListener('submit', async (e) => {
         });
         const result = await response.json();
         console.log('[Absensi] verify response:', result);
+
+        // Server menolak karena mode maintenance baru diaktifkan.
+        if (result.maintenance) {
+            applyMaintenance(true);
+            resetForm();
+            showStatusModal("Maintenance", result.message || "Aplikasi sedang dalam mode maintenance. Silakan coba lagi nanti.", false);
+            return;
+        }
 
         // Di Code.gs Anda menggunakan properti 'success', bukan 'status'
         if (result.success) {
@@ -386,7 +438,7 @@ verifyForm.addEventListener('submit', async (e) => {
     } finally {
         // Matikan Loader
         document.getElementById('verifyLoader').classList.add('hidden');
-        btnVerify.disabled = false;
+        btnVerify.disabled = maintenanceMode;
     }
 });
 
@@ -396,6 +448,11 @@ verifyForm.addEventListener('submit', async (e) => {
 attendanceForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentStudentId || !currentStudentPin) return;
+
+    if (await refreshMaintenance()) {
+        resetForm();
+        return;
+    }
 
     const jenisLatihan = document.getElementById('jenisLatihan').value;
     const remark = document.getElementById('remark').value.trim();
@@ -420,6 +477,14 @@ attendanceForm.addEventListener('submit', async (e) => {
         });
         const result = await response.json();
 
+        // Server menolak karena mode maintenance baru diaktifkan.
+        if (result.maintenance) {
+            applyMaintenance(true);
+            resetForm();
+            showStatusModal("Maintenance", result.message || "Aplikasi sedang dalam mode maintenance. Silakan coba lagi nanti.", false);
+            return;
+        }
+
         if (result.success) {
             showStatusModal("Berhasil!", result.message, true);
             resetForm();
@@ -434,7 +499,7 @@ attendanceForm.addEventListener('submit', async (e) => {
     } finally {
         // Matikan Loader
         document.getElementById('submitLoader').classList.add('hidden');
-        btnSubmit.disabled = false;
+        btnSubmit.disabled = maintenanceMode;
     }
 });
 

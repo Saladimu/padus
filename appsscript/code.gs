@@ -132,6 +132,16 @@ function handleMaintenance(value) {
   return { success: true, maintenance: getMaintenanceMode() };
 }
 
+// Dipakai untuk menolak permintaan saat mode maintenance aktif, sehingga
+// klien yang masih membuka halaman lama tetap tidak bisa menulis data.
+function maintenanceBlockResponse() {
+  return {
+    success: false,
+    maintenance: true,
+    message: 'Aplikasi sedang dalam mode maintenance. Silakan coba lagi nanti.'
+  };
+}
+
 function respond(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -268,6 +278,7 @@ function getTodayRecord(studentId) {
 }
 
 function verifyStudent(id, pin) {
+  if (getMaintenanceMode()) return maintenanceBlockResponse();
   if (!id || !pin) return { success: false, message: 'Student ID/Nama dan PIN wajib diisi.' };
   if (id.toString().length > 50 || pin.toString().length > 20) {
     return { success: false, message: 'Student ID/Nama atau PIN terlalu panjang.' };
@@ -528,6 +539,7 @@ function getStudentHistory(studentId) {
 }
 
 function submitAttendance(payload) {
+  if (getMaintenanceMode()) return maintenanceBlockResponse();
   const { id, pin, type, remark } = payload;
   if (VALID_TYPES.indexOf(type) === -1) {
     return { success: false, message: 'Jenis latihan tidak valid.' };
