@@ -16,6 +16,9 @@ if ('serviceWorker' in navigator) {
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8mxqoDrC0Wjqn-xPkTeqEMaBce2nGJR1ASrgazuTHSizvfhDEm8jfTCOP7mtHAr5zMQ/exec";
 const LS_CONFIG = 'choir_absensi_config';
 const LS_PWD = 'choir_absensi_pwd';
+const LS_ADMIN_LOCK = 'choir_admin_lock_v1';
+const ADMIN_MAX_ATTEMPTS = 3;
+const ADMIN_LOCK_MS = 5 * 60 * 1000;
 
 // ==========================================
 // STATE GLOBAL
@@ -36,6 +39,7 @@ const MAINTENANCE_CHECK_MIN_INTERVAL = 10000;
 
 let settingsLocked = true;
 let settingsLockTimer = null;
+let adminLockTimer = null;
 const SETTINGS_LOCK_TIMEOUT = 5 * 60 * 1000;
 let helpLoaded = false;
 
@@ -163,6 +167,90 @@ function hashPassword(pwd) {
 function checkPassword(pwd) {
     const stored = localStorage.getItem(LS_PWD);
     return hashPassword(pwd).then(hash => stored ? hash === stored : pwd === '00000');
+}
+
+// ==========================================
+// KUNCI SEMENTARA KATA SANDI ADMIN (3x salah -> 5 menit)
+// ==========================================
+function readAdminLock() {
+    try {
+        const raw = localStorage.getItem(LS_ADMIN_LOCK);
+        if (!raw) return { fails: 0, lockedUntil: 0 };
+        const s = JSON.parse(raw);
+        return { fails: Number(s.fails) || 0, lockedUntil: Number(s.lockedUntil) || 0 };
+    } catch (e) {
+        return { fails: 0, lockedUntil: 0 };
+    }
+}
+
+function writeAdminLock(state) {
+    try { localStorage.setItem(LS_ADMIN_LOCK, JSON.stringify(state)); } catch (e) { /* localStorage tidak tersedia */ }
+}
+
+function adminLockRemaining() {
+    const remain = readAdminLock().lockedUntil - Date.now();
+    return remain > 0 ? remain : 0;
+}
+
+function formatLockRemaining(ms) {
+    const total = Math.ceil(ms / 1000);
+    const m = Math.floor(total / 60);
+    const sec = total % 60;
+    return m + ':' + (sec < 10 ? '0' + sec : String(sec));
+}
+
+function clearAdminLock() {
+    writeAdminLock({ fails: 0, lockedUntil: 0 });
+}
+
+function registerAdminFail() {
+    const s = readAdminLock();
+    let fails = s.fails + 1;
+    let lockedUntil = s.lockedUntil;
+    if (fails >= ADMIN_MAX_ATTEMPTS) {
+        lockedUntil = Date.now() + ADMIN_LOCK_MS;
+        fails = ADMIN_MAX_ATTEMPTS;
+    }
+    writeAdminLock({ fails: fails, lockedUntil: lockedUntil });
+    const remaining = lockedUntil - Date.now();
+    return { fails: fails, locked: remaining > 0, remaining: remaining > 0 ? remaining : 0 };
+}
+
+function setUnlockStatus(msg, type) {
+    const el = document.getElementById('unlockStatus');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.className = 'text-xs mt-2 ' + (type === 'err' ? 'text-red-500' : type === 'ok' ? 'text-green-600' : 'text-gray-500');
+}
+
+function refreshAdminLockUI() {
+    const remain = adminLockRemaining();
+    const locked = remain > 0;
+    const inputEl = document.getElementById('unlockPwd');
+    const btnEl = document.getElementById('btnUnlock');
+
+    if (inputEl) inputEl.disabled = locked;
+    if (btnEl) {
+        btnEl.disabled = locked;
+        btnEl.classList.toggle('opacity-50', locked);
+        btnEl.classList.toggle('cursor-not-allowed', locked);
+    }
+
+    if (locked) {
+        setUnlockStatus('Terkunci sementara. Coba lagi dalam ' + formatLockRemaining(remain) + '.', 'err');
+        if (!adminLockTimer) adminLockTimer = setInterval(refreshAdminLockUI, 1000);
+    } else {
+        if (adminLockTimer) {
+            clearInterval(adminLockTimer);
+            adminLockTimer = null;
+        }
+        const s = readAdminLock();
+        if (s.lockedUntil && s.fails >= ADMIN_MAX_ATTEMPTS) {
+            // Masa kunci baru saja berakhir: buka kembali percobaan.
+            clearAdminLock();
+            setUnlockStatus('', '');
+        }
+    }
 }
 
 // Renderer Markdown sederhana untuk panduan (Absensi.md)
@@ -642,6 +730,7 @@ function applySecurityState() {
         document.getElementById('backupStatus').textContent = '';
         collapseSettingsSections();
     }
+    refreshAdminLockUI();
 }
 
 function resetSettingsLockTimer() {
@@ -661,6 +750,12 @@ function stopSettingsLockTimer() {
 }
 
 function unlockSettings() {
+    const remain = adminLockRemaining();
+    if (remain > 0) {
+        refreshAdminLockUI();
+        showStatusModal("Terkunci Sementara", "Terlalu banyak percobaan salah. Coba lagi dalam " + formatLockRemaining(remain) + ".", false);
+        return;
+    }
     const p = document.getElementById('unlockPwd').value;
     if (!p) {
         showStatusModal("Gagal", "Masukkan kata sandi admin terlebih dahulu.", false);
@@ -668,9 +763,19 @@ function unlockSettings() {
     }
     checkPassword(p).then(ok => {
         if (!ok) {
-            showStatusModal("Gagal", "Kata sandi yang dimasukkan salah.", false);
+            const res = registerAdminFail();
+            refreshAdminLockUI();
+            if (res.locked) {
+                showStatusModal("Terkunci Sementara", "Kata sandi salah " + ADMIN_MAX_ATTEMPTS + " kali. Pengaturan terkunci sementara selama 5 menit. Coba lagi dalam " + formatLockRemaining(res.remaining) + ".", false);
+            } else {
+                setUnlockStatus("Kata sandi salah. Percobaan " + res.fails + " dari " + ADMIN_MAX_ATTEMPTS + ".", 'err');
+                showStatusModal("Gagal", "Kata sandi yang dimasukkan salah. Percobaan " + res.fails + " dari " + ADMIN_MAX_ATTEMPTS + ".", false);
+            }
             return;
         }
+        clearAdminLock();
+        refreshAdminLockUI();
+        setUnlockStatus('', '');
         document.getElementById('unlockPwd').value = '';
         settingsLocked = false;
         applySecurityState();
