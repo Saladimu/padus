@@ -367,11 +367,6 @@ document.getElementById('studentIdentity').addEventListener('click', guardMainte
 verifyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    if (await refreshMaintenance()) {
-        resetForm();
-        return;
-    }
-
     const studentIdentity = document.getElementById('studentIdentity').value.trim();
     const studentPin = document.getElementById('studentPin').value.trim();
 
@@ -448,11 +443,6 @@ verifyForm.addEventListener('submit', async (e) => {
 attendanceForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentStudentId || !currentStudentPin) return;
-
-    if (await refreshMaintenance()) {
-        resetForm();
-        return;
-    }
 
     const jenisLatihan = document.getElementById('jenisLatihan').value;
     const remark = document.getElementById('remark').value.trim();
