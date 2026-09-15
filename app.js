@@ -1017,6 +1017,21 @@ function statusClass(status) {
     return String(status || '').toUpperCase() === 'IZIN' ? 'text-yellow-600' : 'text-green-600';
 }
 
+// Hitung rincian Hadir vs Izin dari sekumpulan catatan absensi.
+function countAttendanceStatus(records) {
+    const list = records || [];
+    let izin = 0;
+    list.forEach(function (r) {
+        if (r && String(r.status || '').toUpperCase() === 'IZIN') izin++;
+    });
+    return { total: list.length, hadir: list.length - izin, izin: izin };
+}
+
+// Label ringkas rincian, mis. "8 kali hadir . 2 kali izin"
+function formatAttendanceCount(counts) {
+    return counts.hadir + ' kali hadir \u00b7 ' + counts.izin + ' kali izin';
+}
+
 function renderReport(res) {
     document.getElementById('reportDateDisplay').textContent = formatDateDisplay(res.date) || res.date;
     const records = res.records || [];
@@ -1482,6 +1497,17 @@ function closeStudentModal() {
 // ==========================================
 // RIWAYAT ABSENSI PER SISWA
 // ==========================================
+function toggleHistoryMonth(btn) {
+    if (!btn) return;
+    const body = btn.nextElementSibling;
+    if (!body) return;
+    const willOpen = body.classList.contains('hidden');
+    body.classList.toggle('hidden', !willOpen);
+    btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    const icon = btn.querySelector('svg');
+    if (icon) icon.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
 function showStudentHistory(index) {
     let student = null;
     if (typeof index === 'object' && index !== null) {
@@ -1511,7 +1537,7 @@ function showStudentHistory(index) {
                 return;
             }
             const records = (res.records || []).filter(r => dateInRange(r.date, getYearRange()));
-            document.getElementById('historyStatus').textContent = records.length + ' kali hadir';
+            document.getElementById('historyStatus').textContent = 'Total: ' + formatAttendanceCount(countAttendanceStatus(records));
             document.getElementById('historyEmpty').classList.toggle('hidden', records.length > 0);
 
             const monthGroups = [];
@@ -1548,12 +1574,19 @@ function showStudentHistory(index) {
                     </div>
                 </div>`;
                 }).join('');
+                const counts = countAttendanceStatus(group.records);
                 return `<div class="mb-3">
-                    <div class="flex items-center justify-between px-1 mb-1.5">
-                        <span class="text-sm font-bold text-indigo-700">${escapeHtml(label)}</span>
-                        <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">${group.records.length} kali hadir</span>
-                    </div>
-                    <div class="space-y-2">${items}</div>
+                    <button type="button" onclick="toggleHistoryMonth(this)" aria-expanded="true" class="w-full flex items-center justify-between gap-2 px-1 mb-1.5 text-left">
+                        <span class="flex items-center gap-1.5 text-sm font-bold text-indigo-700 min-w-0">
+                            <svg class="w-4 h-4 text-indigo-500 shrink-0" style="transition:transform 0.2s;transform:rotate(180deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <span class="truncate">${escapeHtml(label)}</span>
+                        </span>
+                        <span class="flex items-center gap-1 shrink-0">
+                            <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.hadir} kali hadir</span>
+                            <span class="text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.izin} kali izin</span>
+                        </span>
+                    </button>
+                    <div class="history-month-body space-y-2">${items}</div>
                 </div>`;
             }).join('');
 
@@ -1567,7 +1600,8 @@ function showStudentHistory(index) {
                 if (parts.length === 2) {
                     label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 }
-                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + group.records.length + ' kali hadir</td></tr>';
+                const counts = countAttendanceStatus(group.records);
+                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + formatAttendanceCount(counts) + '</td></tr>';
                 const sorted = group.records.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
                 sorted.forEach((r, i) => {
                     const seq = i + 1;
@@ -1592,8 +1626,8 @@ function showStudentHistory(index) {
                 if (parts.length === 2) {
                     label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 }
-                return '<div>' + escapeHtml(label) + ' : ' + g.records.length + ' kali hadir</div>';
-            }).join('') + '<div style="font-weight:bold; border-top:1px solid #999; margin-top:2px; padding-top:2px;">Total : ' + records.length + ' kali hadir</div>' : '';
+                return '<div>' + escapeHtml(label) + ' : ' + formatAttendanceCount(countAttendanceStatus(g.records)) + '</div>';
+            }).join('') + '<div style="font-weight:bold; border-top:1px solid #999; margin-top:2px; padding-top:2px;">Total : ' + formatAttendanceCount(countAttendanceStatus(records)) + '</div>' : '';
         })
         .catch(() => {
             document.getElementById('historyStatus').textContent = 'Koneksi gagal. Periksa backend.';
@@ -1721,14 +1755,19 @@ document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveConfig();
 });
 
-const settingsModalEl = document.getElementById('settingsModal');
-if (settingsModalEl) {
-    ['click', 'input', 'change', 'keydown'].forEach(function (evt) {
-        settingsModalEl.addEventListener(evt, function () {
+// Interaksi di dalam modal admin (termasuk Riwayat Absensi) dihitung sebagai
+// aktivitas sehingga pengaturan tidak terkunci otomatis saat sedang dipakai.
+function bindSettingsActivityReset(el) {
+    if (!el) return;
+    ['click', 'input', 'change', 'keydown', 'scroll', 'mousemove', 'touchstart', 'touchmove'].forEach(function (evt) {
+        el.addEventListener(evt, function () {
             resetSettingsLockTimer();
         }, true);
     });
 }
+['settingsModal', 'reportModal', 'studentModal', 'historyModal', 'adminModal'].forEach(function (id) {
+    bindSettingsActivityReset(document.getElementById(id));
+});
 
 // ==========================================
 // INISIALISASI
