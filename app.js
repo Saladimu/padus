@@ -1027,9 +1027,9 @@ function countAttendanceStatus(records) {
     return { total: list.length, hadir: list.length - izin, izin: izin };
 }
 
-// Label ringkas rincian, mis. "8 kali hadir . 2 kali izin"
+// Label ringkas rincian, mis. "8 hadir . 2 izin"
 function formatAttendanceCount(counts) {
-    return counts.hadir + ' kali hadir \u00b7 ' + counts.izin + ' kali izin';
+    return counts.hadir + ' hadir \u00b7 ' + counts.izin + ' izin';
 }
 
 function renderReport(res) {
@@ -1582,8 +1582,8 @@ function showStudentHistory(index) {
                             <span class="truncate">${escapeHtml(label)}</span>
                         </span>
                         <span class="flex items-center gap-1 shrink-0">
-                            <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.hadir} kali hadir</span>
-                            <span class="text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.izin} kali izin</span>
+                            <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.hadir} hadir</span>
+                            <span class="text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-0.5 rounded-full whitespace-nowrap">${counts.izin} izin</span>
                         </span>
                     </button>
                     <div class="history-month-body space-y-2">${items}</div>
