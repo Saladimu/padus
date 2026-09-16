@@ -1601,7 +1601,7 @@ function showStudentHistory(index) {
                     label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 }
                 const counts = countAttendanceStatus(group.records);
-                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; ' + formatAttendanceCount(counts) + '</td></tr>';
+                let html = '<tr><td style="border:1px solid #999;padding:6px;text-align:left;font-weight:bold;background:#f1f5f9;" colspan="6">' + escapeHtml(label) + ' &mdash; [ ' + formatAttendanceCount(counts) + ' ]</td></tr>';
                 const sorted = group.records.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
                 sorted.forEach((r, i) => {
                     const seq = i + 1;
