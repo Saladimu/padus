@@ -20,6 +20,11 @@ const LS_ADMIN_LOCK = 'choir_admin_lock_v1';
 const ADMIN_MAX_ATTEMPTS = 3;
 const ADMIN_LOCK_MS = 5 * 60 * 1000;
 
+// Backend Apps Script kadang lambat lalu mengembalikan halaman HTML
+// alih-alih JSON. Beri batas waktu dan ulangi permintaan otomatis.
+const API_TIMEOUT_MS = 15000;
+const API_MAX_RETRIES = 2;
+
 // ==========================================
 // STATE GLOBAL
 // ==========================================
@@ -35,7 +40,7 @@ let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
 let maintenanceRefreshPromise = null;
 let maintenanceLastCheck = 0;
-const MAINTENANCE_CHECK_MIN_INTERVAL = 10000;
+const MAINTENANCE_CHECK_MIN_INTERVAL = 60000;
 
 let settingsLocked = true;
 let settingsLockTimer = null;
@@ -147,6 +152,55 @@ function dateInRange(dateStr, range) {
 function getApiUrl() {
     const cfg = getConfig();
     return cfg.apiUrl && cfg.apiUrl.trim() ? cfg.apiUrl.trim() : GAS_WEB_APP_URL;
+}
+
+// POST JSON ke backend dengan batas waktu dan percobaan ulang.
+// Respons non-JSON (halaman error Google) atau jaringan lambat akan
+// dicoba ulang, kecuali `options.retries` diisi.
+function apiPost(payload, options) {
+    const opts = options || {};
+    const url = opts.url || getApiUrl();
+    const timeoutMs = opts.timeoutMs || API_TIMEOUT_MS;
+    const maxRetries = typeof opts.retries === 'number' ? opts.retries : API_MAX_RETRIES;
+    const body = JSON.stringify(payload);
+
+    function run(remaining) {
+        const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        let timer = null;
+        const clear = function () {
+            if (timer) { clearTimeout(timer); timer = null; }
+        };
+        if (controller) {
+            timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+        }
+        const init = { method: 'POST', body: body };
+        if (controller) init.signal = controller.signal;
+
+        return fetch(url, init)
+            .then(function (response) {
+                return response.text().then(function (text) {
+                    clear();
+                    return text;
+                });
+            })
+            .then(function (text) {
+                const trimmed = (text || '').trim();
+                if (trimmed.charAt(0) !== '{' && trimmed.charAt(0) !== '[') {
+                    throw new Error('Respons backend tidak valid.');
+                }
+                return JSON.parse(trimmed);
+            })
+            .catch(function (err) {
+                clear();
+                if (remaining <= 0) throw err;
+                const delay = 600 * (maxRetries - remaining + 1);
+                return new Promise(function (resolve) {
+                    setTimeout(function () { resolve(run(remaining - 1)); }, delay);
+                });
+            });
+    }
+
+    return run(maxRetries);
 }
 
 function hashPassword(pwd) {
@@ -359,8 +413,7 @@ function toggleMaintenance() {
     maintenanceSyncInFlight = true;
     const newValue = !maintenanceMode;
     applyMaintenance(newValue);
-    fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance', value: newValue }) })
-        .then(r => r.json())
+    apiPost({ action: 'maintenance', value: newValue }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
                 applyMaintenance(!!res.maintenance);
@@ -396,17 +449,18 @@ function applyMaintenance(on, persist) {
 function applyCachedMaintenance() {
     try {
         const raw = localStorage.getItem(MAINTENANCE_CACHE_KEY);
-        if (!raw) return;
+        if (!raw) return false;
         const entry = JSON.parse(raw);
         if (entry && typeof entry.value === 'boolean' && (Date.now() - entry.ts) < MAINTENANCE_CACHE_TTL) {
             applyMaintenance(entry.value, false);
+            return true;
         }
     } catch (e) { /* abaikan data rusak */ }
+    return false;
 }
 
 function fetchMaintenance() {
-    return fetch(maintenanceApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'maintenance' }) })
-        .then(r => r.json())
+    return apiPost({ action: 'maintenance' }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
                 const on = !!res.maintenance;
@@ -442,8 +496,7 @@ function guardMaintenanceInteraction() {
 }
 
 function initMaintenance() {
-    applyCachedMaintenance();
-    refreshMaintenance(true);
+    if (!applyCachedMaintenance()) refreshMaintenance(true);
 }
 
 // ==========================================
@@ -470,11 +523,7 @@ verifyForm.addEventListener('submit', async (e) => {
     };
 
     try {
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        const result = await apiPost(payload);
         console.log('[Absensi] verify response:', result);
 
         // Server menolak karena mode maintenance baru diaktifkan.
@@ -549,11 +598,7 @@ attendanceForm.addEventListener('submit', async (e) => {
     };
 
     try {
-        const response = await fetch(getApiUrl(), {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        const result = await apiPost(payload);
 
         // Server menolak karena mode maintenance baru diaktifkan.
         if (result.maintenance) {
@@ -563,7 +608,9 @@ attendanceForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        if (result.success) {
+        // Bila percobaan pertama berhasil namun responsnya hilang lalu
+        // diulang, server membalas "sudah tercatat" - perlakukan sebagai sukses.
+        if (result.success || /sudah tercatat/i.test(result.message || '')) {
             showStatusModal("Berhasil!", result.message, true);
             resetForm();
             invalidatePeekCache();
@@ -840,8 +887,7 @@ function renderBackupList(backups, keep) {
 function loadBackupList() {
     const listEl = document.getElementById('backupList');
     listEl.innerHTML = '<span class="text-gray-400">Memuat...</span>';
-    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'backuplist' }) })
-        .then(r => r.json())
+    return apiPost({ action: 'backuplist' })
         .then(res => {
             if (!res.success) {
                 listEl.innerHTML = '<span class="text-red-500">' + escapeHtml(res.message || 'Gagal memuat daftar backup.') + '</span>';
@@ -856,8 +902,7 @@ function backupSheets() {
     const btn = document.getElementById('btnShowBackup');
     btn.disabled = true;
     setBackupStatus('Membuat backup...', '');
-    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'backup' }) })
-        .then(r => r.json())
+    apiPost({ action: 'backup' })
         .then(res => {
             if (!res.success) {
                 setBackupStatus(res.message || 'Gagal membuat backup.', 'err');
@@ -959,8 +1004,7 @@ function testConnection() {
     }
 
     setConnStatus('Menguji koneksi...', '');
-    fetch(url, { method: 'POST', body: JSON.stringify({ action: 'ping' }) })
-        .then(r => r.json())
+    apiPost({ action: 'ping' }, { url: url, retries: 1 })
         .then(res => {
             if (res && res.success === true) {
                 setConnStatus('Koneksi berhasil! Backend aktif dan dapat digunakan.', 'ok');
@@ -1000,8 +1044,7 @@ function loadReport() {
         return;
     }
     setReportStatus('Memuat data...', '');
-    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date }) })
-        .then(r => r.json())
+    apiPost({ action: 'report', date: date })
         .then(res => {
             if (!res.success) {
                 setReportStatus(res.message || 'Gagal memuat laporan.', 'err');
@@ -1220,8 +1263,7 @@ function renderPeekMessage(msg, isError) {
 
 function fetchPeekToday() {
     const date = todayISO();
-    return fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'report', date: date, lean: true }) })
-        .then(r => r.json())
+    return apiPost({ action: 'report', date: date, lean: true })
         .then(res => {
             peekCache = { date: date, ts: Date.now(), res: res };
             savePersistedPeekCache(peekCache);
@@ -1358,8 +1400,7 @@ function setStudentStatus(msg, type) {
 
 function loadStudents() {
     setStudentStatus('Memuat daftar siswa...', '');
-    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'students' }) })
-        .then(r => r.json())
+    apiPost({ action: 'students' })
         .then(res => {
             if (!res.success) {
                 setStudentStatus(res.message || 'Gagal memuat daftar siswa.', 'err');
@@ -1529,8 +1570,7 @@ function showStudentHistory(index) {
     document.getElementById('historyEmpty').classList.add('hidden');
     document.getElementById('historyStatus').textContent = 'Memuat riwayat...';
 
-    fetch(getApiUrl(), { method: 'POST', body: JSON.stringify({ action: 'history', id: student.id }) })
-        .then(r => r.json())
+    apiPost({ action: 'history', id: student.id })
         .then(res => {
             if (!res.success) {
                 document.getElementById('historyStatus').textContent = res.message || 'Gagal memuat riwayat.';
