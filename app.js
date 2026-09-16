@@ -1626,7 +1626,7 @@ function showStudentHistory(index) {
                 if (parts.length === 2) {
                     label = new Date(Number(parts[0]), Number(parts[1]) - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
                 }
-                return '<div>' + escapeHtml(label) + ' : ' + formatAttendanceCount(countAttendanceStatus(g.records)) + '</div>';
+                return '<div>' + escapeHtml(label) + ' : [ ' + formatAttendanceCount(countAttendanceStatus(g.records)) + ' ]</div>';
             }).join('') + '<div style="font-weight:bold; border-top:1px solid #999; margin-top:2px; padding-top:2px;">Total : ' + formatAttendanceCount(countAttendanceStatus(records)) + '</div>' : '';
         })
         .catch(() => {
