@@ -947,8 +947,8 @@ function backupStampKey(stamp) {
 
 // Dua warna latar lembut yang bergilir untuk tiap pasangan backup.
 const BACKUP_PAIR_COLORS = [
-    { bg: '#eff6ff', border: '#bfdbfe' },
-    { bg: '#f0fdf4', border: '#bbf7d0' }
+    { bg: '#eff6ff', border: '#bfdbfe', num: '#1d4ed8' },
+    { bg: '#f0fdf4', border: '#bbf7d0', num: '#15803d' }
 ];
 
 function renderBackupList(backups, keep) {
@@ -988,11 +988,14 @@ function renderBackupList(backups, keep) {
                 <span class="text-gray-500">${Number(b.rows) || 0} records</span>
             </div>`;
         }).join('');
-        return `<div class="rounded-lg" style="background-color:${color.bg};border:1px solid ${color.border};padding:6px 8px;">
-            <div class="mb-1">
-                <span class="font-semibold text-gray-700">${escapeHtml(formatBackupStamp(g.stamp))}</span>
+        return `<div class="rounded-lg flex items-center gap-2" style="background-color:${color.bg};border:1px solid ${color.border};padding:6px 8px;">
+            <span class="font-bold shrink-0" style="font-size:20px;line-height:1;min-width:24px;text-align:center;color:${color.num};">${i + 1}</span>
+            <div class="flex-1 min-w-0">
+                <div class="mb-1">
+                    <span class="font-semibold text-gray-700">${escapeHtml(formatBackupStamp(g.stamp))}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px;">${rows}</div>
             </div>
-            <div style="display:flex;flex-direction:column;gap:3px;">${rows}</div>
         </div>`;
     }).join('');
 }
