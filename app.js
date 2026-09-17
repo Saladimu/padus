@@ -54,8 +54,8 @@ const ADMIN_LOCK_MS = 5 * 60 * 1000;
 
 // Backend Apps Script kadang lambat lalu mengembalikan halaman HTML
 // alih-alih JSON. Beri batas waktu dan ulangi permintaan otomatis.
-const API_TIMEOUT_MS = 15000;
-const API_MAX_RETRIES = 2;
+const API_TIMEOUT_MS = 10000;
+const API_MAX_RETRIES = 3;
 
 // ==========================================
 // STATE GLOBAL
@@ -225,7 +225,7 @@ function apiPost(payload, options) {
             .catch(function (err) {
                 clear();
                 if (remaining <= 0) throw err;
-                const delay = 600 * (maxRetries - remaining + 1);
+                const delay = 500 * (maxRetries - remaining + 1) + Math.floor(Math.random() * 250);
                 return new Promise(function (resolve) {
                     setTimeout(function () { resolve(run(remaining - 1)); }, delay);
                 });
@@ -598,7 +598,7 @@ verifyForm.addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error(error);
-        showStatusModal("Error", "Gagal terhubung ke server backend.", false);
+        showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Periksa koneksi Anda lalu coba lagi.", false);
     } finally {
         // Matikan Loader
         document.getElementById('verifyLoader').classList.add('hidden');
@@ -630,7 +630,7 @@ attendanceForm.addEventListener('submit', async (e) => {
     };
 
     try {
-        const result = await apiPost(payload);
+        const result = await apiPost(payload, { retries: 2 });
 
         // Server menolak karena mode maintenance baru diaktifkan.
         if (result.maintenance) {
@@ -652,7 +652,7 @@ attendanceForm.addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error(error);
-        showStatusModal("Error", "Terjadi gangguan jaringan saat mengirim data.", false);
+        showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Coba lagi sebentar lagi (absensi aman dari data ganda).", false);
     } finally {
         // Matikan Loader
         document.getElementById('submitLoader').classList.add('hidden');
@@ -1015,7 +1015,7 @@ function backupSheets() {
     const btn = document.getElementById('btnShowBackup');
     btn.disabled = true;
     setBackupStatus('Membuat backup...', '');
-    apiPost({ action: 'backup' })
+    apiPost({ action: 'backup' }, { retries: 2 })
         .then(res => {
             if (!res.success) {
                 setBackupStatus(res.message || 'Gagal membuat backup.', 'err');

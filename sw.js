@@ -8,8 +8,8 @@
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v39';
-var ASSET_VERSION = '20260916d';
+var CACHE_NAME = 'choir-absensi-v40';
+var ASSET_VERSION = '20260916e';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -64,20 +64,20 @@ self.addEventListener('fetch', function (event) {
   var request = event.request;
   if (request.method !== 'GET') return;
 
-  // Navigasi halaman: stale-while-revalidate, fallback cache saat offline.
+  // Navigasi halaman: network-first agar rilis terbaru selalu terpakai,
+  // fallback ke cache saat offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then(function (cached) {
-        var network = fetch(request).then(function (response) {
-          if (response && response.status === 200) {
-            var copy = response.clone();
-            caches.open(CACHE_NAME).then(function (cache) {
-              cache.put('./index.html', copy);
-            });
-          }
-          return response;
-        }).catch(function () { return cached; });
-        return cached || network;
+      fetch(request).then(function (response) {
+        if (response && response.status === 200) {
+          var copy = response.clone();
+          caches.open(CACHE_NAME).then(function (cache) {
+            cache.put('./index.html', copy);
+          });
+        }
+        return response;
+      }).catch(function () {
+        return caches.match('./index.html');
       })
     );
     return;
