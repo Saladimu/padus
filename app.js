@@ -6,8 +6,40 @@
 
 // Daftarkan Service Worker lebih awal agar
 // cache aset tersedia sesegera mungkin.
+// Sekaligus deteksi bila ada versi baru terpasang agar pengguna
+// dapat diminta melakukan hard refresh.
+let swRegistration = null;
+let hasSwController = false;
+let updateModalShown = false;
+
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {});
+    hasSwController = !!navigator.serviceWorker.controller;
+
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+        swRegistration = reg;
+        const watchInstalling = function () {
+            const worker = reg.installing;
+            if (!worker) return;
+            worker.addEventListener('statechange', function () {
+                if (worker.state === 'installed' && hasSwController) promptAppUpdate();
+            });
+        };
+        reg.addEventListener('updatefound', watchInstalling);
+        if (reg.installing) watchInstalling();
+    }).catch(function () {});
+
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (hasSwController) promptAppUpdate();
+        hasSwController = true;
+    });
+
+    const checkForAppUpdate = function () {
+        if (swRegistration) swRegistration.update().catch(function () {});
+    };
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') checkForAppUpdate();
+    });
+    setInterval(checkForAppUpdate, 30 * 60 * 1000);
 }
 
 // ==========================================
@@ -700,6 +732,57 @@ function closeStatusModal() {
     }, 300);
 }
 
+// Tampilkan ajakan hard refresh saat versi aplikasi berubah.
+function promptAppUpdate() {
+    if (updateModalShown) return;
+    updateModalShown = true;
+    const modal = document.getElementById('updateModal');
+    const content = document.getElementById('updateModalContent');
+    if (!modal || !content) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(function () {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+        const btn = document.getElementById('btnHardRefresh');
+        if (btn) btn.focus();
+    }, 10);
+}
+
+function dismissUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    const content = document.getElementById('updateModalContent');
+    if (!modal || !content) return;
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(function () {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        updateModalShown = false;
+    }, 300);
+}
+
+// Bersihkan cache + service worker lalu muat ulang dari jaringan.
+function hardRefreshApp() {
+    const reload = function () { window.location.reload(); };
+    const clearCaches = function () {
+        if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            }).catch(function () {}).then(reload);
+        } else {
+            reload();
+        }
+    };
+    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).catch(function () {}).then(clearCaches);
+    } else {
+        clearCaches();
+    }
+}
+
 function toggleAdminModal() {
     const modal = document.getElementById('adminModal');
     if (modal.classList.contains('hidden')) {
@@ -862,6 +945,12 @@ function backupStampKey(stamp) {
     return s.substring(4, 6) + s.substring(2, 4) + s.substring(0, 2);
 }
 
+// Dua warna latar lembut yang bergilir untuk tiap pasangan backup.
+const BACKUP_PAIR_COLORS = [
+    { bg: '#eff6ff', border: '#bfdbfe' },
+    { bg: '#f0fdf4', border: '#bbf7d0' }
+];
+
 function renderBackupList(backups, keep) {
     const listEl = document.getElementById('backupList');
     if (keep) document.getElementById('backupKeepLabel').textContent = keep;
@@ -870,16 +959,40 @@ function renderBackupList(backups, keep) {
         listEl.innerHTML = '<span class="text-gray-400">Belum ada backup.</span>';
         return;
     }
-    const sorted = items.slice().sort(function (a, b) {
-        const ka = backupStampKey(a.stamp);
-        const kb = backupStampKey(b.stamp);
-        if (ka !== kb) return kb.localeCompare(ka);
-        return String(a.name).localeCompare(String(b.name));
+
+    // Kelompokkan backup menjadi pasangan per tanggal (STUDENTS + ATTENDANCE).
+    const groups = [];
+    const byStamp = {};
+    items.forEach(function (b) {
+        const stamp = String(b.stamp || '');
+        if (!byStamp[stamp]) {
+            byStamp[stamp] = { stamp: stamp, items: [] };
+            groups.push(byStamp[stamp]);
+        }
+        byStamp[stamp].items.push(b);
     });
-    listEl.innerHTML = sorted.map(function (b) {
-        return `<div class="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
-            <code class="bg-gray-100 text-gray-800 rounded" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;padding:1px 5px;">${escapeHtml(b.name)}</code>
-            <span class="text-gray-500">${escapeHtml(formatBackupStamp(b.stamp))} &middot; ${Number(b.rows) || 0} records</span>
+    groups.sort(function (a, b) {
+        return backupStampKey(b.stamp).localeCompare(backupStampKey(a.stamp));
+    });
+    groups.forEach(function (g) {
+        g.items.sort(function (a, b) {
+            return String(a.name).localeCompare(String(b.name));
+        });
+    });
+
+    listEl.innerHTML = groups.map(function (g, i) {
+        const color = BACKUP_PAIR_COLORS[i % BACKUP_PAIR_COLORS.length];
+        const rows = g.items.map(function (b) {
+            return `<div class="flex items-center justify-between gap-2 rounded" style="background-color:rgba(255,255,255,0.72);padding:3px 6px;">
+                <code class="text-gray-800 rounded" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;background-color:rgba(255,255,255,0.8);padding:1px 5px;">${escapeHtml(b.name)}</code>
+                <span class="text-gray-500">${Number(b.rows) || 0} records</span>
+            </div>`;
+        }).join('');
+        return `<div class="rounded-lg" style="background-color:${color.bg};border:1px solid ${color.border};padding:6px 8px;">
+            <div class="mb-1">
+                <span class="font-semibold text-gray-700">${escapeHtml(formatBackupStamp(g.stamp))}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">${rows}</div>
         </div>`;
     }).join('');
 }
