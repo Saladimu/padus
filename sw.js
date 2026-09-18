@@ -8,8 +8,8 @@
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v41';
-var ASSET_VERSION = '20260916f';
+var CACHE_NAME = 'choir-absensi-v42';
+var ASSET_VERSION = '20260916g';
 var CORE_ASSETS = [
   './',
   './index.html',

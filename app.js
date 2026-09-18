@@ -1611,7 +1611,7 @@ function renderStudentList() {
         printHtml += g.students.map(function (s, i) {
             return '<tr>' +
                 '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-                '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.name) + '</td>' +
+                '<td style="border:1px solid #999;padding:6px;text-align:left;">' + escapeHtml(s.name) + '</td>' +
                 '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.id) + '</td>' +
                 '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(s.className) + '</td>' +
                 '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(isActive(s) ? 'Aktif' : 'Nonaktif') + '</td>' +
@@ -1765,7 +1765,7 @@ function showStudentHistory(index) {
                     const time = ts.length >= 19 ? ts.substring(11, 16) : '';
                     html += '<tr>' +
                         '<td style="border:1px solid #999;padding:6px;text-align:center;">' + seq + '</td>' +
-                        '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(formatDateDisplay(r.date) || r.date) + '</td>' +
+                        '<td style="border:1px solid #999;padding:6px;text-align:left;">' + escapeHtml(formatDateDisplay(r.date) || r.date) + '</td>' +
                         '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(time) + '</td>' +
                         '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.type) + '</td>' +
                         '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.remark) + '</td>' +
