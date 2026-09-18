@@ -152,8 +152,15 @@ function setConfig(cfg) {
     localStorage.setItem(LS_CONFIG, JSON.stringify(cfg));
 }
 
+// Batas tahun ekskul berlaku selama tidak dimatikan (default aktif agar
+// pengaturan lama yang sudah terisi tetap berjalan).
+function isYearRangeEnabled() {
+    return getConfig().yearEnabled !== false;
+}
+
 // Rentang tahun ekskul dalam format "MM-YYYY".
 function getYearRange() {
+    if (!isYearRangeEnabled()) return { start: '', end: '' };
     const cfg = getConfig();
     return { start: String(cfg.startYear || '').trim(), end: String(cfg.endYear || '').trim() };
 }
@@ -846,14 +853,12 @@ function applySecurityState() {
     document.getElementById('studentBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('btnShowBackup').disabled = settingsLocked;
     document.getElementById('backupBlock').classList.toggle('hidden', settingsLocked);
-    document.getElementById('startYearSetting').disabled = settingsLocked;
-    document.getElementById('endYearSetting').disabled = settingsLocked;
-    document.getElementById('btnSaveYear').disabled = settingsLocked;
     document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('pwdChangeBlock').classList.toggle('hidden', settingsLocked);
     applyLogoMaintenanceState();
     document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
     document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
+    renderYearRangeToggle();
     if (settingsLocked) {
         document.getElementById('reportStatus').textContent = '';
         document.getElementById('yearStatus').textContent = '';
@@ -1086,7 +1091,51 @@ function setYearStatus(msg, type) {
     el.className = 'text-sm mt-2 ' + (type === 'ok' ? 'text-green-600' : type === 'err' ? 'text-red-500' : 'text-gray-500');
 }
 
+// Perbarui tampilan tombol ON/OFF dan aktif/nonaktifkan input rentang tahun.
+function renderYearRangeToggle() {
+    const toggle = document.getElementById('yearEnabledToggle');
+    const knob = document.getElementById('yearEnabledKnob');
+    const fields = document.getElementById('yearRangeFields');
+    const toggleStatus = document.getElementById('yearToggleStatus');
+    if (!toggle) return;
+    const enabled = isYearRangeEnabled();
+    const active = enabled && !settingsLocked;
+    toggle.setAttribute('aria-checked', active ? 'true' : 'false');
+    toggle.disabled = settingsLocked;
+    toggle.classList.toggle('bg-blue-600', active);
+    toggle.classList.toggle('bg-gray-300', !active);
+    if (knob) {
+        knob.classList.toggle('translate-x-6', active);
+        knob.classList.toggle('translate-x-1', !active);
+    }
+    if (fields) {
+        fields.classList.toggle('opacity-60', !active);
+        document.getElementById('startYearSetting').disabled = !active;
+        document.getElementById('endYearSetting').disabled = !active;
+        document.getElementById('btnSaveYear').disabled = !active;
+    }
+    if (toggleStatus) {
+        toggleStatus.textContent = enabled
+            ? (settingsLocked ? 'Batasan tahun ekskul aktif (terkunci).' : 'Batasan tahun ekskul aktif.')
+            : 'Batasan tahun ekskul nonaktif.';
+        toggleStatus.className = 'text-xs mt-2 font-medium ' + (enabled ? 'text-green-600' : 'text-gray-500');
+    }
+}
+
+function toggleYearRange() {
+    if (settingsLocked) return;
+    const cfg = getConfig();
+    cfg.yearEnabled = !isYearRangeEnabled();
+    setConfig(cfg);
+    renderYearRangeToggle();
+    setYearStatus('', '');
+}
+
 function saveYearRange() {
+    if (!isYearRangeEnabled()) {
+        setYearStatus('Aktifkan batas tahun ekskul untuk menyimpan rentang.', 'err');
+        return;
+    }
     const start = document.getElementById('startYearSetting').value.trim();
     const end = document.getElementById('endYearSetting').value.trim();
     if (start && !isValidMonthYear(start)) {
@@ -1897,6 +1946,7 @@ document.getElementById('btnChangePwd').addEventListener('click', changePassword
 document.getElementById('btnTestConn').addEventListener('click', testConnection);
 document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
 document.getElementById('btnSaveYear').addEventListener('click', saveYearRange);
+document.getElementById('yearEnabledToggle').addEventListener('click', toggleYearRange);
 document.getElementById('btnShowReport').addEventListener('click', loadReport);
 document.getElementById('reportDate').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') loadReport();
