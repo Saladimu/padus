@@ -53,8 +53,9 @@ const ADMIN_MAX_ATTEMPTS = 3;
 const ADMIN_LOCK_MS = 5 * 60 * 1000;
 
 // Backend Apps Script kadang lambat lalu mengembalikan halaman HTML
-// alih-alih JSON. Beri batas waktu dan ulangi permintaan otomatis.
-const API_TIMEOUT_MS = 10000;
+// alih-alih JSON. Timeout harus lebih panjang dari waitLock server (10s)
+// agar klien tidak memutus permintaan yang masih menulis absensi.
+const API_TIMEOUT_MS = 25000;
 const API_MAX_RETRIES = 3;
 
 // ==========================================
@@ -203,6 +204,10 @@ function apiPost(payload, options) {
     const maxRetries = typeof opts.retries === 'number' ? opts.retries : API_MAX_RETRIES;
     const body = JSON.stringify(payload);
 
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        return Promise.reject(new Error('Tidak ada koneksi internet.'));
+    }
+
     function run(remaining) {
         const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
         let timer = null;
@@ -212,7 +217,7 @@ function apiPost(payload, options) {
         if (controller) {
             timer = setTimeout(function () { controller.abort(); }, timeoutMs);
         }
-        const init = { method: 'POST', body: body };
+        const init = { method: 'POST', body: body, cache: 'no-store' };
         if (controller) init.signal = controller.signal;
 
         return fetch(url, init)
@@ -231,6 +236,7 @@ function apiPost(payload, options) {
             })
             .catch(function (err) {
                 clear();
+                if (typeof navigator !== 'undefined' && navigator.onLine === false) throw err;
                 if (remaining <= 0) throw err;
                 const delay = 500 * (maxRetries - remaining + 1) + Math.floor(Math.random() * 250);
                 return new Promise(function (resolve) {
