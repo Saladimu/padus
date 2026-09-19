@@ -172,6 +172,31 @@ function isValidMonthYear(val) {
     return m >= 1 && m <= 12;
 }
 
+function formatMonthYearInput(el, deleting) {
+    if (!el) return;
+    const selStart = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+    const digits = String(el.value || '').replace(/\D/g, '').substring(0, 6);
+    let formatted = digits;
+    if (digits.length > 2 || (digits.length === 2 && !deleting)) {
+        formatted = digits.substring(0, 2) + '-' + digits.substring(2);
+    }
+    if (el.value === formatted) return;
+    const insertedDash = formatted.charAt(2) === '-' && String(el.value).charAt(2) !== '-';
+    el.value = formatted;
+    let nextPos = selStart;
+    if (insertedDash && selStart >= 2) nextPos = selStart + 1;
+    try { el.setSelectionRange(nextPos, nextPos); } catch (e) { /* abaikan bila tidak didukung */ }
+}
+
+function bindMonthYearInput(el) {
+    if (!el) return;
+    el.addEventListener('input', function () {
+        const prevLen = el.dataset.prevLen ? Number(el.dataset.prevLen) : 0;
+        formatMonthYearInput(el, el.value.length < prevLen);
+        el.dataset.prevLen = String(el.value.length);
+    });
+}
+
 // Konversi "MM-YYYY" menjadi "YYYY-MM" agar dapat dibandingkan secara leksikografis.
 function monthYearToYM(val) {
     return String(val || '').substring(3, 7) + '-' + String(val || '').substring(0, 2);
@@ -1952,6 +1977,8 @@ document.getElementById('btnChangePwd').addEventListener('click', changePassword
 document.getElementById('btnTestConn').addEventListener('click', testConnection);
 document.getElementById('btnSaveConn').addEventListener('click', saveConfig);
 document.getElementById('btnSaveYear').addEventListener('click', saveYearRange);
+bindMonthYearInput(document.getElementById('startYearSetting'));
+bindMonthYearInput(document.getElementById('endYearSetting'));
 document.getElementById('yearEnabledToggle').addEventListener('click', toggleYearRange);
 document.getElementById('btnShowReport').addEventListener('click', loadReport);
 document.getElementById('reportDate').addEventListener('keydown', (e) => {
