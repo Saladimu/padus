@@ -22,8 +22,22 @@ const VERIFY_WINDOW_MIN = 5;         // durasi blokir (menit)
 const VERIFY_GLOBAL_MAX_FAILS = 50;  // pengaman global bila banyak percobaan gagal
 const VERIFY_CACHE_TTL = 300;        // detik (5 menit)
 
+let cachedVerifyCache = null;
 function getVerifyCache() {
-  return CacheService.getScriptCache();
+  if (!cachedVerifyCache) cachedVerifyCache = CacheService.getScriptCache();
+  return cachedVerifyCache;
+}
+
+let cachedScriptTimeZone = null;
+function getScriptTimeZone() {
+  if (cachedScriptTimeZone === null) cachedScriptTimeZone = Session.getScriptTimeZone();
+  return cachedScriptTimeZone;
+}
+
+let cachedSpreadsheet = null;
+function getSpreadsheet() {
+  if (!cachedSpreadsheet) cachedSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  return cachedSpreadsheet;
 }
 
 function verifyFailCountKey(idKey) {
@@ -169,7 +183,7 @@ function debugCheck(studentId) {
   return {
     success: true,
     todayGMT7: dateString,
-    scriptTimezone: Session.getScriptTimeZone(),
+    scriptTimezone: getScriptTimeZone(),
     targetId: target,
     rowCount: rows.length - 1,
     matches: matches
@@ -177,7 +191,7 @@ function debugCheck(studentId) {
 }
 
 function getSheet(name) {
-  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  return getSpreadsheet().getSheetByName(name);
 }
 
 // Ambil nilai sheet dibatasi getLastRow()/getLastColumn() agar tidak memindai
@@ -242,9 +256,9 @@ function matchesToday(cellValue, todayString) {
   if (!cellValue) return false;
   if (isDateValue(cellValue)) {
     // Object Date dari Sheets kadang gagal dicek dengan instanceof, gunakan isDateValue().
-    const tz = Session.getScriptTimeZone();
+    const tz = getScriptTimeZone();
     if (Utilities.formatDate(cellValue, tz, 'yyyy-MM-dd') === todayString) return true;
-    if (Utilities.formatDate(cellValue, 'GMT+7', 'yyyy-MM-dd') === todayString) return true;
+    if (tz !== 'GMT+7' && Utilities.formatDate(cellValue, 'GMT+7', 'yyyy-MM-dd') === todayString) return true;
     return false;
   }
   const text = String(cellValue).trim();
@@ -260,7 +274,7 @@ function getTodayRecord(studentId) {
   const now = new Date();
   const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
 
-  for (let i = 1; i < data.length; i++) {
+  for (let i = data.length - 1; i >= 1; i--) {
     if (!data[i] || data[i][2] === '') continue;
 
     const recId = data[i][2] ? data[i][2].toString().trim().toUpperCase() : '';
@@ -277,7 +291,7 @@ function getTodayRecord(studentId) {
   return null;
 }
 
-function verifyStudent(id, pin) {
+function verifyStudent(id, pin, skipTodayCheck) {
   if (getMaintenanceMode()) return maintenanceBlockResponse();
   if (!id || !pin) return { success: false, message: 'Student ID/Nama dan PIN wajib diisi.' };
   if (id.toString().length > 50 || pin.toString().length > 20) {
@@ -323,10 +337,12 @@ function verifyStudent(id, pin) {
       data: { id: rowId, name: data[i][1] || '', className: rowClass }
     };
 
-    const todayRecord = getTodayRecord(rowId);
-    if (todayRecord) {
-      response.already = true;
-      response.record = todayRecord;
+    if (!skipTodayCheck) {
+      const todayRecord = getTodayRecord(rowId);
+      if (todayRecord) {
+        response.already = true;
+        response.record = todayRecord;
+      }
     }
 
     return response;
@@ -397,6 +413,7 @@ function getAbsentStudents(attendedIds, attendanceData, targetDate) {
       if (!row || row[2] === '') continue;
       const recId = row[2] ? String(row[2]).trim().toUpperCase() : '';
       if (!recId) continue;
+      if (attendedIds[recId]) continue;
 
       let dateStr = '';
       if (isDateValue(row[1])) dateStr = Utilities.formatDate(row[1], 'GMT+7', 'yyyy-MM-dd');
@@ -545,11 +562,8 @@ function submitAttendance(payload) {
     return { success: false, message: 'Jenis latihan tidak valid.' };
   }
 
-  const verify = verifyStudent(id, pin);
+  const verify = verifyStudent(id, pin, true);
   if (!verify.success) return verify;
-  if (verify.already) {
-    return { success: false, message: 'Absensi Anda untuk hari ini sudah tercatat.' };
-  }
 
   const student = verify.data;
   const studentId = student.id; // Gunakan Student ID kanonik dari sheet
@@ -565,7 +579,7 @@ function submitAttendance(payload) {
     const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
     const timestampString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
 
-    for (let i = 1; i < data.length; i++) {
+    for (let i = data.length - 1; i >= 1; i--) {
       if (!data[i] || data[i][2] === '') continue;
 
       const recId = data[i][2] ? data[i][2].toString().trim().toUpperCase() : '';
@@ -622,7 +636,7 @@ function backupSortKey(stamp) {
 
 // Daftar sheet backup milik satu sheet sumber, terbaru lebih dulu.
 function getBackupSheets(baseName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const list = [];
   ss.getSheets().forEach(function (sheet) {
     const name = sheet.getName();
@@ -637,7 +651,7 @@ function getBackupSheets(baseName) {
 
 // Hapus backup lama sehingga hanya BACKUP_KEEP terbaru yang tersisa.
 function pruneBackups(baseName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   const removed = [];
   getBackupSheets(baseName).slice(BACKUP_KEEP).forEach(function (item) {
     ss.deleteSheet(item.sheet);
@@ -648,7 +662,7 @@ function pruneBackups(baseName) {
 
 // Daftar seluruh backup (STUDENTS + ATTENDANCE) untuk ditampilkan di UI.
 function listBackups() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
 
   const items = [];
@@ -667,7 +681,7 @@ function listBackups() {
 }
 
 function backupSheets() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getSpreadsheet();
   if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
 
   const stamp = Utilities.formatDate(new Date(), 'GMT+7', 'ddMMyy');
