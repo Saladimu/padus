@@ -37,7 +37,10 @@ if ('serviceWorker' in navigator) {
         if (swRegistration) swRegistration.update().catch(function () {});
     };
     document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') checkForAppUpdate();
+        if (document.visibilityState === 'visible') {
+            checkForAppUpdate();
+            if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
+        }
     });
     setInterval(checkForAppUpdate, 30 * 60 * 1000);
 }
@@ -564,7 +567,8 @@ function guardMaintenanceInteraction() {
 }
 
 function initMaintenance() {
-    if (!applyCachedMaintenance()) refreshMaintenance(true);
+    applyCachedMaintenance();
+    refreshMaintenance(true);
 }
 
 // ==========================================
