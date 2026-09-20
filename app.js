@@ -770,6 +770,56 @@ function closeStatusModal() {
     }, 300);
 }
 
+let confirmResolver = null;
+
+function closeConfirmModal(result) {
+    const modal = document.getElementById('confirmModal');
+    const content = document.getElementById('confirmModalContent');
+    if (!modal || !content) {
+        if (confirmResolver) {
+            const resolve = confirmResolver;
+            confirmResolver = null;
+            resolve(!!result);
+        }
+        return;
+    }
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+    if (confirmResolver) {
+        const resolve = confirmResolver;
+        confirmResolver = null;
+        resolve(!!result);
+    }
+}
+
+function showConfirmModal(title, message) {
+    const modal = document.getElementById('confirmModal');
+    const content = document.getElementById('confirmModalContent');
+    if (!modal || !content) return Promise.resolve(false);
+    if (confirmResolver) {
+        const prev = confirmResolver;
+        confirmResolver = null;
+        prev(false);
+    }
+    document.getElementById('confirmTitle').textContent = title || 'Konfirmasi';
+    document.getElementById('confirmMessage').textContent = message || '';
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+        const okBtn = document.getElementById('confirmOk');
+        if (okBtn) okBtn.focus();
+    }, 10);
+    return new Promise(function (resolve) {
+        confirmResolver = resolve;
+    });
+}
+
 // Tampilkan ajakan hard refresh saat versi aplikasi berubah.
 function promptAppUpdate() {
     if (updateModalShown) return;
@@ -987,7 +1037,49 @@ const BACKUP_PAIR_COLORS = [
     { bg: '#f0fdf4', border: '#bbf7d0', num: '#15803d' }
 ];
 
+let lastBackupList = [];
+let lastBackupKeep = 6;
+
+function todayBackupStamp() {
+    const iso = todayISO();
+    return iso.substring(8, 10) + iso.substring(5, 7) + iso.substring(2, 4);
+}
+
+function uniqueBackupStamps(backups) {
+    const seen = {};
+    const stamps = [];
+    (backups || []).forEach(function (b) {
+        const stamp = String(b.stamp || '');
+        if (!stamp || seen[stamp]) return;
+        seen[stamp] = true;
+        stamps.push(stamp);
+    });
+    stamps.sort(function (a, b) {
+        return backupStampKey(b).localeCompare(backupStampKey(a));
+    });
+    return stamps;
+}
+
+function getBackupWarning() {
+    const backups = lastBackupList || [];
+    const keep = Number(lastBackupKeep) || 6;
+    const todayStamp = todayBackupStamp();
+    const stamps = uniqueBackupStamps(backups);
+    const warnings = [];
+    const willReplace = stamps.indexOf(todayStamp) !== -1;
+    if (willReplace) {
+        warnings.push('Backup tanggal ' + formatBackupStamp(todayStamp) + ' sudah ada dan akan diganti.');
+    }
+    if (!willReplace && stamps.length >= keep) {
+        const oldest = stamps[stamps.length - 1];
+        warnings.push('Kuota ' + keep + ' backup terpenuhi. Backup terlama (' + formatBackupStamp(oldest) + ') akan dihapus otomatis.');
+    }
+    return warnings;
+}
+
 function renderBackupList(backups, keep) {
+    lastBackupList = backups || [];
+    if (keep) lastBackupKeep = keep;
     const listEl = document.getElementById('backupList');
     if (keep) document.getElementById('backupKeepLabel').textContent = keep;
     const items = backups || [];
@@ -1050,7 +1142,7 @@ function loadBackupList() {
         .catch(() => { listEl.innerHTML = '<span class="text-red-500">Koneksi gagal. Periksa backend.</span>'; });
 }
 
-function backupSheets() {
+function runBackupSheets() {
     const btn = document.getElementById('btnShowBackup');
     btn.disabled = true;
     setBackupStatus('Membuat backup...', '');
@@ -1066,6 +1158,17 @@ function backupSheets() {
         })
         .catch(() => setBackupStatus('Koneksi gagal. Periksa backend.', 'err'))
         .finally(() => { btn.disabled = settingsLocked; });
+}
+
+function backupSheets() {
+    const warnings = getBackupWarning();
+    if (!warnings.length) {
+        runBackupSheets();
+        return;
+    }
+    showConfirmModal('Peringatan Backup', warnings.join(' ') + ' Lanjutkan?').then(function (ok) {
+        if (ok) runBackupSheets();
+    });
 }
 
 function changePassword() {
@@ -1986,6 +2089,17 @@ document.getElementById('reportDate').addEventListener('keydown', (e) => {
 });
 document.getElementById('btnShowStudents').addEventListener('click', loadStudents);
 document.getElementById('btnShowBackup').addEventListener('click', backupSheets);
+document.getElementById('confirmOk').addEventListener('click', function () { closeConfirmModal(true); });
+document.getElementById('confirmCancel').addEventListener('click', function () { closeConfirmModal(false); });
+document.getElementById('confirmModal').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        closeConfirmModal(true);
+    } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeConfirmModal(false);
+    }
+});
 document.getElementById('studentStatusFilter').addEventListener('change', renderStudentList);
 document.getElementById('unlockPwd').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockSettings();
