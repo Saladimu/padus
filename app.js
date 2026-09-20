@@ -435,17 +435,29 @@ function renderMarkdown(md) {
 }
 
 // ==========================================
-// MODE MAINTENANCE TERSEMBUNYI (5x klik logo)
+// IKON PENGATURAN TERSEMBUNYI (5x klik logo)
 // ==========================================
-function logoMaintenanceEnabled() {
-    const v = getConfig().logoMaintenance;
-    return v === undefined ? true : !!v;
+let settingsGearVisible = false;
+
+function applySettingsGearVisibility() {
+    const btn = document.getElementById('btnSettings');
+    if (!btn) return;
+    btn.classList.toggle('hidden', !settingsGearVisible);
+}
+
+function toggleSettingsGear() {
+    settingsGearVisible = !settingsGearVisible;
+    applySettingsGearVisibility();
+    if (!settingsGearVisible) {
+        const modal = document.getElementById('settingsModal');
+        if (modal && !modal.classList.contains('hidden')) toggleSettingsModal();
+    }
 }
 
 function applyLogoMaintenanceState() {
     const el = document.getElementById('btnLogoMaintenanceToggle');
     if (!el) return;
-    const on = logoMaintenanceEnabled();
+    const on = maintenanceMode;
     el.classList.toggle('bg-green-500', on);
     el.classList.toggle('bg-gray-300', !on);
     el.setAttribute('aria-checked', on ? 'true' : 'false');
@@ -453,22 +465,14 @@ function applyLogoMaintenanceState() {
     if (knob) knob.classList.toggle('translate-x-5', on);
 }
 
-function toggleLogoMaintenanceSetting() {
-    const cfg = getConfig();
-    cfg.logoMaintenance = !logoMaintenanceEnabled();
-    setConfig(cfg);
-    applyLogoMaintenanceState();
-}
-
 function logoClick() {
-    if (!logoMaintenanceEnabled()) return;
     logoClickCount++;
     if (logoClickTimer) clearTimeout(logoClickTimer);
     logoClickTimer = setTimeout(function () { logoClickCount = 0; }, 1500);
     if (logoClickCount >= 5) {
         logoClickCount = 0;
         clearTimeout(logoClickTimer);
-        toggleMaintenance();
+        toggleSettingsGear();
     }
 }
 
@@ -503,13 +507,7 @@ function applyMaintenance(on, persist) {
     btnVerify.disabled = on;
     btnVerify.classList.toggle('opacity-50', on);
     btnVerify.classList.toggle('cursor-not-allowed', on);
-    const settingsBtn = document.getElementById('btnSettings');
-    if (settingsBtn) {
-        settingsBtn.disabled = on;
-        settingsBtn.classList.toggle('opacity-40', on);
-        settingsBtn.classList.toggle('cursor-not-allowed', on);
-        settingsBtn.classList.toggle('pointer-events-none', on);
-    }
+    applyLogoMaintenanceState();
     if (persist === false) return;
     try {
         localStorage.setItem(MAINTENANCE_CACHE_KEY, JSON.stringify({ value: on, ts: Date.now() }));
@@ -2004,7 +2002,7 @@ function printHistory() {
 // MODAL PENGATURAN ADMIN
 // ==========================================
 function toggleSettingsModal() {
-    if (maintenanceMode) return;
+    if (!settingsGearVisible) return;
     const modal = document.getElementById('settingsModal');
     if (modal.classList.contains('hidden')) {
         modal.classList.remove('hidden');
@@ -2129,6 +2127,7 @@ document.getElementById('currentDateDisplay').textContent = new Date().toLocaleD
 document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
+applySettingsGearVisibility();
 
 // Panaskan cache peek laporan hari ini agar klik pertama terasa instan
 loadPersistedPeekCache();

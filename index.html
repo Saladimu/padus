@@ -7,14 +7,14 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260919d">
+    <link rel="stylesheet" href="styles.css?v=20260919f">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="app.js?v=20260919d" defer></script>
+    <script src="app.js?v=20260919f" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -38,7 +38,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </button>
-                <button id="btnSettings" onclick="toggleSettingsModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
+                <button id="btnSettings" onclick="toggleSettingsModal()" class="hidden w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -339,10 +339,10 @@
                     </button>
                     <div class="mt-4 pt-4 border-t border-red-200 flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-sm font-semibold text-gray-700">Klik 5x Logo (Mode Maintenance)</p>
-                            <p class="text-xs text-gray-500">Nonaktifkan untuk mematikan mode maintenance lewat 5x klik logo.</p>
+                            <p class="text-sm font-semibold text-gray-700">Mode Maintenance</p>
+                            <p class="text-xs text-gray-500">Aktifkan untuk menonaktifkan absensi siswa sementara.</p>
                         </div>
-                        <button id="btnLogoMaintenanceToggle" onclick="toggleLogoMaintenanceSetting()" class="shrink-0 relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none" role="switch" aria-checked="true" title="Klik 5x Logo">
+                        <button id="btnLogoMaintenanceToggle" onclick="toggleMaintenance()" class="shrink-0 relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none" role="switch" aria-checked="false" title="Mode Maintenance">
                             <span class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"></span>
                         </button>
                     </div>
