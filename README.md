@@ -2,12 +2,23 @@
 
 Aplikasi web absensi ekstrakurikuler Paduan Suara. Frontend berupa satu halaman HTML statis yang terhubung ke backend Google Apps Script (`appsscript/`) yang menulis data ke Google Sheets.
 
+## Panduan Penggunaan
+
+| Panduan | Untuk | Isi |
+|---------|-------|-----|
+| [`Panduan-Siswa.md`](Panduan-Siswa.md) | Siswa pengguna | Cara absensi langkah demi langkah, opsi Izin, aturan, dan troubleshooting |
+| [`Panduan-Admin.md`](Panduan-Admin.md) | Administrator | Menu admin, laporan, daftar siswa, backup, mode maintenance, dan setup backend |
+| [`Absensi.md`](Absensi.md) | Siswa (in-app) | Panduan singkat yang dirender di modal Bantuan (?) |
+| [`appsscript/readme.md`](appsscript/readme.md) | Pengembang/admin | Referensi teknis action backend & struktur sheet |
+
 ## Struktur Proyek
 
 ```
 index.html            Halaman utama aplikasi (HTML semantik: header/main/footer)
 app.js                Logika aplikasi (dimuat dengan <script defer>; SW didaftarkan di sini)
 Absensi.md            Panduan penggunaan (dirender di modal Bantuan)
+Panduan-Siswa.md      Panduan penggunaan lengkap untuk siswa
+Panduan-Admin.md      Panduan penggunaan lengkap untuk administrator
 styles.css            CSS Tailwind hasil build (minified)
 src/input.css         Sumber CSS (Tailwind v4 + custom styles) untuk rebuild
 sw.js                 Service worker (cache aset agar akses cepat & offline)
