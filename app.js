@@ -1547,7 +1547,7 @@ function renderPeekRecords(records) {
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2 min-w-0">
                     <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)} ${izinTag}</span>
-                    <span class="text-xs text-gray-500 shrink-0">${escapeHtml(r.id)}</span>
+                    <span class="text-xs text-gray-500 shrink-0">${escapeHtml(r.id)}${r.className ? ' | ' + escapeHtml(r.className) : ''}</span>
                 </div>
                 <div class="flex items-center justify-between gap-2 mt-0.5">
                     <div class="text-xs text-gray-600">Login ${escapeHtml(time)}</div>
