@@ -1542,15 +1542,14 @@ function renderPeekRecords(records) {
         const izinTag = String(r.status || '').toUpperCase() === 'IZIN'
             ? '<span class="text-xs font-semibold" style="color:#f97316;">(Izin)</span>'
             : '';
-        return `<div class="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">${(i + 1)}</div>
+        return `<div class="flex items-center gap-3 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-sm">${(i + 1)}</div>
             <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)}</span>
-                    ${izinTag}
+                <div class="flex items-center justify-between gap-2 min-w-0">
+                    <span class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(r.name)} ${izinTag}</span>
+                    <span class="text-xs text-gray-500 shrink-0">${escapeHtml(r.id)}</span>
                 </div>
-                <div class="text-xs text-gray-500">${escapeHtml(r.id)}</div>
-                <div class="flex items-center justify-between gap-2 mt-1">
+                <div class="flex items-center justify-between gap-2 mt-0.5">
                     <div class="text-xs text-gray-600">Login ${escapeHtml(time)}</div>
                     <button type="button" onclick="showPeekStudentHistory(${i})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
