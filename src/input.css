@@ -179,6 +179,7 @@ body {
     #printReportTable th:nth-child(6) { width: 17% !important; }
     #printReportTable th:nth-child(7) { width: 14% !important; }
     #printReportTable th:nth-child(8) { width: 11% !important; }
+    #printReportTable td:nth-child(2) { text-align: left !important; }
     #printReportAbsentTable th:nth-child(1) { width: 6% !important; }
     #printReportAbsentTable th:nth-child(2) { width: 30% !important; }
     #printReportAbsentTable th:nth-child(3) { width: 10% !important; }

@@ -130,6 +130,19 @@ function ddmmFromIso(iso) {
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+// Ubah timestamp "yyyy-MM-dd HH:mm:ss" menjadi "HH:MM AM/PM" (tanpa tanggal).
+function formatTimeAmPm(ts) {
+    const text = String(ts || '').trim();
+    const m = text.match(/(?:^|\s)(\d{1,2}):(\d{2})(?::\d{2})?/);
+    if (!m) return text;
+    let hour = Number(m[1]);
+    const minute = m[2];
+    const suffix = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour === 0) hour = 12;
+    return String(hour).padStart(2, '0') + ':' + minute + ' ' + suffix;
+}
+
 // Ubah "yyyy-MM-dd" menjadi "DD-Mon" (tanpa tahun), contoh "05-Sep"
 function ddMonFromIso(iso) {
     const parts = String(iso || '').split('-');
@@ -1454,12 +1467,12 @@ function populateReportPrint(res) {
     document.getElementById('printReportRows').innerHTML = records.length ? records.map((r, i) => {
         return '<tr>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + (i + 1) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.name) + '</td>' +
+            '<td style="border:1px solid #999;padding:6px;text-align:left;">' + escapeHtml(r.name) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.id) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.className) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.type) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.remark) + '</td>' +
-            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.timestamp) + '</td>' +
+            '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(formatTimeAmPm(r.timestamp)) + '</td>' +
             '<td style="border:1px solid #999;padding:6px;text-align:center;">' + escapeHtml(r.status) + '</td>' +
             '</tr>';
     }).join('') : '<tr><td style="border:1px solid #999;padding:6px;text-align:center;" colspan="8">Tidak ada data</td></tr>';
