@@ -1550,8 +1550,14 @@ function renderPeekRecords(records) {
                     ${izinTag}
                 </div>
                 <div class="text-xs text-gray-500">${escapeHtml(r.id)}</div>
+                <div class="flex items-center justify-between gap-2 mt-1">
+                    <div class="text-xs text-gray-600">Login ${escapeHtml(time)}</div>
+                    <button type="button" onclick="showPeekStudentHistory(${i})" class="shrink-0 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Riwayat
+                    </button>
+                </div>
             </div>
-            <div class="text-xs text-gray-600 shrink-0">Login ${escapeHtml(time)}</div>
         </div>`;
     }).join('');
 }
@@ -1850,7 +1856,17 @@ function toggleHistoryMonth(btn) {
     if (icon) icon.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-function showStudentHistory(index) {
+function setHistoryPrintVisible(visible) {
+    const btn = document.getElementById('btnPrintHistory');
+    const closeBtn = document.getElementById('btnCloseHistory');
+    if (btn) btn.classList.toggle('hidden', !visible);
+    if (closeBtn) {
+        closeBtn.classList.toggle('w-1/2', visible);
+        closeBtn.classList.toggle('w-full', !visible);
+    }
+}
+
+function showStudentHistory(index, options) {
     let student = null;
     if (typeof index === 'object' && index !== null) {
         student = index;
@@ -1858,6 +1874,7 @@ function showStudentHistory(index) {
         student = currentStudentList[index];
     }
     if (!student) return;
+    setHistoryPrintVisible(!(options && options.hidePrint));
     const modal = document.getElementById('historyModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -1980,6 +1997,13 @@ function showReportStudentHistory(index) {
     const r = records[index];
     if (!r) return;
     showStudentHistory({ id: r.id, name: r.name, className: r.className });
+}
+
+function showPeekStudentHistory(index) {
+    const records = (peekCache && peekCache.res && peekCache.res.records) || [];
+    const r = records[index];
+    if (!r) return;
+    showStudentHistory({ id: r.id, name: r.name, className: r.className }, { hidePrint: true });
 }
 
 function closeHistoryModal() {
