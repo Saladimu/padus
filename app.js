@@ -46,6 +46,59 @@ if ('serviceWorker' in navigator) {
 }
 
 // ==========================================
+// MODAL PEMBARUAN APLIKASI (HARD REFRESH)
+// ==========================================
+function promptAppUpdate() {
+    if (updateModalShown) return;
+    updateModalShown = true;
+    const modal = document.getElementById('updateModal');
+    const content = document.getElementById('updateModalContent');
+    if (!modal || !content) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    setTimeout(function () {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('scale-95');
+        const btn = document.getElementById('btnHardRefresh');
+        if (btn) btn.focus();
+    }, 10);
+}
+
+function dismissUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    const content = document.getElementById('updateModalContent');
+    if (!modal || !content) return;
+    modal.classList.add('opacity-0');
+    content.classList.add('scale-95');
+    setTimeout(function () {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        updateModalShown = false;
+    }, 300);
+}
+
+// Bersihkan cache + service worker lalu muat ulang dari jaringan.
+function hardRefreshApp() {
+    const reload = function () { window.location.reload(); };
+    const clearCaches = function () {
+        if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+            }).catch(function () {}).then(reload);
+        } else {
+            reload();
+        }
+    };
+    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        }).catch(function () {}).then(clearCaches);
+    } else {
+        clearCaches();
+    }
+}
+
+// ==========================================
 // CONFIGURASI BACKEND
 // ==========================================
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8mxqoDrC0Wjqn-xPkTeqEMaBce2nGJR1ASrgazuTHSizvfhDEm8jfTCOP7mtHAr5zMQ/exec";
