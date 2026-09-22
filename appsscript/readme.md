@@ -41,3 +41,5 @@ Duplikasi dicegah berdasarkan kombinasi `ID` + `Tanggal` (format `yyyy-MM-dd`, z
 - Cache request-level untuk spreadsheet, timezone, dan `CacheService`.
 - `submit` melewati cek absensi hari ini di `verifyStudent` (`skipTodayCheck`); duplikat tetap dicek sekali di bawah lock.
 - `getAbsentStudents()` tidak membangun log terakhir untuk siswa yang sudah hadir pada tanggal laporan.
+- Format tanggal/jam GMT+7 dihitung lokal (`datePartsGmt7()`) alih-alih `Utilities.formatDate` per baris pada `report`/`history`/`getAbsentStudents`.
+- `backuplist` memakai satu `getSheets()`, cache request-level, dan `CacheService` 120 detik (`backup:list:v1`); cache dihapus setelah `backup`.

@@ -252,17 +252,58 @@ function isDateValue(v) {
   return v instanceof Date || Object.prototype.toString.call(v) === '[object Date]';
 }
 
+function pad2(n) {
+  return n < 10 ? '0' + n : String(n);
+}
+
+// Setara Utilities.formatDate(..., 'GMT+7', ...) tanpa RPC per baris.
+function datePartsGmt7(date) {
+  const d = new Date(date.getTime() + 7 * 3600000);
+  return {
+    ymd: d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate()),
+    hms: pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds()),
+    hm: pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes())
+  };
+}
+
+function dateToYmd(date, tz) {
+  if (tz === 'GMT+7' || tz === 'Asia/Jakarta' || tz === 'Asia/Bangkok') {
+    return datePartsGmt7(date).ymd;
+  }
+  return Utilities.formatDate(date, tz, 'yyyy-MM-dd');
+}
+
+function cellToYmdGmt7(cellValue) {
+  if (!cellValue) return '';
+  if (isDateValue(cellValue)) return datePartsGmt7(cellValue).ymd;
+  return String(cellValue).trim().substring(0, 10);
+}
+
+function formatTimestampGmt7(v) {
+  if (!v) return '';
+  if (isDateValue(v)) {
+    const p = datePartsGmt7(v);
+    return p.ymd + ' ' + p.hms;
+  }
+  return String(v).trim();
+}
+
+function formatTimeHmGmt7(v) {
+  if (!v) return '';
+  if (isDateValue(v)) return datePartsGmt7(v).hm;
+  const t = String(v).trim();
+  return t.length >= 16 ? t.substring(11, 16) : '';
+}
+
 function matchesToday(cellValue, todayString) {
   if (!cellValue) return false;
   if (isDateValue(cellValue)) {
-    // Object Date dari Sheets kadang gagal dicek dengan instanceof, gunakan isDateValue().
     const tz = getScriptTimeZone();
-    if (Utilities.formatDate(cellValue, tz, 'yyyy-MM-dd') === todayString) return true;
-    if (tz !== 'GMT+7' && Utilities.formatDate(cellValue, 'GMT+7', 'yyyy-MM-dd') === todayString) return true;
+    if (dateToYmd(cellValue, tz) === todayString) return true;
+    if (tz !== 'GMT+7' && dateToYmd(cellValue, 'GMT+7') === todayString) return true;
     return false;
   }
   const text = String(cellValue).trim();
-  // Menangani teks "2026-08-24", "2026-08-24 08:00:00", dsb.
   if (text.substring(0, 10) === todayString) return true;
   return text === todayString;
 }
@@ -364,12 +405,6 @@ function getAttendanceReport(date, lean) {
   const records = [];
   const attendedIds = {};
 
-  function formatTimestamp(v) {
-    if (!v) return '';
-    if (isDateValue(v)) return Utilities.formatDate(v, 'GMT+7', 'yyyy-MM-dd HH:mm:ss');
-    return String(v).trim();
-  }
-
   for (let i = 1; i < data.length; i++) {
     if (!data[i] || data[i][1] === '') continue;
     if (!matchesToday(data[i][1], target)) continue;
@@ -378,7 +413,7 @@ function getAttendanceReport(date, lean) {
     if (id) attendedIds[id] = true;
 
     records.push({
-      timestamp: formatTimestamp(data[i][0]),
+      timestamp: formatTimestampGmt7(data[i][0]),
       id: data[i][2] ? String(data[i][2]) : '',
       name: data[i][3] ? String(data[i][3]) : '',
       className: data[i][4] ? String(data[i][4]) : '',
@@ -415,18 +450,11 @@ function getAbsentStudents(attendedIds, attendanceData, targetDate) {
       if (!recId) continue;
       if (attendedIds[recId]) continue;
 
-      let dateStr = '';
-      if (isDateValue(row[1])) dateStr = Utilities.formatDate(row[1], 'GMT+7', 'yyyy-MM-dd');
-      else dateStr = String(row[1] || '').trim().substring(0, 10);
+      const dateStr = cellToYmdGmt7(row[1]);
       if (!dateStr) continue;
       if (targetDate && dateStr >= String(targetDate)) continue;
 
-      let timeStr = '';
-      if (isDateValue(row[0])) timeStr = Utilities.formatDate(row[0], 'GMT+7', 'HH:mm');
-      else {
-        const t = String(row[0] || '').trim();
-        timeStr = t.length >= 16 ? t.substring(11, 16) : '';
-      }
+      const timeStr = formatTimeHmGmt7(row[0]);
 
       const log = {
         date: dateStr,
@@ -527,16 +555,14 @@ function getStudentHistory(studentId) {
     const recId = data[i][2] ? String(data[i][2]).trim().toUpperCase() : '';
     if (recId !== target) continue;
 
-    let dateStr = '';
-    if (isDateValue(data[i][1])) dateStr = Utilities.formatDate(data[i][1], 'GMT+7', 'yyyy-MM-dd');
-    else dateStr = String(data[i][1]).trim().substring(0, 10);
+    const dateStr = cellToYmdGmt7(data[i][1]);
 
     records.push({
       date: dateStr,
       type: data[i][5] ? String(data[i][5]) : '',
       remark: data[i][6] ? String(data[i][6]) : '',
       status: data[i][7] ? String(data[i][7]) : '',
-      timestamp: data[i][0] ? (isDateValue(data[i][0]) ? Utilities.formatDate(data[i][0], 'GMT+7', 'yyyy-MM-dd HH:mm:ss') : String(data[i][0]).trim()) : ''
+      timestamp: formatTimestampGmt7(data[i][0])
     });
   }
 
@@ -628,25 +654,61 @@ function submitAttendance(payload) {
 // BACKUP_KEEP salinan terbaru per sheet. Bila salinan hari itu sudah ada,
 // salinan lama diganti agar tidak terjadi duplikat nama.
 const BACKUP_KEEP = 6;
+const BACKUP_LIST_CACHE_KEY = 'backup:list:v1';
+const BACKUP_LIST_CACHE_TTL = 120;
 
 // Ubah stempel DDMMYY menjadi kunci urut YYMMDD agar pengurutan kronologis.
 function backupSortKey(stamp) {
   return stamp.substring(4, 6) + stamp.substring(2, 4) + stamp.substring(0, 2);
 }
 
+function isBackupStamp(stamp) {
+  return /^\d{6}$/.test(stamp);
+}
+
+function matchBackupSheet(name) {
+  const attendanceStamp = name.substring(SHEET_NAME_ATTENDANCE.length);
+  if (name.indexOf(SHEET_NAME_ATTENDANCE) === 0 && isBackupStamp(attendanceStamp)) {
+    return { base: SHEET_NAME_ATTENDANCE, stamp: attendanceStamp };
+  }
+  const studentsStamp = name.substring(SHEET_NAME_STUDENTS.length);
+  if (name.indexOf(SHEET_NAME_STUDENTS) === 0 && isBackupStamp(studentsStamp)) {
+    return { base: SHEET_NAME_STUDENTS, stamp: studentsStamp };
+  }
+  return null;
+}
+
+let cachedBackupSheets = null;
+function collectBackupSheets() {
+  if (cachedBackupSheets) return cachedBackupSheets;
+  const ss = getSpreadsheet();
+  const grouped = {};
+  grouped[SHEET_NAME_STUDENTS] = [];
+  grouped[SHEET_NAME_ATTENDANCE] = [];
+  ss.getSheets().forEach(function (sheet) {
+    const match = matchBackupSheet(sheet.getName());
+    if (!match) return;
+    grouped[match.base].push({
+      sheet: sheet,
+      name: sheet.getName(),
+      stamp: match.stamp,
+      key: backupSortKey(match.stamp)
+    });
+  });
+  grouped[SHEET_NAME_STUDENTS].sort(function (a, b) { return b.key.localeCompare(a.key); });
+  grouped[SHEET_NAME_ATTENDANCE].sort(function (a, b) { return b.key.localeCompare(a.key); });
+  cachedBackupSheets = grouped;
+  return grouped;
+}
+
+function invalidateBackupListCache() {
+  cachedBackupSheets = null;
+  try { getVerifyCache().remove(BACKUP_LIST_CACHE_KEY); } catch (e) { /* abaikan */ }
+}
+
 // Daftar sheet backup milik satu sheet sumber, terbaru lebih dulu.
 function getBackupSheets(baseName) {
-  const ss = getSpreadsheet();
-  const list = [];
-  ss.getSheets().forEach(function (sheet) {
-    const name = sheet.getName();
-    if (name.indexOf(baseName) !== 0) return;
-    const stamp = name.substring(baseName.length);
-    if (!/^\d{6}$/.test(stamp)) return;
-    list.push({ sheet: sheet, name: name, stamp: stamp, key: backupSortKey(stamp) });
-  });
-  list.sort(function (a, b) { return b.key.localeCompare(a.key); });
-  return list;
+  return collectBackupSheets()[baseName] || [];
 }
 
 // Hapus backup lama sehingga hanya BACKUP_KEEP terbaru yang tersisa.
@@ -662,12 +724,19 @@ function pruneBackups(baseName) {
 
 // Daftar seluruh backup (STUDENTS + ATTENDANCE) untuk ditampilkan di UI.
 function listBackups() {
+  const cache = getVerifyCache();
+  const cached = cache.get(BACKUP_LIST_CACHE_KEY);
+  if (cached) {
+    try { return JSON.parse(cached); } catch (e) { /* cache rusak, muat ulang */ }
+  }
+
   const ss = getSpreadsheet();
   if (!ss) return { success: false, message: 'Spreadsheet tidak ditemukan.' };
 
+  const grouped = collectBackupSheets();
   const items = [];
   [SHEET_NAME_STUDENTS, SHEET_NAME_ATTENDANCE].forEach(function (base) {
-    getBackupSheets(base).forEach(function (item) {
+    grouped[base].forEach(function (item) {
       items.push({
         name: item.name,
         base: base,
@@ -677,7 +746,9 @@ function listBackups() {
     });
   });
 
-  return { success: true, keep: BACKUP_KEEP, count: items.length, backups: items };
+  const result = { success: true, keep: BACKUP_KEEP, count: items.length, backups: items };
+  try { cache.put(BACKUP_LIST_CACHE_KEY, JSON.stringify(result), BACKUP_LIST_CACHE_TTL); } catch (e) { /* data terlalu besar untuk cache */ }
+  return result;
 }
 
 function backupSheets() {
@@ -712,6 +783,7 @@ function backupSheets() {
 
   pruneBackups(SHEET_NAME_STUDENTS);
   pruneBackups(SHEET_NAME_ATTENDANCE);
+  invalidateBackupListCache();
 
   const listed = listBackups();
   let message = 'Backup dibuat: ' + created.join(', ') + '.';

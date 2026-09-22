@@ -835,72 +835,6 @@ function showConfirmModal(title, message) {
     });
 }
 
-// Tampilkan ajakan hard refresh saat versi aplikasi berubah.
-function promptAppUpdate() {
-    if (updateModalShown) return;
-    updateModalShown = true;
-    const modal = document.getElementById('updateModal');
-    const content = document.getElementById('updateModalContent');
-    if (!modal || !content) return;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    setTimeout(function () {
-        modal.classList.remove('opacity-0');
-        content.classList.remove('scale-95');
-        const btn = document.getElementById('btnHardRefresh');
-        if (btn) btn.focus();
-    }, 10);
-}
-
-function dismissUpdateModal() {
-    const modal = document.getElementById('updateModal');
-    const content = document.getElementById('updateModalContent');
-    if (!modal || !content) return;
-    modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
-    setTimeout(function () {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        updateModalShown = false;
-    }, 300);
-}
-
-// Bersihkan cache + service worker lalu muat ulang dari jaringan.
-function hardRefreshApp() {
-    const reload = function () { window.location.reload(); };
-    const clearCaches = function () {
-        if (window.caches && caches.keys) {
-            caches.keys().then(function (keys) {
-                return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-            }).catch(function () {}).then(reload);
-        } else {
-            reload();
-        }
-    };
-    if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-            return Promise.all(regs.map(function (r) { return r.unregister(); }));
-        }).catch(function () {}).then(clearCaches);
-    } else {
-        clearCaches();
-    }
-}
-
-function toggleAdminModal() {
-    const modal = document.getElementById('adminModal');
-    if (modal.classList.contains('hidden')) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        setTimeout(() => modal.classList.remove('opacity-0'), 10);
-    } else {
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
-    }
-}
-
 // ==========================================
 // SETTINGS ADMIN (KATA SANDI & KEAMANAN)
 // ==========================================
@@ -917,6 +851,7 @@ function toggleSettingsSection(bodyId, btn) {
             icon.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
         }
     }
+    if (willOpen && bodyId === 'backupBody' && !settingsLocked) loadBackupList();
 }
 
 function collapseSettingsSections() {
@@ -1011,7 +946,6 @@ function unlockSettings() {
         settingsLocked = false;
         applySecurityState();
         resetSettingsLockTimer();
-        loadBackupList();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
@@ -1054,6 +988,7 @@ const BACKUP_PAIR_COLORS = [
 
 let lastBackupList = [];
 let lastBackupKeep = 6;
+let backupListInFlight = null;
 
 function todayBackupStamp() {
     const iso = todayISO();
@@ -1145,16 +1080,29 @@ function renderBackupList(backups, keep) {
 
 function loadBackupList() {
     const listEl = document.getElementById('backupList');
-    listEl.innerHTML = '<span class="text-gray-400">Memuat...</span>';
-    return apiPost({ action: 'backuplist' })
+    if (lastBackupList && lastBackupList.length) {
+        renderBackupList(lastBackupList, lastBackupKeep);
+    } else {
+        listEl.innerHTML = '<span class="text-gray-400">Memuat...</span>';
+    }
+    if (backupListInFlight) return backupListInFlight;
+    backupListInFlight = apiPost({ action: 'backuplist' }, { retries: 1 })
         .then(res => {
             if (!res.success) {
-                listEl.innerHTML = '<span class="text-red-500">' + escapeHtml(res.message || 'Gagal memuat daftar backup.') + '</span>';
+                if (!(lastBackupList && lastBackupList.length)) {
+                    listEl.innerHTML = '<span class="text-red-500">' + escapeHtml(res.message || 'Gagal memuat daftar backup.') + '</span>';
+                }
                 return;
             }
             renderBackupList(res.backups, res.keep);
         })
-        .catch(() => { listEl.innerHTML = '<span class="text-red-500">Koneksi gagal. Periksa backend.</span>'; });
+        .catch(() => {
+            if (!(lastBackupList && lastBackupList.length)) {
+                listEl.innerHTML = '<span class="text-red-500">Koneksi gagal. Periksa backend.</span>';
+            }
+        })
+        .finally(function () { backupListInFlight = null; });
+    return backupListInFlight;
 }
 
 function runBackupSheets() {
@@ -1358,7 +1306,9 @@ function loadReport() {
         return;
     }
     setReportStatus('Memuat data...', '');
-    apiPost({ action: 'report', date: date })
+    const btn = document.getElementById('btnShowReport');
+    btn.disabled = true;
+    apiPost({ action: 'report', date: date }, { retries: 1 })
         .then(res => {
             if (!res.success) {
                 setReportStatus(res.message || 'Gagal memuat laporan.', 'err');
@@ -1367,7 +1317,8 @@ function loadReport() {
             setReportStatus('', '');
             renderReport(res);
         })
-        .catch(() => setReportStatus('Koneksi gagal. Periksa backend.', 'err'));
+        .catch(() => setReportStatus('Koneksi gagal. Periksa backend.', 'err'))
+        .finally(() => { btn.disabled = settingsLocked; });
 }
 
 function statusClass(status) {
@@ -2047,7 +1998,8 @@ function toggleSettingsModal() {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
-        if (!settingsLocked) loadBackupList();
+        const backupBody = document.getElementById('backupBody');
+        if (!settingsLocked && backupBody && !backupBody.classList.contains('hidden')) loadBackupList();
     } else {
         modal.classList.add('opacity-0');
         setTimeout(() => {
