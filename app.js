@@ -1498,9 +1498,10 @@ function closeReportModal() {
 // PEEK LAPORAN ABSENSI HARI INI (klik tanggal di header)
 // ==========================================
 function renderPeekRecords(records) {
-    document.getElementById('peekCountDisplay').textContent = records.length + ' siswa tercatat';
-    document.getElementById('peekEmpty').classList.toggle('hidden', records.length > 0);
-    document.getElementById('peekList').innerHTML = records.map((r, i) => {
+    const list = records || [];
+    document.getElementById('peekCountDisplay').textContent = list.length + ' siswa tercatat';
+    document.getElementById('peekEmpty').classList.toggle('hidden', list.length > 0);
+    document.getElementById('peekList').innerHTML = list.map((r, i) => {
         const ts = String(r.timestamp || '');
         const time = ts.length >= 16 ? ts.substring(11, 16) : ts;
         const izinTag = String(r.status || '').toUpperCase() === 'IZIN'
@@ -1530,12 +1531,26 @@ function renderPeekMessage(msg, isError) {
     statusEl.className = 'text-sm mt-1 ' + (isError ? 'text-red-500' : 'text-gray-500');
 }
 
+// Banner callout di menu utama: jumlah siswa yang sudah absensi hari ini.
+function setMainCallout(count) {
+    const el = document.getElementById('mainCallout');
+    if (!el) return;
+    const n = Number(count) || 0;
+    if (n > 0) {
+        document.getElementById('mainCalloutText').textContent = n + ' siswa sudah absensi';
+        el.classList.remove('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+}
+
 function fetchPeekToday() {
     const date = todayISO();
     return apiPost({ action: 'report', date: date, lean: true })
         .then(res => {
             peekCache = { date: date, ts: Date.now(), res: res };
             savePersistedPeekCache(peekCache);
+            if (res && res.success) setMainCallout((res.records || []).length);
             return res;
         })
         .catch(err => {
@@ -1559,6 +1574,7 @@ function loadPersistedPeekCache() {
         const entry = JSON.parse(raw);
         if (entry && entry.date === todayISO() && entry.res && entry.res.success) {
             peekCache = entry;
+            setMainCallout((entry.res.records || []).length);
         }
     } catch (e) { /* abaikan data rusak */ }
 }
@@ -1627,6 +1643,7 @@ function applyPeekResult(res) {
         return;
     }
     renderPeekRecords(res.records || []);
+    setMainCallout((res.records || []).length);
     renderPeekMessage('', false);
 }
 
