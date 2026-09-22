@@ -899,9 +899,10 @@ function applySecurityState() {
     refreshAdminLockUI();
 }
 
-function resetSettingsLockTimer() {
-    if (settingsLocked) return;
-    if (settingsLockTimer) clearTimeout(settingsLockTimer);
+// Mulai sesi pengaturan berbatas waktu: terkunci otomatis setelah
+// SETTINGS_LOCK_TIMEOUT, tanpa reset dari aktivitas pengguna.
+function startSettingsLockTimer() {
+    stopSettingsLockTimer();
     settingsLockTimer = setTimeout(function () {
         settingsLockTimer = null;
         lockSettings();
@@ -945,7 +946,7 @@ function unlockSettings() {
         document.getElementById('unlockPwd').value = '';
         settingsLocked = false;
         applySecurityState();
-        resetSettingsLockTimer();
+        startSettingsLockTimer();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
@@ -2114,19 +2115,8 @@ document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveConfig();
 });
 
-// Interaksi di dalam modal admin (termasuk Riwayat Absensi) dihitung sebagai
-// aktivitas sehingga pengaturan tidak terkunci otomatis saat sedang dipakai.
-function bindSettingsActivityReset(el) {
-    if (!el) return;
-    ['click', 'input', 'change', 'keydown', 'scroll', 'mousemove', 'touchstart', 'touchmove'].forEach(function (evt) {
-        el.addEventListener(evt, function () {
-            resetSettingsLockTimer();
-        }, true);
-    });
-}
-['settingsModal', 'reportModal', 'studentModal', 'historyModal', 'adminModal'].forEach(function (id) {
-    bindSettingsActivityReset(document.getElementById(id));
-});
+// Sesi pengaturan berbatas waktu tetap: pengaturan otomatis terkunci 5 menit
+// setelah dibuka, tanpa diperpanjang oleh aktivitas pengguna.
 
 // ==========================================
 // INISIALISASI
