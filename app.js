@@ -514,12 +514,26 @@ function applySettingsGearVisibility() {
     btn.classList.toggle('hidden', !settingsGearVisible);
 }
 
-function toggleSettingsGear() {
-    settingsGearVisible = !settingsGearVisible;
+// Sembunyikan ikon pengaturan dan tutup modalnya bila sedang terbuka.
+function hideSettingsGear() {
+    settingsGearVisible = false;
     applySettingsGearVisibility();
-    if (!settingsGearVisible) {
-        const modal = document.getElementById('settingsModal');
-        if (modal && !modal.classList.contains('hidden')) toggleSettingsModal();
+    const modal = document.getElementById('settingsModal');
+    if (modal && !modal.classList.contains('hidden')) {
+        modal.classList.add('opacity-0');
+        setTimeout(function () {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+}
+
+function toggleSettingsGear() {
+    if (settingsGearVisible) {
+        hideSettingsGear();
+    } else {
+        settingsGearVisible = true;
+        applySettingsGearVisibility();
     }
 }
 
@@ -958,7 +972,7 @@ function startSettingsLockTimer() {
     stopSettingsLockTimer();
     settingsLockTimer = setTimeout(function () {
         settingsLockTimer = null;
-        lockSettings();
+        lockSettings(true);
     }, SETTINGS_LOCK_TIMEOUT);
 }
 
@@ -1004,11 +1018,13 @@ function unlockSettings() {
     });
 }
 
-function lockSettings() {
+// `auto` true = dipanggil oleh timer 5 menit; ikon pengaturan ikut disembunyikan.
+function lockSettings(auto) {
     settingsLocked = true;
     stopSettingsLockTimer();
     applySecurityState();
     document.getElementById('connStatus').textContent = '';
+    if (auto === true) hideSettingsGear();
     showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
 }
 
@@ -1586,16 +1602,31 @@ function renderPeekMessage(msg, isError) {
 }
 
 // Banner callout di menu utama: jumlah siswa yang sudah absensi hari ini.
+// Teks diset ke semua salinan marquee agar animasi kiri->kanan mulus.
 function setMainCallout(count) {
     const el = document.getElementById('mainCallout');
     if (!el) return;
     const n = Number(count) || 0;
     if (n > 0) {
-        document.getElementById('mainCalloutText').textContent = n + ' siswa sudah absensi';
+        const text = n + ' siswa sudah absensi';
+        el.querySelectorAll('.callout-marquee-text').forEach(function (span) {
+            span.textContent = text;
+        });
         el.classList.remove('hidden');
     } else {
         el.classList.add('hidden');
     }
+}
+
+// Marquee banner: berhenti saat disentuh/ditahan, lanjut saat jari dilepas.
+function initCalloutMarquee() {
+    const el = document.getElementById('mainCallout');
+    if (!el) return;
+    const pause = function () { el.classList.add('marquee-paused'); };
+    const resume = function () { el.classList.remove('marquee-paused'); };
+    el.addEventListener('touchstart', pause, { passive: true });
+    el.addEventListener('touchend', resume, { passive: true });
+    el.addEventListener('touchcancel', resume, { passive: true });
 }
 
 function fetchPeekToday() {
@@ -2179,6 +2210,7 @@ document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
 applySettingsGearVisibility();
+initCalloutMarquee();
 
 // Panaskan cache peek laporan hari ini agar klik pertama terasa instan
 loadPersistedPeekCache();
