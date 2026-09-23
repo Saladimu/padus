@@ -507,6 +507,26 @@ function renderMarkdown(md) {
 // IKON PENGATURAN TERSEMBUNYI (5x klik logo)
 // ==========================================
 let settingsGearVisible = false;
+let gearHideTimer = null;
+const GEAR_HIDE_TIMEOUT = 5 * 60 * 1000;
+
+// Timer idle ikon pengaturan: bila ikon ditampilkan (5 ketuk logo) tetapi
+// tidak ada aktivitas, ikon disembunyikan otomatis setelah 5 menit.
+function resetGearHideTimer() {
+    if (!settingsGearVisible || !settingsLocked) return;
+    stopGearHideTimer();
+    gearHideTimer = setTimeout(function () {
+        gearHideTimer = null;
+        hideSettingsGear();
+    }, GEAR_HIDE_TIMEOUT);
+}
+
+function stopGearHideTimer() {
+    if (gearHideTimer) {
+        clearTimeout(gearHideTimer);
+        gearHideTimer = null;
+    }
+}
 
 function applySettingsGearVisibility() {
     const btn = document.getElementById('btnSettings');
@@ -516,6 +536,7 @@ function applySettingsGearVisibility() {
 
 // Sembunyikan ikon pengaturan dan tutup modalnya bila sedang terbuka.
 function hideSettingsGear() {
+    stopGearHideTimer();
     settingsGearVisible = false;
     applySettingsGearVisibility();
     const modal = document.getElementById('settingsModal');
@@ -534,6 +555,7 @@ function toggleSettingsGear() {
     } else {
         settingsGearVisible = true;
         applySettingsGearVisibility();
+        resetGearHideTimer();
     }
 }
 
@@ -966,9 +988,15 @@ function applySecurityState() {
     refreshAdminLockUI();
 }
 
-// Mulai sesi pengaturan berbatas waktu: terkunci otomatis setelah
-// SETTINGS_LOCK_TIMEOUT, tanpa reset dari aktivitas pengguna.
+// Sesi pengaturan berbatas waktu idle: terkunci otomatis setelah
+// SETTINGS_LOCK_TIMEOUT tanpa aktivitas pengguna. Aktivitas di menu
+// pengaturan/riwayat akan menyegarkan timer (lihat bindIdleActivityReset).
 function startSettingsLockTimer() {
+    resetSettingsLockTimer();
+}
+
+function resetSettingsLockTimer() {
+    if (settingsLocked) return;
     stopSettingsLockTimer();
     settingsLockTimer = setTimeout(function () {
         settingsLockTimer = null;
@@ -981,6 +1009,25 @@ function stopSettingsLockTimer() {
         clearTimeout(settingsLockTimer);
         settingsLockTimer = null;
     }
+}
+
+// Satu titik reset untuk kedua timer idle:
+// - sesi pengaturan terbuka -> perpanjang timer kunci (5 menit tanpa aktivitas)
+// - ikon pengaturan tampil tapi belum dibuka -> perpanjang timer sembunyi ikon
+function resetIdleTimers() {
+    if (settingsLocked) {
+        resetGearHideTimer();
+    } else {
+        resetSettingsLockTimer();
+    }
+}
+
+// Aktivitas pengguna (klik, ketik, gulir, sentuh, gerak) menyegarkan timer idle.
+function bindIdleActivityReset(target) {
+    if (!target) return;
+    ['click', 'input', 'change', 'keydown', 'scroll', 'mousemove', 'touchstart', 'touchmove'].forEach(function (evt) {
+        target.addEventListener(evt, resetIdleTimers, true);
+    });
 }
 
 function unlockSettings() {
@@ -1013,19 +1060,25 @@ function unlockSettings() {
         document.getElementById('unlockPwd').value = '';
         settingsLocked = false;
         applySecurityState();
+        stopGearHideTimer();
         startSettingsLockTimer();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
 
-// `auto` true = dipanggil oleh timer 5 menit; ikon pengaturan ikut disembunyikan.
+// `auto` true = dipanggil oleh timer idle 5 menit; ikon pengaturan ikut disembunyikan.
 function lockSettings(auto) {
     settingsLocked = true;
     stopSettingsLockTimer();
     applySecurityState();
     document.getElementById('connStatus').textContent = '';
-    if (auto === true) hideSettingsGear();
+    if (auto === true) {
+        hideSettingsGear();
+        showStatusModal("Sesi Berakhir", "Pengaturan Admin terkunci otomatis karena tidak ada aktivitas selama 5 menit.", true);
+        return;
+    }
     showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
+    resetGearHideTimer();
 }
 
 function setBackupStatus(msg, type) {
@@ -2199,8 +2252,12 @@ document.getElementById('apiUrlSetting').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') saveConfig();
 });
 
-// Sesi pengaturan berbatas waktu tetap: pengaturan otomatis terkunci 5 menit
-// setelah dibuka, tanpa diperpanjang oleh aktivitas pengguna.
+// Timer idle (sesi pengaturan & sembunyi ikon) disegarkan oleh aktivitas
+// pengguna di seluruh halaman, termasuk menu utama.
+bindIdleActivityReset(document);
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') resetIdleTimers();
+});
 
 // ==========================================
 // INISIALISASI
