@@ -11,4 +11,4 @@
 // Contoh:
 // window.PADUS_DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycb.../exec";
 
-window.PADUS_DEFAULT_API_URL = "";
+window.PADUS_DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbz8mxqoDrC0Wjqn-xPkTeqEMaBce2nGJR1ASrgazuTHSizvfhDEm8jfTCOP7mtHAr5zMQ/exec";
