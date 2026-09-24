@@ -320,6 +320,25 @@ function updateConnectionWarning() {
     el.classList.toggle('hidden', hasApiUrl());
 }
 
+// Tandai sumber URL yang sedang dipakai di submenu Koneksi Google Sheets:
+// pengaturan perangkat ini (override) atau default config.js.
+function updateConnSourceBadge() {
+    const el = document.getElementById('connSource');
+    if (!el) return;
+    const saved = (getConfig().apiUrl || '').trim();
+    const def = getDefaultApiUrl();
+    if (saved) {
+        el.textContent = 'Sumber URL: pengaturan perangkat ini (menimpa default config.js).';
+        el.className = 'text-xs font-medium mb-3 text-blue-600';
+    } else if (def) {
+        el.textContent = 'Sumber URL: config.js (default untuk semua perangkat).';
+        el.className = 'text-xs font-medium mb-3 text-green-600';
+    } else {
+        el.textContent = 'Sumber URL: belum diatur (config.js kosong dan belum ada pengaturan perangkat).';
+        el.className = 'text-xs font-medium mb-3 text-red-500';
+    }
+}
+
 // POST JSON ke backend dengan batas waktu dan percobaan ulang.
 // Respons non-JSON (halaman error Google) atau jaringan lambat akan
 // dicoba ulang, kecuali `options.retries` diisi.
@@ -1013,6 +1032,7 @@ function applySecurityState() {
     const savedUrl = (getConfig().apiUrl || '').trim();
     urlInput.value = settingsLocked ? '' : (savedUrl || getDefaultApiUrl());
     updateConnectionWarning();
+    updateConnSourceBadge();
     if (!settingsLocked) {
         if (!hasApiUrl()) {
             setConnStatus(apiUrlMissingMessage(), 'err');
@@ -1362,6 +1382,7 @@ function saveConfig() {
         cfg.apiUrl = '';
         setConfig(cfg);
         updateConnectionWarning();
+        updateConnSourceBadge();
         if (!hasApiUrl()) {
             setConnStatus(apiUrlMissingMessage(), 'err');
             return;
@@ -1458,6 +1479,7 @@ function testConnection() {
     if (!url) {
         setConnStatus(apiUrlMissingMessage(), 'err');
         updateConnectionWarning();
+        updateConnSourceBadge();
         return;
     }
     if (!isValidAppsScriptUrl(url)) {
@@ -1470,6 +1492,7 @@ function testConnection() {
         setConfig(cfg);
     }
     updateConnectionWarning();
+    updateConnSourceBadge();
 
     setConnStatus('Menguji koneksi...', '');
     apiPost({ action: 'ping' }, { url: url, retries: 1 })
