@@ -22,47 +22,58 @@ Dokumentasi teknis backend ada di [`appsscript/readme.md`](appsscript/readme.md)
 
 ## 2. Membuka Menu Admin (Pengaturan)
 
-Ikon roda gigi **tersembunyi** agar tidak dibuka siswa.
+Ada **dua menu** yang perlu dibedakan:
+
+- **Pengaturan & Setup** — dibuka lewat **ikon roda gigi** di header kanan atas, yang kini **selalu tampil**. Berisi **Koneksi Google Sheets** dan tombol **Setup Backend** (panduan), **tanpa kata sandi**.
+- **Menu Admin** — **tersembunyi** agar tidak dibuka siswa; berisi pengaturan sensitif dan memerlukan **kata sandi**.
+
+Membuka **Menu Admin**:
 
 1. **Ketuk logo tengah (bulat) 5 kali berturut-turut** (cepat — jeda antar ketukan maksimal ±1,5 detik).
-2. Ikon **roda gigi (Pengaturan Admin)** muncul di header kanan atas.
-3. Ketuk ikon tersebut, lalu **masukkan kata sandi admin**.
+2. Modal **Menu Admin** langsung terbuka. Ketuk 5 kali lagi kapan saja untuk membuka/menutupnya.
+3. **Masukkan kata sandi admin**.
    - **Kata sandi bawaan: `00000`** — *segera ganti* setelah pertama kali masuk (lihat [Bagian 9](#9-ubah-kata-saidi--mode-maintenance)).
-4. Untuk **menyembunyikan** ikon lagi (dan menutup modal pengaturan): **ketuk logo tengah 5 kali** sekali lagi. Ikon juga **tersembunyi otomatis** setelah 5 menit tanpa aktivitas (lihat tabel di bawah).
+4. Untuk **menutup** Menu Admin: ketuk **logo tengah 5 kali** lagi atau tekan tombol **X**. Menutup Menu Admin **langsung mengunci sesi**, sehingga pembukaan berikutnya perlu kata sandi lagi.
 
 ### Pengaman menu admin
 
 | Mekanisme | Keterangan |
 |-----------|------------|
 | **Kunci 3× salah** | 3 kali salah kata sandi → form terkunci **5 menit** (hitungan mundur tampil di layar; reload tidak melewati kunci) |
-| **Auto-lock 5 menit** | Setelah **5 menit tanpa aktivitas**, pengaturan **terkunci otomatis** dan **ikon roda gigi ikut disembunyikan** (modal pengaturan tertutup). Setiap aktivitas (klik/ketik/gulir/sentuh) — termasuk di modal Laporan/Riwayat/Daftar Siswa — tetap dihitung dan menyegarkan timer, jadi sesi tidak terkunci saat sedang bekerja |
-| **Ikon gigi auto-hilang** | Bila ikon gigi sudah tampil (5 ketuk logo) tetapi belum dibuka/di-unlock, ikon **tersembunyi otomatis** setelah 5 menit tanpa aktivitas. Tampilkan lagi dengan 5 ketuk logo |
-| **Kunci manual** | Tombol **Kunci** di dalam menu untuk mengunci segera (ikon tetap tampil, lalu ikut tersembunyi otomatis bila dibiarkan) |
+| **Auto-lock 5 menit** | Setelah **5 menit tanpa aktivitas**, **Menu Admin** otomatis **tertutup dan terkunci kembali**. Setiap aktivitas (klik/ketik/gulir/sentuh) — termasuk di modal Laporan/Riwayat/Daftar Siswa — tetap dihitung dan menyegarkan timer, jadi sesi tidak terkunci saat sedang bekerja |
+| **Kunci saat ditutup** | Menutup Menu Admin (X atau 5 ketuk logo) **langsung mengunci sesi** |
+| **Kunci manual** | Tombol **Kunci** di dalam menu untuk mengunci segera |
 
 > ⚠️ **Penting — sifat kata sandi & URL backend:** keduanya disimpan **per perangkat/per browser** (localStorage), bukan di server. Mengganti kata sandi di HP **tidak** mengubah kata sandi di laptop. Ganti kata sandi di **setiap perangkat admin** yang dipakai, dan pastikan URL backend tersimpan benar di tiap perangkat.
 
 ---
 
-## 3. Menu Pengaturan — Ikhtisar
+## 3. Struktur Menu — Ikhtisar
 
-Setelah terbuka, menu Pengaturan berisi (dari atas):
+Aplikasi memiliki **dua menu**:
+
+**Pengaturan & Setup** (ikon roda gigi, **tanpa kata sandi**):
+
+1. **Koneksi Google Sheets** *(accordion)* — URL backend + Test Koneksi
+
+**Menu Admin** (5 ketuk logo, **perlu kata sandi**):
 
 1. **Buka Kunci / Kunci** — status keamanan menu
-2. **Koneksi Google Sheets** *(accordion)* — URL backend + Test Koneksi (**dapat dibuka tanpa kata sandi**)
-3. **Tahun ekskul padus** — batas rentang laporan (ON/OFF)
-4. **Laporan Absensi** — rekap per tanggal + siswa tidak hadir
-5. **Daftar Siswa** — data sheet `STUDENTS`
-6. **Backup Data** *(accordion)* — backup sheet bertanggal
-7. **Ubah password/Maintenance** *(accordion)* — ganti kata sandi + mode maintenance
-8. **Setup Backend** — panduan deploy Google Apps Script
+2. **Tahun ekskul padus** — batas rentang laporan (ON/OFF)
+3. **Laporan Absensi** — rekap per tanggal + siswa tidak hadir
+4. **Daftar Siswa** — data sheet `STUDENTS`
+5. **Backup Data** *(accordion)* — backup sheet bertanggal
+6. **Ubah password/Maintenance** *(accordion)* — ganti kata sandi + mode maintenance
 
-Tanda *(accordion)* = header dapat diklik untuk membuka/menutup isinya. Saat menu terkunci, semua bagian otomatis tertutup.
+Tombol **Setup Backend** (panduan deploy Google Apps Script) ada di menu **Pengaturan & Setup**.
+
+Tanda *(accordion)* = header dapat diklik untuk membuka/menutup isinya. Saat menu terkunci, bagian admin otomatis tertutup.
 
 ---
 
 ## 4. Koneksi Google Sheets
 
-Mengatur URL backend aplikasi untuk **perangkat ini**. Bagian ini **tidak dikunci** — siapa pun dapat **melihat, mengubah, menguji (Test Koneksi), dan menyimpan** URL tanpa kata sandi admin. Batas kata sandi hanya berlaku untuk Tahun ekskul, Laporan, Daftar Siswa, dan Backup.
+Mengatur URL backend aplikasi untuk **perangkat ini**. Bagian ini ada di menu **Pengaturan & Setup** dan **tidak dikunci** — siapa pun dapat **melihat, mengubah, menguji (Test Koneksi), dan menyimpan** URL tanpa kata sandi admin. Batas kata sandi hanya berlaku untuk menu **Menu Admin** (Tahun ekskul, Laporan, Daftar Siswa, dan Backup).
 
 1. Buka bagian **Koneksi Google Sheets** (klik headernya bila tertutup).
 2. Isi **URL Aplikasi Web** Google Apps Script (berakhir dengan `/exec`). URL yang sedang dipakai (dari pengaturan perangkat atau default) langsung tampil di kolom ini.
@@ -263,10 +274,10 @@ Pengecekan pembaruan berjalan otomatis setiap 30 menit dan saat tab kembali akti
 
 | Masalah | Solusi |
 |---------|--------|
-| Ikon roda gigi tidak muncul | Ketuk **logo tengah 5 kali** cepat (jeda antar ketukan < ±1,5 detik) |
+| Menu Admin tidak muncul | Ketuk **logo tengah 5 kali** cepat (jeda antar ketukan < ±1,5 detik). Ikon roda gigi (Pengaturan & Setup) sendiri **selalu tampil** dan tidak perlu 5 ketuk |
 | Lupa kata sandi admin | Di **perangkat itu**, hapus data lokal browser untuk situs ini — khususnya item `choir_absensi_pwd` (Chrome: menu ⋮ → *Delete browsing data* / DevTools → Application → Local Storage), atau hapus data situs. Kata sandi kembali ke bawaan **`00000`** — ganti segera setelah masuk |
 | Terkunci "3 kali salah" | Tunggu **5 menit** sampai hitungan mundur selesai |
-| Pengaturan terkunci sendiri / ikon gigi hilang | Itu **auto-lock 5 menit tanpa aktivitas** — ketuk **logo tengah 5 kali** untuk memunculkan ikon lagi, lalu buka dengan kata sandi |
+| Menu Admin terkunci sendiri | Itu **auto-lock 5 menit tanpa aktivitas** — ketuk **logo tengah 5 kali** untuk membukanya lagi, lalu masukkan kata sandi |
 | Test Koneksi gagal / merah | Periksa URL backend (harus URL `/exec` Aplikasi Web), cek izin *Anyone* pada deployment, dan pastikan kode `code.gs` ter-deploy penuh |
 | Absensi siswa ditolak semua | Cek **Mode Maintenance** (Bagian 9) dan status `ACTIVE` di sheet `STUDENTS` |
 | Siswa tidak bisa absen padahal data ada | Status di `STUDENTS` bukan `ACTIVE`; atau PIN salah; atau siswa sudah absen hari itu (cek Laporan hari ini); atau terkena rate-limit 5 menit |

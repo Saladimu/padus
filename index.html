@@ -7,15 +7,15 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260922p">
+    <link rel="stylesheet" href="styles.css?v=20260922q">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="config.js?v=20260922p" defer></script>
-    <script src="app.js?v=20260922p" defer></script>
+    <script src="config.js?v=20260922q" defer></script>
+    <script src="app.js?v=20260922q" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -39,7 +39,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </button>
-                <button id="btnSettings" onclick="toggleSettingsModal()" class="hidden w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan Admin" aria-label="Pengaturan Admin">
+                <button id="btnSettings" onclick="toggleSettingsModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition" title="Pengaturan &amp; Setup" aria-label="Pengaturan &amp; Setup">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -224,39 +224,14 @@
     </div>
 
     <!-- Modal Pengaturan Admin -->
+    <!-- Modal Pengaturan (publik): Koneksi & Setup Backend -->
     <div id="settingsModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
-                <h2 class="text-lg font-bold text-gray-800">Pengaturan Admin</h2>
+                <h2 class="text-lg font-bold text-gray-800">Pengaturan &amp; Setup</h2>
                 <button onclick="toggleSettingsModal()" class="text-gray-500 hover:text-red-500 text-2xl leading-none">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto flex-1 space-y-5">
-                <!-- Keamanan -->
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="font-bold text-sm mb-1">Keamanan</h3>
-                    <p class="text-xs text-gray-500 mb-3">Sebagian besar pengaturan backend dilindungi kata sandi admin. Koneksi Google Sheets dapat diakses tanpa kata sandi.</p>
-
-                    <div id="secLocked">
-                        <label for="unlockPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Admin</label>
-                        <input type="password" id="unlockPwd" autocomplete="current-password" placeholder="Masukkan kata sandi admin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                        <button id="btnUnlock" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 1v1m-6 4h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z"></path></svg>
-                            Buka Kunci
-                        </button>
-                        <p id="unlockStatus" class="text-xs mt-2"></p>
-                        <p class="text-xs text-gray-400 mt-2">Submenu Tahun ekskul padus, Laporan Absensi, Daftar Siswa, dan Backup Data dikunci sampai kata sandi yang benar dimasukkan. Submenu <b>Koneksi Google Sheets</b> tetap dapat dilihat dan diubah tanpa kata sandi.</p>
-                    </div>
-
-                    <div id="secUnlocked" class="hidden">
-                        <div class="flex justify-end mb-3">
-                            <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                Kunci Pengaturan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Koneksi Google Sheets -->
                 <div class="bg-green-50 p-4 rounded-lg border border-green-200" id="connBlock">
                     <button type="button" onclick="toggleSettingsSection('connBody', this)" aria-expanded="false" class="w-full flex items-center justify-between gap-2 text-left">
@@ -279,6 +254,53 @@
                         </button>
                     </div>
                     <p id="connStatus" class="text-sm mt-2"></p>
+                    </div>
+                </div>
+
+                <!-- Setup Backend -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-sm mb-1">Setup Backend</h3>
+                    <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
+                    <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                        Setup Google Sheets Backend
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Menu Admin (tersembunyi: buka dengan 5x ketuk logo) -->
+    <div id="menuAdminModal" class="fixed inset-0 bg-black/60 hidden flex-col items-center justify-center z-50 p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                <h2 class="text-lg font-bold text-gray-800">Menu Admin</h2>
+                <button onclick="toggleMenuAdminModal()" class="text-gray-500 hover:text-red-500 text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-5">
+                <!-- Keamanan -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-sm mb-1">Keamanan</h3>
+                    <p class="text-xs text-gray-500 mb-3">Menu ini khusus admin dan dilindungi kata sandi. Koneksi Google Sheets & Setup Backend ada di menu <b>Pengaturan</b> (ikon roda gigi) yang dapat dibuka tanpa kata sandi.</p>
+
+                    <div id="secLocked">
+                        <label for="unlockPwd" class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Admin</label>
+                        <input type="password" id="unlockPwd" autocomplete="current-password" placeholder="Masukkan kata sandi admin" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                        <button id="btnUnlock" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 1v1m-6 4h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z"></path></svg>
+                            Buka Kunci
+                        </button>
+                        <p id="unlockStatus" class="text-xs mt-2"></p>
+                        <p class="text-xs text-gray-400 mt-2">Submenu Tahun ekskul padus, Laporan Absensi, Daftar Siswa, dan Backup Data dikunci sampai kata sandi yang benar dimasukkan.</p>
+                    </div>
+
+                    <div id="secUnlocked" class="hidden">
+                        <div class="flex justify-end mb-3">
+                            <button id="btnLock" class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                Kunci Pengaturan
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -380,16 +402,6 @@
                         </button>
                     </div>
                     </div>
-                </div>
-
-                <!-- Setup Backend -->
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="font-bold text-sm mb-1">Setup Backend</h3>
-                    <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
-                    <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                        Admin: Setup Google Sheets Backend
-                    </button>
                 </div>
             </div>
         </div>

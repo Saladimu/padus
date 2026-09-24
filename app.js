@@ -560,60 +560,11 @@ function renderMarkdown(md) {
 }
 
 // ==========================================
-// IKON PENGATURAN TERSEMBUNYI (5x klik logo)
+// PENGATURAN (publik) & MENU ADMIN (5x klik logo)
 // ==========================================
-let settingsGearVisible = false;
-let gearHideTimer = null;
-const GEAR_HIDE_TIMEOUT = 5 * 60 * 1000;
-
-// Timer idle ikon pengaturan: bila ikon ditampilkan (5 ketuk logo) tetapi
-// tidak ada aktivitas, ikon disembunyikan otomatis setelah 5 menit.
-function resetGearHideTimer() {
-    if (!settingsGearVisible || !settingsLocked) return;
-    stopGearHideTimer();
-    gearHideTimer = setTimeout(function () {
-        gearHideTimer = null;
-        hideSettingsGear();
-    }, GEAR_HIDE_TIMEOUT);
-}
-
-function stopGearHideTimer() {
-    if (gearHideTimer) {
-        clearTimeout(gearHideTimer);
-        gearHideTimer = null;
-    }
-}
-
-function applySettingsGearVisibility() {
-    const btn = document.getElementById('btnSettings');
-    if (!btn) return;
-    btn.classList.toggle('hidden', !settingsGearVisible);
-}
-
-// Sembunyikan ikon pengaturan dan tutup modalnya bila sedang terbuka.
-function hideSettingsGear() {
-    stopGearHideTimer();
-    settingsGearVisible = false;
-    applySettingsGearVisibility();
-    const modal = document.getElementById('settingsModal');
-    if (modal && !modal.classList.contains('hidden')) {
-        modal.classList.add('opacity-0');
-        setTimeout(function () {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
-    }
-}
-
-function toggleSettingsGear() {
-    if (settingsGearVisible) {
-        hideSettingsGear();
-    } else {
-        settingsGearVisible = true;
-        applySettingsGearVisibility();
-        resetGearHideTimer();
-    }
-}
+// Pengaturan publik (Koneksi Google Sheets + Setup Backend) dibuka lewat
+// ikon roda gigi yang selalu tampil. Menu Admin tetap tersembunyi dan
+// dibuka/ditutup dengan mengetuk logo tengah 5 kali.
 
 function applyLogoMaintenanceState() {
     const el = document.getElementById('btnLogoMaintenanceToggle');
@@ -633,7 +584,7 @@ function logoClick() {
     if (logoClickCount >= 5) {
         logoClickCount = 0;
         clearTimeout(logoClickTimer);
-        toggleSettingsGear();
+        toggleMenuAdminModal();
     }
 }
 
@@ -1008,11 +959,11 @@ function toggleSettingsSection(bodyId, btn) {
 }
 
 function collapseSettingsSections() {
-    ['connBody', 'backupBody', 'pwdBody'].forEach(function (id) {
+    ['backupBody', 'pwdBody'].forEach(function (id) {
         const body = document.getElementById(id);
         if (body) body.classList.add('hidden');
     });
-    document.querySelectorAll('#settingsModal button[aria-expanded]').forEach(function (btn) {
+    document.querySelectorAll('#menuAdminModal button[aria-expanded]').forEach(function (btn) {
         btn.setAttribute('aria-expanded', 'false');
         const icon = btn.querySelector('svg');
         if (icon) icon.style.transform = 'rotate(0deg)';
@@ -1089,15 +1040,10 @@ function stopSettingsLockTimer() {
     }
 }
 
-// Satu titik reset untuk kedua timer idle:
-// - sesi pengaturan terbuka -> perpanjang timer kunci (5 menit tanpa aktivitas)
-// - ikon pengaturan tampil tapi belum dibuka -> perpanjang timer sembunyi ikon
+// Aktivitas pengguna memperpanjang sesi Menu Admin yang sedang terbuka
+// (kunci otomatis setelah 5 menit tanpa aktivitas).
 function resetIdleTimers() {
-    if (settingsLocked) {
-        resetGearHideTimer();
-    } else {
-        resetSettingsLockTimer();
-    }
+    if (!settingsLocked) resetSettingsLockTimer();
 }
 
 // Aktivitas pengguna (klik, ketik, gulir, sentuh, gerak) menyegarkan timer idle.
@@ -1138,25 +1084,22 @@ function unlockSettings() {
         document.getElementById('unlockPwd').value = '';
         settingsLocked = false;
         applySecurityState();
-        stopGearHideTimer();
         startSettingsLockTimer();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
 
-// `auto` true = dipanggil oleh timer idle 5 menit; ikon pengaturan ikut disembunyikan.
+// `auto` true = dipanggil oleh timer idle 5 menit; modal Menu Admin ikut ditutup.
 function lockSettings(auto) {
     settingsLocked = true;
     stopSettingsLockTimer();
     applySecurityState();
-    document.getElementById('connStatus').textContent = '';
     if (auto === true) {
-        hideSettingsGear();
+        hideMenuAdminModal();
         showStatusModal("Sesi Berakhir", "Pengaturan Admin terkunci otomatis karena tidak ada aktivitas selama 5 menit.", true);
         return;
     }
     showStatusModal("Pemberitahuan", "Pengaturan Admin berhasil dikunci.", true);
-    resetGearHideTimer();
 }
 
 function setBackupStatus(msg, type) {
@@ -2250,11 +2193,26 @@ function printHistory() {
 }
 
 // ==========================================
-// MODAL PENGATURAN ADMIN
+// MODAL PENGATURAN (publik) & MENU ADMIN
 // ==========================================
+// Pengaturan publik: Koneksi Google Sheets + Setup Backend, selalu bisa dibuka.
 function toggleSettingsModal() {
-    if (!settingsGearVisible) return;
     const modal = document.getElementById('settingsModal');
+    if (!modal) return;
+    if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    } else {
+        hideModalEl(modal);
+    }
+}
+
+// Menu Admin: tersembunyi, dibuka/ditutup dengan 5 ketuk logo. Selalu butuh
+// kata sandi; saat ditutup langsung terkunci kembali.
+function toggleMenuAdminModal() {
+    const modal = document.getElementById('menuAdminModal');
+    if (!modal) return;
     if (modal.classList.contains('hidden')) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -2262,12 +2220,30 @@ function toggleSettingsModal() {
         const backupBody = document.getElementById('backupBody');
         if (!settingsLocked && backupBody && !backupBody.classList.contains('hidden')) loadBackupList();
     } else {
-        modal.classList.add('opacity-0');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
+        hideMenuAdminModal();
+        relockSettingsSilently();
     }
+}
+
+function hideMenuAdminModal() {
+    const modal = document.getElementById('menuAdminModal');
+    if (modal) hideModalEl(modal);
+}
+
+function hideModalEl(modal) {
+    modal.classList.add('opacity-0');
+    setTimeout(function () {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 300);
+}
+
+// Kunci kembali sesi admin tanpa pesan (dipakai saat Menu Admin ditutup).
+function relockSettingsSilently() {
+    if (settingsLocked) return;
+    settingsLocked = true;
+    stopSettingsLockTimer();
+    applySecurityState();
 }
 
 // ==========================================
@@ -2389,7 +2365,6 @@ document.getElementById('currentDateDisplay').textContent = new Date().toLocaleD
 document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
-applySettingsGearVisibility();
 initCalloutMarquee();
 
 // Panaskan cache peek laporan hari ini agar klik pertama terasa instan
