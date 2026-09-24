@@ -1,6 +1,6 @@
 # Backend Google Apps Script
 
-Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web** dari menu **Terapkan > Penerapan Baru** (Execute as: Me, Access: Anyone). URL Aplikasi Web yang dihasilkan dimasukkan ke `GAS_WEB_APP_URL` di `../index.html`.
+Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web** dari menu **Terapkan > Penerapan Baru** (Execute as: Me, Access: Anyone). URL Aplikasi Web yang dihasilkan diisi di `../config.js` (`window.PADUS_DEFAULT_API_URL`) agar semua perangkat (termasuk siswa) otomatis memakai backend yang sama, atau lewat menu **Pengaturan > Koneksi Google Sheets** untuk override per perangkat. Bila keduanya kosong, aplikasi menampilkan peringatan agar admin mengisinya.
 
 ## Action yang Didukung (`doPost`)
 

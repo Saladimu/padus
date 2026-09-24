@@ -101,7 +101,10 @@ function hardRefreshApp() {
 // ==========================================
 // CONFIGURASI BACKEND
 // ==========================================
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8mxqoDrC0Wjqn-xPkTeqEMaBce2nGJR1ASrgazuTHSizvfhDEm8jfTCOP7mtHAr5zMQ/exec";
+// URL backend Apps Script. Nilainya diambil dari parameter submenu
+// "Koneksi Google Sheets" (disimpan di localStorage). Kosong sampai admin
+// mengisinya, sehingga aplikasi tidak lagi memakai URL bawaan yang hardcoded.
+let GAS_WEB_APP_URL = "";
 const LS_CONFIG = 'choir_absensi_config';
 const LS_PWD = 'choir_absensi_pwd';
 const LS_ADMIN_LOCK = 'choir_admin_lock_v1';
@@ -282,10 +285,39 @@ function dateInRange(dateStr, range) {
     return true;
 }
 
-// URL backend: pakai yang disimpan, fallback ke URL bawaan.
+// URL default publik dari config.js (dimuat sebelum app.js). Nilai ini
+// dipakai SEMUA perangkat sehingga siswa tidak perlu mengisi apa pun.
+function getDefaultApiUrl() {
+    if (typeof window === 'undefined' || !window.PADUS_DEFAULT_API_URL) return '';
+    return String(window.PADUS_DEFAULT_API_URL).trim();
+}
+
+// URL backend: pakai override dari submenu "Koneksi Google Sheets" bila ada,
+// jika tidak pakai URL default dari config.js. Tidak ada URL hardcoded di sini.
 function getApiUrl() {
-    const cfg = getConfig();
-    return cfg.apiUrl && cfg.apiUrl.trim() ? cfg.apiUrl.trim() : GAS_WEB_APP_URL;
+    const fromSettings = (getConfig().apiUrl || '').trim();
+    GAS_WEB_APP_URL = fromSettings || getDefaultApiUrl();
+    return GAS_WEB_APP_URL;
+}
+
+function hasApiUrl() {
+    return getApiUrl() !== '';
+}
+
+// URL valid = Apps Script Web App (berakhiran /exec).
+function isValidAppsScriptUrl(url) {
+    return /^https:\/\/script\.google\.com\/\S*\/exec(\?.*)?$/i.test(String(url || '').trim());
+}
+
+function apiUrlMissingMessage() {
+    return 'URL Apps Script belum diatur. Buka Pengaturan > Koneksi Google Sheets, tempel URL Web App yang berakhiran /exec, lalu tekan Simpan. (Ketuk logo 5 kali bila ikon Pengaturan belum tampil.)';
+}
+
+// Tampilkan/sembunyikan banner peringatan di menu utama.
+function updateConnectionWarning() {
+    const el = document.getElementById('connWarning');
+    if (!el) return;
+    el.classList.toggle('hidden', hasApiUrl());
 }
 
 // POST JSON ke backend dengan batas waktu dan percobaan ulang.
@@ -297,6 +329,11 @@ function apiPost(payload, options) {
     const timeoutMs = opts.timeoutMs || API_TIMEOUT_MS;
     const maxRetries = typeof opts.retries === 'number' ? opts.retries : API_MAX_RETRIES;
     const body = JSON.stringify(payload);
+
+    if (!url || !/^https?:\/\//i.test(url)) {
+        updateConnectionWarning();
+        return Promise.reject(new Error(apiUrlMissingMessage()));
+    }
 
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         return Promise.reject(new Error('Tidak ada koneksi internet.'));
@@ -740,7 +777,11 @@ verifyForm.addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error(error);
-        showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Periksa koneksi Anda lalu coba lagi.", false);
+        if (!hasApiUrl()) {
+            showStatusModal("Backend Belum Diatur", apiUrlMissingMessage(), false);
+        } else {
+            showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Periksa koneksi Anda lalu coba lagi.", false);
+        }
     } finally {
         // Matikan Loader
         document.getElementById('verifyLoader').classList.add('hidden');
@@ -794,7 +835,11 @@ attendanceForm.addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error(error);
-        showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Coba lagi sebentar lagi (absensi aman dari data ganda).", false);
+        if (!hasApiUrl()) {
+            showStatusModal("Backend Belum Diatur", apiUrlMissingMessage(), false);
+        } else {
+            showStatusModal("Error", "Server tidak merespons setelah beberapa percobaan. Coba lagi sebentar lagi (absensi aman dari data ganda).", false);
+        }
     } finally {
         // Matikan Loader
         document.getElementById('submitLoader').classList.add('hidden');
@@ -965,7 +1010,20 @@ function applySecurityState() {
     document.getElementById('btnTestConn').disabled = settingsLocked;
     document.getElementById('btnSaveConn').disabled = settingsLocked;
     urlInput.placeholder = settingsLocked ? 'Terkunci - masukkan kata sandi admin' : 'https://script.google.com/macros/s/.../exec';
-    urlInput.value = settingsLocked ? '' : (getConfig().apiUrl || '');
+    const savedUrl = (getConfig().apiUrl || '').trim();
+    urlInput.value = settingsLocked ? '' : (savedUrl || getDefaultApiUrl());
+    updateConnectionWarning();
+    if (!settingsLocked) {
+        if (!hasApiUrl()) {
+            setConnStatus(apiUrlMissingMessage(), 'err');
+        } else if (savedUrl && !isValidAppsScriptUrl(savedUrl)) {
+            setConnStatus('URL tersimpan tidak valid. Gunakan URL Web App yang berakhiran "/exec", lalu Simpan.', 'err');
+        } else if (!savedUrl) {
+            setConnStatus('Memakai URL default dari config.js.', 'ok');
+        } else {
+            setConnStatus('', '');
+        }
+    }
     document.getElementById('reportDate').disabled = settingsLocked;
     document.getElementById('btnShowReport').disabled = settingsLocked;
     document.getElementById('btnShowStudents').disabled = settingsLocked;
@@ -1300,8 +1358,25 @@ function setConnStatus(msg, type) {
 function saveConfig() {
     const url = document.getElementById('apiUrlSetting').value.trim();
     const cfg = getConfig();
+    if (!url) {
+        cfg.apiUrl = '';
+        setConfig(cfg);
+        updateConnectionWarning();
+        if (!hasApiUrl()) {
+            setConnStatus(apiUrlMissingMessage(), 'err');
+            return;
+        }
+        setConnStatus('Kolom URL dikosongkan: memakai URL default dari config.js.', 'ok');
+        testConnection();
+        return;
+    }
+    if (!isValidAppsScriptUrl(url)) {
+        setConnStatus('URL tidak valid. Gunakan URL Apps Script Web App yang berakhiran "/exec" (contoh: https://script.google.com/macros/s/.../exec).', 'err');
+        return;
+    }
     cfg.apiUrl = url;
     setConfig(cfg);
+    updateConnectionWarning();
     testConnection();
 }
 
@@ -1378,15 +1453,23 @@ function saveYearRange() {
 }
 
 function testConnection() {
-    const url = document.getElementById('apiUrlSetting').value.trim();
-    const cfg = getConfig();
-    cfg.apiUrl = url;
-    setConfig(cfg);
-
+    const typed = document.getElementById('apiUrlSetting').value.trim();
+    const url = typed || getDefaultApiUrl();
     if (!url) {
-        setConnStatus('URL belum diisi.', 'err');
+        setConnStatus(apiUrlMissingMessage(), 'err');
+        updateConnectionWarning();
         return;
     }
+    if (!isValidAppsScriptUrl(url)) {
+        setConnStatus('URL tidak valid. Gunakan URL Apps Script Web App yang berakhiran "/exec" (contoh: https://script.google.com/macros/s/.../exec).', 'err');
+        return;
+    }
+    if (typed) {
+        const cfg = getConfig();
+        cfg.apiUrl = typed;
+        setConfig(cfg);
+    }
+    updateConnectionWarning();
 
     setConnStatus('Menguji koneksi...', '');
     apiPost({ action: 'ping' }, { url: url, retries: 1 })
@@ -2202,6 +2285,23 @@ function toggleHelpModal() {
 
 function toggleQrModal() {
     const modal = document.getElementById('qrModal');
+    if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    } else {
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+}
+
+// Modal panduan setup backend (dibuka dari banner peringatan & submenu Setup Backend).
+function toggleAdminModal() {
+    const modal = document.getElementById('adminModal');
+    if (!modal) return;
     if (modal.classList.contains('hidden')) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');

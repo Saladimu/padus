@@ -8,12 +8,13 @@
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v74';
-var ASSET_VERSION = '20260922l';
+var CACHE_NAME = 'choir-absensi-v76';
+var ASSET_VERSION = '20260922n';
 var CORE_ASSETS = [
   './',
   './index.html',
   './app.js?v=' + ASSET_VERSION,
+  './config.js?v=' + ASSET_VERSION,
   './styles.css?v=' + ASSET_VERSION,
   './Absensi.md',
   './qrpadus.png',
@@ -41,9 +42,11 @@ self.addEventListener('activate', function (event) {
               var url = req.url;
               var isAppJs = /\/app\.js(?:\?|$)/.test(url);
               var isStylesCss = /\/styles\.css(?:\?|$)/.test(url);
+              var isConfigJs = /\/config\.js(?:\?|$)/.test(url);
               var isCurrent = url.indexOf('app.js?v=' + ASSET_VERSION) !== -1 ||
-                              url.indexOf('styles.css?v=' + ASSET_VERSION) !== -1;
-              return (isAppJs || isStylesCss) && !isCurrent;
+                              url.indexOf('styles.css?v=' + ASSET_VERSION) !== -1 ||
+                              url.indexOf('config.js?v=' + ASSET_VERSION) !== -1;
+              return (isAppJs || isStylesCss || isConfigJs) && !isCurrent;
             }).map(function (req) { return cache.delete(req); })
           );
         });
@@ -98,6 +101,25 @@ self.addEventListener('fetch', function (event) {
           return response;
         }).catch(function () { return cached; });
         return cached || network;
+      })
+    );
+    return;
+  }
+
+  // config.js: network-first agar URL default yang diubah admin langsung
+  // terpakai di semua perangkat; fallback ke cache saat offline.
+  if (/\/config\.js(?:\?|$)/.test(request.url)) {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' }).then(function (response) {
+        if (response && response.status === 200) {
+          var copy = response.clone();
+          caches.open(CACHE_NAME).then(function (cache) {
+            cache.put(request, copy);
+          });
+        }
+        return response;
+      }).catch(function () {
+        return caches.match(request);
       })
     );
     return;
