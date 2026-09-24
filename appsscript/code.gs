@@ -112,7 +112,7 @@ function doPost(e) {
     } else if (action === 'history') {
       return respond(getStudentHistory(data.id));
     } else if (action === 'maintenance') {
-      return respond(handleMaintenance(data.value));
+      return respond(handleMaintenance(data));
     } else if (action === 'debug') {
       return respond(debugCheck(data.id));
     }
@@ -129,21 +129,98 @@ function doOptions(e) {
   return respond({ success: true });
 }
 
-const MAINTENANCE_KEY = 'choir_maintenance';
+// Mode maintenance punya dua lapis:
+// - Override manual (admin): '1' = paksa aktif, '0' = paksa nonaktif, tidak ada = ikut jadwal.
+// - Jadwal otomatis harian (default 09:00-17:00 WIB) yang berlaku bila tidak ada override manual.
+const MAINTENANCE_MANUAL_KEY = 'choir_maintenance_manual';
+const MAINTENANCE_SCHEDULE_KEY = 'choir_maintenance_schedule';
+const MAINTENANCE_TZ = 'Asia/Jakarta';
+const DEFAULT_MAINTENANCE_SCHEDULE = { enabled: true, start: '09:00', end: '17:00' };
+
+function isValidHhmm(value) {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+}
+
+function minutesOfHhmm(value) {
+  const parts = value.split(':');
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+function normalizeMaintenanceSchedule(obj) {
+  const s = obj && typeof obj === 'object' ? obj : {};
+  return {
+    enabled: s.enabled === undefined ? DEFAULT_MAINTENANCE_SCHEDULE.enabled : !!s.enabled,
+    start: isValidHhmm(s.start) ? s.start : DEFAULT_MAINTENANCE_SCHEDULE.start,
+    end: isValidHhmm(s.end) ? s.end : DEFAULT_MAINTENANCE_SCHEDULE.end
+  };
+}
+
+function getMaintenanceSchedule() {
+  const raw = PropertiesService.getScriptProperties().getProperty(MAINTENANCE_SCHEDULE_KEY);
+  if (!raw) return Object.assign({}, DEFAULT_MAINTENANCE_SCHEDULE);
+  try {
+    return normalizeMaintenanceSchedule(JSON.parse(raw));
+  } catch (e) {
+    return Object.assign({}, DEFAULT_MAINTENANCE_SCHEDULE);
+  }
+}
+
+function setMaintenanceSchedule(obj) {
+  const schedule = normalizeMaintenanceSchedule(obj);
+  PropertiesService.getScriptProperties()
+    .setProperty(MAINTENANCE_SCHEDULE_KEY, JSON.stringify(schedule));
+  return schedule;
+}
+
+function getMaintenanceManual() {
+  const value = PropertiesService.getScriptProperties().getProperty(MAINTENANCE_MANUAL_KEY);
+  if (value === '1') return true;
+  if (value === '0') return false;
+  return null;
+}
+
+function setMaintenanceManual(value) {
+  const props = PropertiesService.getScriptProperties();
+  if (value === true) props.setProperty(MAINTENANCE_MANUAL_KEY, '1');
+  else if (value === false) props.setProperty(MAINTENANCE_MANUAL_KEY, '0');
+  else props.deleteProperty(MAINTENANCE_MANUAL_KEY);
+}
+
+// Cek apakah waktu sekarang (WIB) berada di dalam rentang jadwal harian.
+// Mendukung rentang yang melewati tengah malam (mis. 22:00-05:00).
+function isWithinMaintenanceSchedule(schedule, now) {
+  if (!schedule || !schedule.enabled) return false;
+  const stamp = Utilities.formatDate(now || new Date(), MAINTENANCE_TZ, 'HH:mm');
+  const current = minutesOfHhmm(stamp);
+  const start = minutesOfHhmm(schedule.start);
+  const end = minutesOfHhmm(schedule.end);
+  if (start === end) return false;
+  if (start < end) return current >= start && current < end;
+  return current >= start || current < end;
+}
 
 function getMaintenanceMode() {
-  return PropertiesService.getScriptProperties().getProperty(MAINTENANCE_KEY) === '1';
+  const manual = getMaintenanceManual();
+  if (manual !== null) return manual;
+  return isWithinMaintenanceSchedule(getMaintenanceSchedule());
 }
 
-function setMaintenanceMode(value) {
-  PropertiesService.getScriptProperties().setProperty(MAINTENANCE_KEY, value ? '1' : '0');
-}
-
-function handleMaintenance(value) {
-  if (typeof value === 'boolean') {
-    setMaintenanceMode(value);
+function handleMaintenance(data) {
+  const payload = data && typeof data === 'object' ? data : {};
+  if (payload.value === 'auto') {
+    setMaintenanceManual(null);
+  } else if (typeof payload.value === 'boolean') {
+    setMaintenanceManual(payload.value);
   }
-  return { success: true, maintenance: getMaintenanceMode() };
+  if (payload.schedule && typeof payload.schedule === 'object') {
+    setMaintenanceSchedule(payload.schedule);
+  }
+  return {
+    success: true,
+    maintenance: getMaintenanceMode(),
+    manual: getMaintenanceManual(),
+    schedule: getMaintenanceSchedule()
+  };
 }
 
 // Dipakai untuk menolak permintaan saat mode maintenance aktif, sehingga

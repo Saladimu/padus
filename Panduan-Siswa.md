@@ -126,7 +126,7 @@ Jika ada kesalahan pengisian, segera sampaikan kepada **guru pembimbing / ketua 
 
 ## 7. Mode Maintenance
 
-Kadang sistem perlu diperbaiki/diatur oleh admin. Saat **Mode Maintenance** aktif:
+Kadang sistem perlu diperbaiki/diatur oleh admin. Mode maintenance juga bisa **aktif otomatis mengikuti jadwal harian** (bawaan **09:00–17:00 WIB**). Saat **Mode Maintenance** aktif:
 
 - Muncul jendela kecil merah berkedip **"We're Getting Things Ready"**.
 - Kolom Student ID dan PIN **dinonaktifkan** — absensi tidak bisa dilakukan.

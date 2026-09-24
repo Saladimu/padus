@@ -63,7 +63,7 @@ Aplikasi memiliki **dua menu**:
 3. **Laporan Absensi** — rekap per tanggal + siswa tidak hadir
 4. **Daftar Siswa** — data sheet `STUDENTS`
 5. **Backup Data** *(accordion)* — backup sheet bertanggal
-6. **Ubah password/Maintenance** *(accordion)* — ganti kata sandi + mode maintenance
+6. **Ubah password/Maintenance** *(accordion)* — ganti kata sandi + mode & jadwal maintenance
 
 Tombol **Setup Backend** (panduan deploy Google Apps Script) ada di menu **Pengaturan & Setup**.
 
@@ -159,13 +159,29 @@ Buka submenu **Ubah password/Maintenance** (header merah di bagian bawah menu).
 
 ### Mode Maintenance
 
-Sakelar **Mode Maintenance** untuk menonaktifkan absensi siswa sementara (mis. saat perbaikan data atau sebelum tahun ekskul baru dimulai).
+Mode maintenance menonaktifkan absensi siswa sementara (mis. saat perbaikan data atau sebelum tahun ekskul baru dimulai). Ada **tiga pilihan mode** (tombol bersegmen **Otomatis / Aktif / Nonaktif**) dan satu **Jadwal Otomatis Harian**.
 
-Saat **ON**:
+**Pilihan mode:**
+
+- **Otomatis** — maintenance mengikuti **Jadwal Otomatis Harian**. Ini pilihan bawaan.
+- **Aktif** — paksa maintenance **ON** terus (mengabaikan jadwal) sampai diubah kembali.
+- **Nonaktif** — paksa maintenance **OFF** terus (mengabaikan jadwal) sampai diubah kembali.
+
+**Jadwal Otomatis Harian** (bawaan **aktif, 09:00–17:00 WIB**):
+
+1. Sakelar **Jadwal Otomatis Harian** untuk menyalakan/mematikan jadwal.
+2. Isi jam **Dari** dan **Sampai** (format 24 jam, zona **WIB/GMT+7**), lalu tekan **Simpan Jadwal**.
+3. Selama berada di dalam rentang jam, maintenance **ON otomatis**; di luar rentang, **OFF** — tanpa perlu menekan apa pun. Rentang yang melewati tengah malam (mis. 22:00–05:00) juga didukung.
+
+Baris **Status** menunjukkan keadaan saat ini: mis. *"AKTIF otomatis (dalam jadwal 09:00-17:00 WIB)"* atau *"NONAKTIF — di luar jadwal 09:00-17:00 WIB"*.
+
+Saat maintenance **ON**:
 
 - Semua perangkat menampilkan jendela merah berkedip **"We're Getting Things Ready"** dan input siswa dinonaktifkan.
 - Backend **menolak** `verify`/`submit` (`{ success:false, maintenance:true }`) — halaman lama yang masih terbuka pun tidak bisa menulis data.
 - Status disimpan di server (Script Properties) sehingga **global untuk semua perangkat**.
+
+**Prioritas:** override manual (**Aktif**/**Nonaktif**) selalu menang atas jadwal. Pilih **Otomatis** agar jadwal berlaku lagi.
 
 Catatan teknis: perangkat yang sudah terbuka mengecek ulang status saat siswa menyentuh form (throttle 60 detik) dan saat tab kembali aktif; cache status lokal berumur maksimal 5 menit. Setelah mematikan maintenance, perangkat siswa akan kembali normal dalam hitungan detik–menit (atau setelah refresh).
 
@@ -300,7 +316,7 @@ Pengecekan pembaruan berjalan otomatis setiap 30 menit dan saat tab kembali akti
 | `students` | Daftar siswa tanpa PIN | Daftar Siswa |
 | `history` | Riwayat absensi per siswa | Tombol Riwayat |
 | `ping` | Tes koneksi (`{ success: true }`) | Test Koneksi |
-| `maintenance` | Baca/simpan status mode maintenance (Script Properties) | Sakelar Mode Maintenance |
+| `maintenance` | Baca/simpan mode maintenance (override manual + jadwal otomatis) di Script Properties | Mode & Jadwal Maintenance |
 | `backup` | Duplikat sheet `STUDENTS`/`ATTENDANCE` bertanggal (retensi 6) | Buat Backup Sekarang |
 | `backuplist` | Daftar backup tersimpan | Daftar data backup |
 

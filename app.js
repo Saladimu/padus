@@ -127,6 +127,8 @@ let currentReportData = null;
 let currentStudentList = [];
 
 let maintenanceMode = false;
+let maintenanceManual = null; // null = ikut jadwal, true = paksa aktif, false = paksa nonaktif
+let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00' };
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
@@ -566,17 +568,6 @@ function renderMarkdown(md) {
 // ikon roda gigi yang selalu tampil. Menu Admin tetap tersembunyi dan
 // dibuka/ditutup dengan mengetuk logo tengah 5 kali.
 
-function applyLogoMaintenanceState() {
-    const el = document.getElementById('btnLogoMaintenanceToggle');
-    if (!el) return;
-    const on = maintenanceMode;
-    el.classList.toggle('bg-green-500', on);
-    el.classList.toggle('bg-gray-300', !on);
-    el.setAttribute('aria-checked', on ? 'true' : 'false');
-    const knob = el.querySelector('span');
-    if (knob) knob.classList.toggle('translate-x-5', on);
-}
-
 function logoClick() {
     logoClickCount++;
     if (logoClickTimer) clearTimeout(logoClickTimer);
@@ -594,21 +585,160 @@ function maintenanceApiUrl() {
     return base + sep + '_=' + Date.now();
 }
 
-function toggleMaintenance() {
+function normalizeMaintenanceSchedule(schedule) {
+    const s = schedule && typeof schedule === 'object' ? schedule : {};
+    const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
+    return {
+        enabled: s.enabled === undefined ? true : !!s.enabled,
+        start: timeRe.test(s.start) ? s.start : '09:00',
+        end: timeRe.test(s.end) ? s.end : '17:00'
+    };
+}
+
+// Menit saat ini menurut zona waktu WIB, apa pun zona perangkat.
+function wibMinutesNow(now) {
+    try {
+        const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false
+        }).formatToParts(now || new Date());
+        let hour = 0, minute = 0;
+        parts.forEach(function (part) {
+            if (part.type === 'hour') hour = parseInt(part.value, 10);
+            if (part.type === 'minute') minute = parseInt(part.value, 10);
+        });
+        return hour * 60 + minute;
+    } catch (e) {
+        const d = new Date();
+        return d.getHours() * 60 + d.getMinutes();
+    }
+}
+
+function minutesOfHhmm(value) {
+    const parts = String(value).split(':');
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+function isWithinMaintenanceSchedule(schedule, now) {
+    if (!schedule || !schedule.enabled) return false;
+    const current = wibMinutesNow(now);
+    const start = minutesOfHhmm(schedule.start);
+    const end = minutesOfHhmm(schedule.end);
+    if (start === end) return false;
+    return start < end ? (current >= start && current < end) : (current >= start || current < end);
+}
+
+function setMaintenanceOverride(mode) {
     if (maintenanceSyncInFlight) return;
     maintenanceSyncInFlight = true;
-    const newValue = !maintenanceMode;
-    applyMaintenance(newValue);
-    apiPost({ action: 'maintenance', value: newValue }, { url: maintenanceApiUrl() })
+    const value = mode === 'auto' ? 'auto' : (mode === 'on');
+    apiPost({ action: 'maintenance', value: value }, { url: maintenanceApiUrl() })
+        .then(res => { if (res && res.success) applyMaintenanceResult(res); })
+        .catch(() => {})
+        .finally(() => { maintenanceSyncInFlight = false; });
+}
+
+function toggleMaintenanceSchedule() {
+    maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
+    maintenanceSchedule.enabled = !maintenanceSchedule.enabled;
+    renderMaintenanceControls();
+    persistMaintenanceSchedule();
+}
+
+function saveMaintenanceSchedule() {
+    const startEl = document.getElementById('maintenanceStart');
+    const endEl = document.getElementById('maintenanceEnd');
+    const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!startEl || !endEl) return;
+    if (!timeRe.test(startEl.value) || !timeRe.test(endEl.value)) {
+        setMaintenanceScheduleStatus('Format jam harus HH:MM.', true);
+        return;
+    }
+    maintenanceSchedule = {
+        enabled: normalizeMaintenanceSchedule(maintenanceSchedule).enabled,
+        start: startEl.value,
+        end: endEl.value
+    };
+    persistMaintenanceSchedule();
+}
+
+function persistMaintenanceSchedule() {
+    if (maintenanceSyncInFlight) return;
+    maintenanceSyncInFlight = true;
+    setMaintenanceScheduleStatus('Menyimpan jadwal...', false);
+    apiPost({ action: 'maintenance', schedule: maintenanceSchedule }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
-                applyMaintenance(!!res.maintenance);
+                applyMaintenanceResult(res);
+                setMaintenanceScheduleStatus('Jadwal tersimpan.', false);
             } else {
-                applyMaintenance(!newValue);
+                setMaintenanceScheduleStatus('Gagal menyimpan jadwal.', true);
             }
         })
-        .catch(() => applyMaintenance(!newValue))
+        .catch(() => setMaintenanceScheduleStatus('Gagal menyimpan jadwal (jaringan).', true))
         .finally(() => { maintenanceSyncInFlight = false; });
+}
+
+function setMaintenanceScheduleStatus(message, isError) {
+    const el = document.getElementById('maintenanceScheduleStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.className = 'mt-2 text-xs ' + (isError ? 'text-red-600' : 'text-gray-500');
+}
+
+function applyMaintenanceResult(res) {
+    if (!res || !res.success) return;
+    maintenanceManual = (res.manual === true || res.manual === false) ? res.manual : null;
+    if (res.schedule) maintenanceSchedule = normalizeMaintenanceSchedule(res.schedule);
+    applyMaintenance(!!res.maintenance);
+}
+
+function renderMaintenanceControls() {
+    const active = maintenanceManual === true ? 'on' : (maintenanceManual === false ? 'off' : 'auto');
+    const buttons = {
+        auto: document.getElementById('btnMaintAuto'),
+        on: document.getElementById('btnMaintOn'),
+        off: document.getElementById('btnMaintOff')
+    };
+    Object.keys(buttons).forEach(function (key) {
+        const el = buttons[key];
+        if (!el) return;
+        const isActive = key === active;
+        el.classList.toggle('bg-white', isActive);
+        el.classList.toggle('text-blue-700', isActive);
+        el.classList.toggle('shadow', isActive);
+        el.classList.toggle('text-gray-600', !isActive);
+    });
+
+    const schedToggle = document.getElementById('maintenanceScheduleToggle');
+    if (schedToggle) {
+        const on = maintenanceSchedule.enabled;
+        schedToggle.classList.toggle('bg-green-500', on);
+        schedToggle.classList.toggle('bg-gray-300', !on);
+        schedToggle.setAttribute('aria-checked', on ? 'true' : 'false');
+        const knob = schedToggle.querySelector('span');
+        if (knob) knob.classList.toggle('translate-x-5', on);
+    }
+    const startEl = document.getElementById('maintenanceStart');
+    const endEl = document.getElementById('maintenanceEnd');
+    if (startEl && document.activeElement !== startEl) startEl.value = maintenanceSchedule.start;
+    if (endEl && document.activeElement !== endEl) endEl.value = maintenanceSchedule.end;
+
+    const status = document.getElementById('maintenanceStatus');
+    if (status) {
+        let text;
+        if (maintenanceManual === true) {
+            text = 'Status: AKTIF (dipaksa manual) — jadwal diabaikan.';
+        } else if (maintenanceManual === false) {
+            text = 'Status: NONAKTIF (dipaksa manual) — jadwal diabaikan.';
+        } else if (!maintenanceSchedule.enabled) {
+            text = 'Status: NONAKTIF — jadwal otomatis dimatikan.';
+        } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
+            text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB).';
+        } else {
+            text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB.';
+        }
+        status.textContent = text;
+    }
 }
 
 function applyMaintenance(on, persist) {
@@ -619,10 +749,12 @@ function applyMaintenance(on, persist) {
     btnVerify.disabled = on;
     btnVerify.classList.toggle('opacity-50', on);
     btnVerify.classList.toggle('cursor-not-allowed', on);
-    applyLogoMaintenanceState();
+    renderMaintenanceControls();
     if (persist === false) return;
     try {
-        localStorage.setItem(MAINTENANCE_CACHE_KEY, JSON.stringify({ value: on, ts: Date.now() }));
+        localStorage.setItem(MAINTENANCE_CACHE_KEY, JSON.stringify({
+            value: on, manual: maintenanceManual, schedule: maintenanceSchedule, ts: Date.now()
+        }));
     } catch (e) { /* localStorage tidak tersedia */ }
 }
 
@@ -632,6 +764,8 @@ function applyCachedMaintenance() {
         if (!raw) return false;
         const entry = JSON.parse(raw);
         if (entry && typeof entry.value === 'boolean' && (Date.now() - entry.ts) < MAINTENANCE_CACHE_TTL) {
+            if (entry.schedule) maintenanceSchedule = normalizeMaintenanceSchedule(entry.schedule);
+            maintenanceManual = (entry.manual === true || entry.manual === false) ? entry.manual : null;
             applyMaintenance(entry.value, false);
             return true;
         }
@@ -643,9 +777,8 @@ function fetchMaintenance() {
     return apiPost({ action: 'maintenance' }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
-                const on = !!res.maintenance;
-                applyMaintenance(on);
-                return on;
+                applyMaintenanceResult(res);
+                return !!res.maintenance;
             }
             return maintenanceMode;
         })
@@ -1004,7 +1137,7 @@ function applySecurityState() {
     document.getElementById('backupBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('pwdChangeBlock').classList.toggle('hidden', settingsLocked);
-    applyLogoMaintenanceState();
+    renderMaintenanceControls();
     document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
     document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
     renderYearRangeToggle();

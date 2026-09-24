@@ -12,6 +12,7 @@ Kode backend untuk aplikasi Absensi Paduan Suara. Deploy sebagai **Aplikasi Web*
 | `submit` | Validasi ulang identitas (tanpa membaca ulang absensi hari ini di `verifyStudent`), cek duplikasi per hari di bawah `LockService` (scan dari baris terbaru), lalu menulis baris ke sheet `ATTENDANCE`. Ditolak dengan `{ success:false, maintenance:true }` saat mode maintenance aktif. |
 | `backup` | Menduplikasi sheet `STUDENTS` dan `ATTENDANCE` menjadi sheet bertanggal `DDMMYY` di spreadsheet yang sama, lalu menyimpan maksimal `BACKUP_KEEP` (6) backup terbaru per sheet (lihat `backupSheets()`). Dipakai oleh submenu **Backup Data**. |
 | `backuplist` | Mengembalikan daftar backup tersimpan (`name`, `base`, `stamp`, `rows`) beserta nilai `keep`, dipakai untuk menampilkan daftar di submenu **Backup Data** (lihat `listBackups()`). |
+| `maintenance` | Baca/simpan mode maintenance global. `value` boolean = override manual (paksa ON/OFF); `value:"auto"` = hapus override agar ikut jadwal; `schedule:{enabled,start,end}` = simpan **Jadwal Otomatis Harian** (format `HH:MM`, zona WIB, bawaan `09:00`-`17:00`; mendukung rentang lintas tengah malam). Respons memuat `maintenance` (efektif), `manual` (`null`/`true`/`false`), dan `schedule`. Dipakai submenu **Ubah password/Maintenance**. |
 
 ## Struktur Sheet
 
