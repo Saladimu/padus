@@ -48,7 +48,7 @@ Ikon roda gigi **tersembunyi** agar tidak dibuka siswa.
 Setelah terbuka, menu Pengaturan berisi (dari atas):
 
 1. **Buka Kunci / Kunci** — status keamanan menu
-2. **Koneksi Google Sheets** *(accordion)* — URL backend + Test Koneksi
+2. **Koneksi Google Sheets** *(accordion)* — URL backend + Test Koneksi (**dapat dibuka tanpa kata sandi**)
 3. **Tahun ekskul padus** — batas rentang laporan (ON/OFF)
 4. **Laporan Absensi** — rekap per tanggal + siswa tidak hadir
 5. **Daftar Siswa** — data sheet `STUDENTS`
@@ -62,14 +62,14 @@ Tanda *(accordion)* = header dapat diklik untuk membuka/menutup isinya. Saat men
 
 ## 4. Koneksi Google Sheets
 
-Mengatur URL backend aplikasi untuk **perangkat ini**.
+Mengatur URL backend aplikasi untuk **perangkat ini**. Bagian ini **tidak dikunci** — siapa pun dapat **melihat, mengubah, menguji (Test Koneksi), dan menyimpan** URL tanpa kata sandi admin. Batas kata sandi hanya berlaku untuk Tahun ekskul, Laporan, Daftar Siswa, dan Backup.
 
 1. Buka bagian **Koneksi Google Sheets** (klik headernya bila tertutup).
-2. Isi **URL Aplikasi Web** Google Apps Script (berakhir dengan `/exec`).
+2. Isi **URL Aplikasi Web** Google Apps Script (berakhir dengan `/exec`). URL yang sedang dipakai (dari pengaturan perangkat atau default) langsung tampil di kolom ini.
 3. Tekan **Test Koneksi** — memanggil action `ping`. Sukses bila status koneksi menyala hijau.
 4. Tekan **Simpan**.
 
-Bila URL kosong, aplikasi memakai URL bawaan yang tertanam di `app.js`. Untuk memindah ke backend/spreadsheet baru: deploy ulang Apps Script (Bagian 10) → simpan URL baru di sini di setiap perangkat admin.
+Bila URL kosong, aplikasi memakai URL bawaan di `config.js`. Untuk memindah ke backend/spreadsheet baru: deploy ulang Apps Script (Bagian 11) → simpan URL baru di sini di setiap perangkat admin.
 
 ---
 

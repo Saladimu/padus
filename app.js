@@ -1025,24 +1025,24 @@ function applySecurityState() {
     const urlInput = document.getElementById('apiUrlSetting');
     secLocked.classList.toggle('hidden', !settingsLocked);
     secUnlocked.classList.toggle('hidden', settingsLocked);
-    urlInput.disabled = settingsLocked;
-    document.getElementById('btnTestConn').disabled = settingsLocked;
-    document.getElementById('btnSaveConn').disabled = settingsLocked;
-    urlInput.placeholder = settingsLocked ? 'Terkunci - masukkan kata sandi admin' : 'https://script.google.com/macros/s/.../exec';
+    // Koneksi Google Sheets TIDAK dikunci: URL backend dapat dilihat, diubah,
+    // diuji, dan disimpan tanpa kata sandi admin (berlaku per perangkat ini).
+    urlInput.disabled = false;
+    document.getElementById('btnTestConn').disabled = false;
+    document.getElementById('btnSaveConn').disabled = false;
+    urlInput.placeholder = 'https://script.google.com/macros/s/.../exec';
     const savedUrl = (getConfig().apiUrl || '').trim();
-    urlInput.value = settingsLocked ? '' : (savedUrl || getDefaultApiUrl());
+    urlInput.value = savedUrl || getDefaultApiUrl();
     updateConnectionWarning();
     updateConnSourceBadge();
-    if (!settingsLocked) {
-        if (!hasApiUrl()) {
-            setConnStatus(apiUrlMissingMessage(), 'err');
-        } else if (savedUrl && !isValidAppsScriptUrl(savedUrl)) {
-            setConnStatus('URL tersimpan tidak valid. Gunakan URL Web App yang berakhiran "/exec", lalu Simpan.', 'err');
-        } else if (!savedUrl) {
-            setConnStatus('Memakai URL default dari config.js.', 'ok');
-        } else {
-            setConnStatus('', '');
-        }
+    if (!hasApiUrl()) {
+        setConnStatus(apiUrlMissingMessage(), 'err');
+    } else if (savedUrl && !isValidAppsScriptUrl(savedUrl)) {
+        setConnStatus('URL tersimpan tidak valid. Gunakan URL Web App yang berakhiran "/exec", lalu Simpan.', 'err');
+    } else if (!savedUrl) {
+        setConnStatus('Memakai URL default dari config.js.', 'ok');
+    } else {
+        setConnStatus('', '');
     }
     document.getElementById('reportDate').disabled = settingsLocked;
     document.getElementById('btnShowReport').disabled = settingsLocked;
