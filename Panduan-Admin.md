@@ -28,15 +28,16 @@ Ikon roda gigi **tersembunyi** agar tidak dibuka siswa.
 2. Ikon **roda gigi (Pengaturan Admin)** muncul di header kanan atas.
 3. Ketuk ikon tersebut, lalu **masukkan kata sandi admin**.
    - **Kata sandi bawaan: `00000`** — *segera ganti* setelah pertama kali masuk (lihat [Bagian 9](#9-ubah-kata-saidi--mode-maintenance)).
-4. Untuk **menyembunyikan** ikon lagi (dan menutup modal pengaturan): **ketuk logo tengah 5 kali** sekali lagi.
+4. Untuk **menyembunyikan** ikon lagi (dan menutup modal pengaturan): **ketuk logo tengah 5 kali** sekali lagi. Ikon juga **tersembunyi otomatis** setelah 5 menit tanpa aktivitas (lihat tabel di bawah).
 
 ### Pengaman menu admin
 
 | Mekanisme | Keterangan |
 |-----------|------------|
 | **Kunci 3× salah** | 3 kali salah kata sandi → form terkunci **5 menit** (hitungan mundur tampil di layar; reload tidak melewati kunci) |
-| **Auto-lock 5 menit** | 5 menit tanpa aktivitas, pengaturan **terkunci otomatis**. Aktivitas di modal Laporan/Riwayat/Daftar Siswa tetap dihitung, jadi tidak terkunci saat sedang bekerja |
-| **Kunci manual** | Tombol **Kunci** di dalam menu untuk mengunci segera |
+| **Auto-lock 5 menit** | Setelah **5 menit tanpa aktivitas**, pengaturan **terkunci otomatis** dan **ikon roda gigi ikut disembunyikan** (modal pengaturan tertutup). Setiap aktivitas (klik/ketik/gulir/sentuh) — termasuk di modal Laporan/Riwayat/Daftar Siswa — tetap dihitung dan menyegarkan timer, jadi sesi tidak terkunci saat sedang bekerja |
+| **Ikon gigi auto-hilang** | Bila ikon gigi sudah tampil (5 ketuk logo) tetapi belum dibuka/di-unlock, ikon **tersembunyi otomatis** setelah 5 menit tanpa aktivitas. Tampilkan lagi dengan 5 ketuk logo |
+| **Kunci manual** | Tombol **Kunci** di dalam menu untuk mengunci segera (ikon tetap tampil, lalu ikut tersembunyi otomatis bila dibiarkan) |
 
 > ⚠️ **Penting — sifat kata sandi & URL backend:** keduanya disimpan **per perangkat/per browser** (localStorage), bukan di server. Mengganti kata sandi di HP **tidak** mengubah kata sandi di laptop. Ganti kata sandi di **setiap perangkat admin** yang dipakai, dan pastikan URL backend tersimpan benar di tiap perangkat.
 
@@ -104,6 +105,8 @@ Rekap kehadiran per tanggal.
 ### Peek laporan hari ini (tanpa buka menu admin)
 
 **Ketuk tanggal di bawah judul** "ABSENSI PADUAN SUARA" di halaman utama — modal ringkas berisi siapa saja yang sudah tercatat hari ini (nama, ID | Kelas, jam log-in, tanda **(Izin)** oranye, tombol **Riwayat**). Tersedia tombol **refresh** di kiri-atas modal untuk memuat ulang paksa. Praktis dipakai guru saat latihan berlangsung. Riwayat yang dibuka dari peek **tanpa tombol Print**.
+
+Di halaman utama juga tampil **banner berjalan (marquee)** bertuliskan **"N siswa sudah absensi"** — jumlah siswa yang sudah tercatat hari ini, diperbarui otomatis. Teks bergerak pelan **kiri ke kanan** dan **berhenti saat disentuh kursor/jari**, lalu lanjut lagi setelah dilepas. Banner hanya tampil bila sudah ada yang absen.
 
 ---
 
@@ -263,7 +266,7 @@ Pengecekan pembaruan berjalan otomatis setiap 30 menit dan saat tab kembali akti
 | Ikon roda gigi tidak muncul | Ketuk **logo tengah 5 kali** cepat (jeda antar ketukan < ±1,5 detik) |
 | Lupa kata sandi admin | Di **perangkat itu**, hapus data lokal browser untuk situs ini — khususnya item `choir_absensi_pwd` (Chrome: menu ⋮ → *Delete browsing data* / DevTools → Application → Local Storage), atau hapus data situs. Kata sandi kembali ke bawaan **`00000`** — ganti segera setelah masuk |
 | Terkunci "3 kali salah" | Tunggu **5 menit** sampai hitungan mundur selesai |
-| Pengaturan terkunci sendiri | Itu **auto-lock 5 menit** — buka kembali dengan kata sandi |
+| Pengaturan terkunci sendiri / ikon gigi hilang | Itu **auto-lock 5 menit tanpa aktivitas** — ketuk **logo tengah 5 kali** untuk memunculkan ikon lagi, lalu buka dengan kata sandi |
 | Test Koneksi gagal / merah | Periksa URL backend (harus URL `/exec` Aplikasi Web), cek izin *Anyone* pada deployment, dan pastikan kode `code.gs` ter-deploy penuh |
 | Absensi siswa ditolak semua | Cek **Mode Maintenance** (Bagian 9) dan status `ACTIVE` di sheet `STUDENTS` |
 | Siswa tidak bisa absen padahal data ada | Status di `STUDENTS` bukan `ACTIVE`; atau PIN salah; atau siswa sudah absen hari itu (cek Laporan hari ini); atau terkena rate-limit 5 menit |

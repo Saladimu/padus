@@ -113,6 +113,7 @@ Jika ada kesalahan pengisian, segera sampaikan kepada **guru pembimbing / ketua 
 
 | Fitur | Cara Menggunakan |
 |-------|------------------|
+| **Banner jumlah absensi hari ini** | Di bawah judul utama muncul banner gradasi oranye-merah berisi teks berjalan **"N siswa sudah absensi"**. Teks bergerak pelan dari **kiri ke kanan** dan **berhenti saat kursor (atau jarimu) menyentuh banner**, lalu lanjut lagi setelah dilepas. Banner hanya tampil bila sudah ada siswa yang absen hari ini |
 | **Bantuan / Panduan** | Tombol ikon **?** di kiri atas — membuka panduan singkat di dalam aplikasi |
 | **Lihat siapa yang sudah absen hari ini** | Ketuk **tanggal** di bawah judul "ABSENSI PADUAN SUARA" — muncul daftar siswa yang sudah tercatat hari ini (nama, ID, kelas, jam log-in). Siswa berstatus izin ditandai **(Izin)**. |
 | **Riwayat kehadiranmu** | Dari daftar absensi hari ini, tekan tombol **Riwayat** (ikon jam) di baris namamu untuk melihat riwayat kehadiran per bulan |
@@ -153,7 +154,7 @@ Yang perlu kamu lakukan: **tidak perlu apa-apa** — tunggu pengumuman dari guru
 | Ingin mengganti jenis latihan setelah submit | Hubungi guru/admin — data yang sudah terkirim tidak bisa diubah sendiri |
 | Tombol Submit tidak bisa ditekan | Pastikan **jenis latihan dipilih**, **pernyataan dicentang**, dan untuk **Izin** catatan sudah diisi |
 | Layar tidak merespons / data tidak muncul | Tekan tombol **refresh** di header; pastikan koneksi internet aktif |
-| Pesan galat saat submit / verifikasi | Sambungan ke server sedang bermasalah — **coba lagi** beberapa saat (tombol yang sama) |
+| Pesan galat saat submit / verifikasi | Aplikasi sudah **mencoba ulang otomatis** beberapa kali. Bila tetap gagal, periksa koneksi internet lalu tekan tombol yang sama sekali lagi |
 | Muncul "Pembaruan Tersedia" | Tekan **Hard Refresh** untuk memakai versi terbaru aplikasi |
 | Form terkunci & muncul jendela merah | Sistem sedang **Mode Maintenance** — tunggu pengumuman guru/admin |
 
