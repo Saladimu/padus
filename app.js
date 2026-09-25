@@ -132,6 +132,7 @@ let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00' };
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
+let maintenanceOverrideReqId = 0;
 let maintenanceRefreshPromise = null;
 let maintenanceLastCheck = 0;
 const MAINTENANCE_CHECK_MIN_INTERVAL = 60000;
@@ -628,13 +629,36 @@ function isWithinMaintenanceSchedule(schedule, now) {
 }
 
 function setMaintenanceOverride(mode) {
-    if (maintenanceSyncInFlight) return;
+    const prevManual = maintenanceManual;
+    const prevOn = maintenanceMode;
+    if (mode === 'auto') maintenanceManual = null;
+    else maintenanceManual = (mode === 'on');
+    const nextOn = maintenanceManual === true
+        ? true
+        : (maintenanceManual === false
+            ? false
+            : (maintenanceSchedule.enabled && isWithinMaintenanceSchedule(maintenanceSchedule)));
+    applyMaintenance(nextOn);
+    const reqId = ++maintenanceOverrideReqId;
     maintenanceSyncInFlight = true;
     const value = mode === 'auto' ? 'auto' : (mode === 'on');
-    apiPost({ action: 'maintenance', value: value }, { url: maintenanceApiUrl() })
-        .then(res => { if (res && res.success) applyMaintenanceResult(res); })
-        .catch(() => {})
-        .finally(() => { maintenanceSyncInFlight = false; });
+    apiPost({ action: 'maintenance', value: value }, { url: maintenanceApiUrl(), retries: 1 })
+        .then(res => {
+            if (reqId !== maintenanceOverrideReqId) return;
+            if (res && res.success) applyMaintenanceResult(res);
+            else {
+                maintenanceManual = prevManual;
+                applyMaintenance(prevOn);
+            }
+        })
+        .catch(() => {
+            if (reqId !== maintenanceOverrideReqId) return;
+            maintenanceManual = prevManual;
+            applyMaintenance(prevOn);
+        })
+        .finally(() => {
+            if (reqId === maintenanceOverrideReqId) maintenanceSyncInFlight = false;
+        });
 }
 
 function toggleMaintenanceSchedule() {
