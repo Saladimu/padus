@@ -63,7 +63,8 @@ Aplikasi memiliki **dua menu**:
 3. **Laporan Absensi** — rekap per tanggal + siswa tidak hadir
 4. **Daftar Siswa** — data sheet `STUDENTS`
 5. **Backup Data** *(accordion)* — backup sheet bertanggal
-6. **Ubah password/Maintenance** *(accordion)* — ganti kata sandi + mode & jadwal maintenance
+6. **Ubah Password** *(accordion)* — ganti kata sandi admin
+7. **Mode maintenance** *(accordion)* — mode & jadwal maintenance
 
 Tombol **Setup Backend** (panduan deploy Google Apps Script) ada di menu **Pengaturan & Setup**.
 
@@ -147,19 +148,19 @@ Dibuka dari tombol **Riwayat** di Laporan Absensi, Daftar Siswa, atau peek hari 
 
 ---
 
-## 9. Ubah Kata Sandi & Mode Maintenance
-
-Buka submenu **Ubah password/Maintenance** (header merah di bagian bawah menu).
+## 9. Ubah Password & Mode maintenance
 
 ### Ganti kata sandi admin
+
+Buka submenu **Ubah Password** (header merah, setelah Backup).
 
 1. Isi **Kata Sandi Saat Ini**, **Kata Sandi Baru** (minimal 4 karakter), dan **Konfirmasi**.
 2. Tekan **Ganti Kata Sandi**.
 3. Ingat: kata sandi tersimpan **per perangkat** — ulangi di perangkat admin lain.
 
-### Mode Maintenance
+### Mode maintenance
 
-Mode maintenance menonaktifkan absensi siswa sementara (mis. saat perbaikan data atau sebelum tahun ekskul baru dimulai). Ada **tiga pilihan mode** (tombol bersegmen **Otomatis / Aktif / Nonaktif**) dan satu **Jadwal Otomatis Harian**.
+Buka submenu **Mode maintenance** (setelah Ubah Password). Mode maintenance menonaktifkan absensi siswa sementara (mis. saat perbaikan data atau sebelum tahun ekskul baru dimulai). Ada **tiga pilihan mode** (tombol bersegmen **Otomatis / Aktif / Nonaktif**) dan satu **Jadwal Otomatis Harian**.
 
 **Pilihan mode:**
 

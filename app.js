@@ -1092,7 +1092,7 @@ function toggleSettingsSection(bodyId, btn) {
 }
 
 function collapseSettingsSections() {
-    ['backupBody', 'pwdBody'].forEach(function (id) {
+    ['backupBody', 'pwdBody', 'maintBody'].forEach(function (id) {
         const body = document.getElementById(id);
         if (body) body.classList.add('hidden');
     });
@@ -1137,6 +1137,7 @@ function applySecurityState() {
     document.getElementById('backupBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('yearBlock').classList.toggle('hidden', settingsLocked);
     document.getElementById('pwdChangeBlock').classList.toggle('hidden', settingsLocked);
+    document.getElementById('maintBlock').classList.toggle('hidden', settingsLocked);
     renderMaintenanceControls();
     document.getElementById('startYearSetting').value = settingsLocked ? '' : (getConfig().startYear || '');
     document.getElementById('endYearSetting').value = settingsLocked ? '' : (getConfig().endYear || '');
