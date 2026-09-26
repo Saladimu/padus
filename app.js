@@ -8,33 +8,61 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
+const APP_ASSET_VERSION = '20260926b';
 let swRegistration = null;
 let hasSwController = false;
 let updateModalShown = false;
+let updateReloadArmed = false;
+
+function watchWaitingWorker(worker) {
+    if (!worker) return;
+    if (worker.state === 'installed' && hasSwController) promptAppUpdate();
+    worker.addEventListener('statechange', function () {
+        if (worker.state === 'installed' && hasSwController) promptAppUpdate();
+    });
+}
+
+function listenForWaitingSw(reg) {
+    if (!reg) return;
+    watchWaitingWorker(reg.waiting);
+    watchWaitingWorker(reg.installing);
+    reg.addEventListener('updatefound', function () {
+        watchWaitingWorker(reg.installing);
+    });
+}
+
+function checkRemoteAppVersion() {
+    fetch('sw.js?_=' + Date.now(), { cache: 'no-store' })
+        .then(function (res) { return res.text(); })
+        .then(function (text) {
+            const match = String(text).match(/ASSET_VERSION\s*=\s*['"]([^'"]+)['"]/);
+            if (match && match[1] && match[1] !== APP_ASSET_VERSION) promptAppUpdate();
+        })
+        .catch(function () {});
+}
 
 if ('serviceWorker' in navigator) {
     hasSwController = !!navigator.serviceWorker.controller;
 
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         swRegistration = reg;
-        const watchInstalling = function () {
-            const worker = reg.installing;
-            if (!worker) return;
-            worker.addEventListener('statechange', function () {
-                if (worker.state === 'installed' && hasSwController) promptAppUpdate();
-            });
-        };
-        reg.addEventListener('updatefound', watchInstalling);
-        if (reg.installing) watchInstalling();
+        listenForWaitingSw(reg);
+        if (reg.waiting && hasSwController) promptAppUpdate();
+        return reg.update();
     }).catch(function () {});
 
     navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (updateReloadArmed) {
+            window.location.reload();
+            return;
+        }
         if (hasSwController) promptAppUpdate();
         hasSwController = true;
     });
 
     const checkForAppUpdate = function () {
         if (swRegistration) swRegistration.update().catch(function () {});
+        checkRemoteAppVersion();
     };
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'visible') {
@@ -42,7 +70,8 @@ if ('serviceWorker' in navigator) {
             if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
         }
     });
-    setInterval(checkForAppUpdate, 30 * 60 * 1000);
+    setTimeout(checkForAppUpdate, 2000);
+    setInterval(checkForAppUpdate, 60 * 1000);
 }
 
 // ==========================================
@@ -50,10 +79,13 @@ if ('serviceWorker' in navigator) {
 // ==========================================
 function promptAppUpdate() {
     if (updateModalShown) return;
-    updateModalShown = true;
     const modal = document.getElementById('updateModal');
     const content = document.getElementById('updateModalContent');
-    if (!modal || !content) return;
+    if (!modal || !content) {
+        setTimeout(promptAppUpdate, 300);
+        return;
+    }
+    updateModalShown = true;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     setTimeout(function () {
@@ -79,6 +111,10 @@ function dismissUpdateModal() {
 
 // Bersihkan cache + service worker lalu muat ulang dari jaringan.
 function hardRefreshApp() {
+    updateReloadArmed = true;
+    if (swRegistration && swRegistration.waiting) {
+        swRegistration.waiting.postMessage('SKIP_WAITING');
+    }
     const reload = function () { window.location.reload(); };
     const clearCaches = function () {
         if (window.caches && caches.keys) {
@@ -89,6 +125,7 @@ function hardRefreshApp() {
             reload();
         }
     };
+    setTimeout(reload, 1500);
     if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
         navigator.serviceWorker.getRegistrations().then(function (regs) {
             return Promise.all(regs.map(function (r) { return r.unregister(); }));
@@ -890,7 +927,12 @@ function applyCachedMaintenance() {
         if (!raw) return false;
         const entry = JSON.parse(raw);
         if (entry && typeof entry.value === 'boolean' && (Date.now() - entry.ts) < MAINTENANCE_CACHE_TTL) {
-            if (entry.schedule) maintenanceSchedule = normalizeMaintenanceSchedule(entry.schedule);
+            if (entry.schedule) {
+                const cached = normalizeMaintenanceSchedule(entry.schedule);
+                maintenanceSchedule.enabled = cached.enabled;
+                maintenanceSchedule.start = cached.start;
+                maintenanceSchedule.end = cached.end;
+            }
             maintenanceManual = (entry.manual === true || entry.manual === false) ? entry.manual : null;
             applyMaintenance(entry.value, false);
             return true;
@@ -935,11 +977,16 @@ function guardMaintenanceInteraction() {
 }
 
 function refreshMaintenanceScheduleView() {
+    maintenanceLastCheck = 0;
+    maintenanceRefreshPromise = null;
     setMaintenanceScheduleStatus('Memuat jadwal...', false);
-    return refreshMaintenance(true).then(function () {
+    return fetchMaintenance().then(function () {
         renderMaintenanceControls();
         const el = document.getElementById('maintenanceScheduleStatus');
         if (el && el.textContent === 'Memuat jadwal...') setMaintenanceScheduleStatus('', false);
+    }).catch(function () {
+        setMaintenanceScheduleStatus('Gagal memuat jadwal dari server.', true);
+        renderMaintenanceControls();
     });
 }
 

@@ -183,7 +183,14 @@ function getMaintenanceSchedule() {
 }
 
 function setMaintenanceSchedule(obj) {
-  const schedule = normalizeMaintenanceSchedule(obj);
+  const incoming = obj && typeof obj === 'object' ? obj : {};
+  const current = getMaintenanceSchedule();
+  const schedule = normalizeMaintenanceSchedule({
+    enabled: incoming.enabled === undefined ? current.enabled : incoming.enabled,
+    start: incoming.start === undefined ? current.start : incoming.start,
+    end: incoming.end === undefined ? current.end : incoming.end,
+    days: Array.isArray(incoming.days) ? incoming.days : current.days
+  });
   PropertiesService.getScriptProperties()
     .setProperty(MAINTENANCE_SCHEDULE_KEY, JSON.stringify(schedule));
   return schedule;

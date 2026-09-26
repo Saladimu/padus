@@ -8,8 +8,8 @@
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v82';
-var ASSET_VERSION = '20260922t';
+var CACHE_NAME = 'choir-absensi-v84';
+var ASSET_VERSION = '20260926b';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -28,8 +28,11 @@ self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function (cache) { return cache.addAll(CORE_ASSETS); })
-      .then(function () { return self.skipWaiting(); })
   );
+});
+
+self.addEventListener('message', function (event) {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', function (event) {
