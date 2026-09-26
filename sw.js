@@ -74,7 +74,8 @@ self.addEventListener('fetch', function (event) {
   if (/\/sw\.js(?:\?|$)/.test(request.url)) return;
   if (request.url.indexOf('update-check=') !== -1) return;
   if (request.cache === 'no-store' || request.cache === 'reload') {
-    event.respondWith(fetch(request, { cache: 'no-store' }));
+    var followRequest = new Request(request, { cache: 'no-store', redirect: 'follow' });
+    event.respondWith(fetch(followRequest));
     return;
   }
 
