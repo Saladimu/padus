@@ -135,6 +135,8 @@ let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00', days: M
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
+let maintenancePersistQueued = false;
+let maintenanceDaySaveTimer = null;
 let maintenanceOverrideReqId = 0;
 let maintenanceRefreshPromise = null;
 let maintenanceLastCheck = 0;
@@ -628,6 +630,11 @@ function onMaintenanceDayChange() {
     maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
     maintenanceSchedule.days = collectMaintenanceDays();
     renderMaintenanceControls();
+    if (maintenanceDaySaveTimer) clearTimeout(maintenanceDaySaveTimer);
+    maintenanceDaySaveTimer = setTimeout(function () {
+        maintenanceDaySaveTimer = null;
+        persistMaintenanceSchedule();
+    }, 400);
 }
 
 function formatMaintenanceDays(days) {
@@ -726,7 +733,9 @@ function setMaintenanceOverride(mode) {
             applyMaintenance(prevOn);
         })
         .finally(() => {
-            if (reqId === maintenanceOverrideReqId) maintenanceSyncInFlight = false;
+            if (reqId !== maintenanceOverrideReqId) return;
+            maintenanceSyncInFlight = false;
+            flushMaintenancePersistQueue();
         });
 }
 
@@ -755,8 +764,17 @@ function saveMaintenanceSchedule() {
     persistMaintenanceSchedule();
 }
 
+function flushMaintenancePersistQueue() {
+    if (!maintenancePersistQueued) return;
+    maintenancePersistQueued = false;
+    persistMaintenanceSchedule();
+}
+
 function persistMaintenanceSchedule() {
-    if (maintenanceSyncInFlight) return;
+    if (maintenanceSyncInFlight) {
+        maintenancePersistQueued = true;
+        return;
+    }
     maintenanceSyncInFlight = true;
     setMaintenanceScheduleStatus('Menyimpan jadwal...', false);
     apiPost({ action: 'maintenance', schedule: maintenanceSchedule }, { url: maintenanceApiUrl() })
@@ -769,7 +787,10 @@ function persistMaintenanceSchedule() {
             }
         })
         .catch(() => setMaintenanceScheduleStatus('Gagal menyimpan jadwal (jaringan).', true))
-        .finally(() => { maintenanceSyncInFlight = false; });
+        .finally(() => {
+            maintenanceSyncInFlight = false;
+            flushMaintenancePersistQueue();
+        });
 }
 
 function setMaintenanceScheduleStatus(message, isError) {
@@ -820,7 +841,6 @@ function renderMaintenanceControls() {
     const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
     const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
     dayBoxes.forEach(function (el) {
-        if (document.activeElement === el) return;
         el.checked = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
     });
 
@@ -911,6 +931,15 @@ function refreshMaintenance(force) {
 function guardMaintenanceInteraction() {
     refreshMaintenance().then(on => {
         if (on) resetForm();
+    });
+}
+
+function refreshMaintenanceScheduleView() {
+    setMaintenanceScheduleStatus('Memuat jadwal...', false);
+    return refreshMaintenance(true).then(function () {
+        renderMaintenanceControls();
+        const el = document.getElementById('maintenanceScheduleStatus');
+        if (el && el.textContent === 'Memuat jadwal...') setMaintenanceScheduleStatus('', false);
     });
 }
 
@@ -1195,6 +1224,7 @@ function toggleSettingsSection(bodyId, btn) {
         }
     }
     if (willOpen && bodyId === 'backupBody' && !settingsLocked) loadBackupList();
+    if (willOpen && bodyId === 'maintBody' && !settingsLocked) refreshMaintenanceScheduleView();
 }
 
 function collapseSettingsSections() {
@@ -1325,6 +1355,7 @@ function unlockSettings() {
         settingsLocked = false;
         applySecurityState();
         startSettingsLockTimer();
+        refreshMaintenanceScheduleView();
         showStatusModal("Berhasil", "Pengaturan Admin berhasil dibuka.", true);
     });
 }
@@ -2459,6 +2490,7 @@ function toggleMenuAdminModal() {
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
         const backupBody = document.getElementById('backupBody');
         if (!settingsLocked && backupBody && !backupBody.classList.contains('hidden')) loadBackupList();
+        if (!settingsLocked) refreshMaintenanceScheduleView();
     } else {
         hideMenuAdminModal();
         relockSettingsSilently();
