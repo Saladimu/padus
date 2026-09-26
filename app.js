@@ -8,7 +8,7 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926d';
+const APP_ASSET_VERSION = '20260926e';
 let swRegistration = null;
 let hasSwController = false;
 let updateModalShown = false;
@@ -31,14 +31,22 @@ function listenForWaitingSw(reg) {
     });
 }
 
+function remoteVersionMismatch(text) {
+    const swMatch = String(text).match(/ASSET_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    if (swMatch && swMatch[1] && swMatch[1] !== APP_ASSET_VERSION) return true;
+    const htmlMatch = String(text).match(/app\.js\?v=([^"'&\s]+)/);
+    return !!(htmlMatch && htmlMatch[1] && htmlMatch[1] !== APP_ASSET_VERSION);
+}
+
 function checkRemoteAppVersion() {
-    fetch('sw.js?_=' + Date.now(), { cache: 'no-store' })
-        .then(function (res) { return res.text(); })
-        .then(function (text) {
-            const match = String(text).match(/ASSET_VERSION\s*=\s*['"]([^'"]+)['"]/);
-            if (match && match[1] && match[1] !== APP_ASSET_VERSION) promptAppUpdate();
-        })
-        .catch(function () {});
+    const bust = '_=' + Date.now();
+    const opts = { cache: 'no-store' };
+    Promise.all([
+        fetch('sw.js?' + bust, opts).then(function (res) { return res.text(); }).catch(function () { return ''; }),
+        fetch('index.html?' + bust, opts).then(function (res) { return res.text(); }).catch(function () { return ''; })
+    ]).then(function (texts) {
+        if (texts.some(remoteVersionMismatch)) promptAppUpdate();
+    });
 }
 
 if ('serviceWorker' in navigator) {
@@ -48,7 +56,9 @@ if ('serviceWorker' in navigator) {
         swRegistration = reg;
         listenForWaitingSw(reg);
         if (reg.waiting && hasSwController) promptAppUpdate();
-        return reg.update();
+        return reg.update().then(function () {
+            if (reg.waiting && hasSwController) promptAppUpdate();
+        });
     }).catch(function () {});
 
     navigator.serviceWorker.addEventListener('controllerchange', function () {
@@ -70,6 +80,7 @@ if ('serviceWorker' in navigator) {
             if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
         }
     });
+    checkForAppUpdate();
     setTimeout(checkForAppUpdate, 2000);
     setInterval(checkForAppUpdate, 60 * 1000);
 }
@@ -77,17 +88,37 @@ if ('serviceWorker' in navigator) {
 // ==========================================
 // MODAL PEMBARUAN APLIKASI (HARD REFRESH)
 // ==========================================
+function ensureUpdateModal() {
+    let modal = document.getElementById('updateModal');
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.id = 'updateModal';
+    modal.className = 'fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4 opacity-0 transition-opacity duration-300';
+    modal.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300" id="updateModalContent">' +
+        '<h2 class="text-xl font-bold text-gray-800 mb-2">Pembaruan Tersedia</h2>' +
+        '<p class="text-gray-600 mb-6">Aplikasi ada perubahan, perlu hard refresh ulang.</p>' +
+        '<div class="flex gap-2">' +
+        '<button type="button" onclick="dismissUpdateModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition">Nanti</button>' +
+        '<button type="button" id="btnHardRefresh" onclick="hardRefreshApp()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">Hard Refresh</button>' +
+        '</div></div>';
+    document.body.appendChild(modal);
+    return modal;
+}
+
 function promptAppUpdate() {
     if (updateModalShown) return;
-    const modal = document.getElementById('updateModal');
-    const content = document.getElementById('updateModalContent');
-    if (!modal || !content) {
+    if (!document.body) {
         setTimeout(promptAppUpdate, 300);
         return;
     }
+    const modal = ensureUpdateModal();
+    const content = document.getElementById('updateModalContent');
+    if (!modal || !content) return;
     updateModalShown = true;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.style.display = 'flex';
+    modal.style.zIndex = '100';
     setTimeout(function () {
         modal.classList.remove('opacity-0');
         content.classList.remove('scale-95');
@@ -105,6 +136,7 @@ function dismissUpdateModal() {
     setTimeout(function () {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        modal.style.display = '';
         updateModalShown = false;
     }, 300);
 }

@@ -1,15 +1,14 @@
 /* Service Worker Absensi Paduan Suara
    Strategi:
-   - Navigation (HTML): stale-while-revalidate, tampilkan cache segera lalu
-     perbarui di latar belakang; fallback ke cache saat offline.
+    - Navigation (HTML): network-first, fallback ke cache saat offline.
    - Aset statis same-origin (CSS, JS, gambar, ikon): cache-first agar akses cepat.
    - Font Google (lintas-origin): stale-while-revalidate agar muat berikutnya instan.
    - Cache diberi versi; saat aktivasi, cache lama dihapus dan varian
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v86';
-var ASSET_VERSION = '20260926d';
+var CACHE_NAME = 'choir-absensi-v87';
+var ASSET_VERSION = '20260926e';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -69,6 +68,11 @@ self.addEventListener('activate', function (event) {
 self.addEventListener('fetch', function (event) {
   var request = event.request;
   if (request.method !== 'GET') return;
+  if (/\/sw\.js(?:\?|$)/.test(request.url)) return;
+  if (request.cache === 'no-store' || request.cache === 'reload') {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Navigasi halaman: network-first agar rilis terbaru selalu terpakai,
   // fallback ke cache saat offline.
