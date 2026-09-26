@@ -402,7 +402,7 @@
                         <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="maintBody" class="hidden mt-3">
-                    <p class="text-xs text-gray-500 mb-3">Menonaktifkan absensi siswa sementara. Pilih <b>Otomatis</b> agar mengikuti jadwal harian. Hari aktif yang dicentang selalu ON; rentang jam hanya berlaku di hari yang tidak dicentang.</p>
+                    <p class="text-xs text-gray-500 mb-3">Menonaktifkan absensi siswa sementara. Pilih <b>Otomatis</b> agar mengikuti jadwal harian. Hari aktif yang dicentang selalu ON. Di hari tidak dicentang: dalam jam Dari/Sampai = OFF, di luar jam = ON.</p>
                     <div class="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-lg text-xs font-semibold" role="group" aria-label="Mode Maintenance">
                         <button type="button" id="btnMaintAuto" onclick="setMaintenanceOverride('auto')" class="py-1.5 rounded-md transition">Otomatis</button>
                         <button type="button" id="btnMaintOn" onclick="setMaintenanceOverride('on')" class="py-1.5 rounded-md transition">Aktif</button>
@@ -427,7 +427,7 @@
                         </div>
                         <div id="maintenanceDays" class="mt-3">
                             <p class="text-xs text-gray-600 mb-1">Hari aktif</p>
-                            <p class="text-[11px] text-gray-500 mb-2">Dicentang: ON sepanjang hari. Tidak dicentang: mengikuti jam Dari/Sampai.</p>
+                            <p class="text-[11px] text-gray-500 mb-2">Dicentang: ON sepanjang hari. Tidak dicentang: OFF dalam jam Dari/Sampai, ON di luar jam.</p>
                             <div class="flex justify-between gap-1" role="group" aria-label="Hari jadwal otomatis">
                                 <label class="flex flex-col items-center gap-1 text-[11px] font-semibold text-gray-700">
                                     <input type="checkbox" data-day="1" checked onchange="onMaintenanceDayChange()" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500" aria-label="Senin">

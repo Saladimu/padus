@@ -756,9 +756,9 @@ function updateMaintenanceStatusText() {
     } else if (isMaintenanceDaySelected(maintenanceSchedule)) {
         text = 'Status: AKTIF otomatis (hari aktif sepanjang hari, ' + dayText + ').';
     } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
-        text = 'Status: AKTIF otomatis (di luar hari aktif, dalam jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB).';
+        text = 'Status: AKTIF otomatis (di luar jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB).';
     } else {
-        text = 'Status: NONAKTIF — di luar jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (hari aktif: ' + dayText + ').';
+        text = 'Status: NONAKTIF — dalam jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (hari aktif: ' + dayText + ').';
     }
     status.textContent = text;
 }
@@ -843,7 +843,7 @@ function isTimeInMaintenanceRange(schedule, now) {
 function isWithinMaintenanceSchedule(schedule, now) {
     if (!schedule || !schedule.enabled) return false;
     if (isMaintenanceDaySelected(schedule, now)) return true;
-    return isTimeInMaintenanceRange(schedule, now);
+    return !isTimeInMaintenanceRange(schedule, now);
 }
 
 function setMaintenanceOverride(mode) {

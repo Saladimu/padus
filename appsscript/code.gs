@@ -271,7 +271,7 @@ function isTimeInMaintenanceRange(schedule, now) {
 function isWithinMaintenanceSchedule(schedule, now) {
   if (!schedule || !schedule.enabled) return false;
   if (isMaintenanceDaySelected(schedule, now)) return true;
-  return isTimeInMaintenanceRange(schedule, now);
+  return !isTimeInMaintenanceRange(schedule, now);
 }
 
 function getMaintenanceMode() {
