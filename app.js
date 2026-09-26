@@ -713,7 +713,6 @@ function syncMaintenanceDayCheckboxes(force) {
 function updateMaintenanceStatusText() {
     const status = document.getElementById('maintenanceStatus');
     if (!status) return;
-    const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
     const dayText = formatMaintenanceDays(maintenanceSchedule.days);
     let text;
     if (maintenanceManual === true) {
@@ -722,14 +721,12 @@ function updateMaintenanceStatusText() {
         text = 'Status: NONAKTIF (dipaksa manual) — jadwal diabaikan.';
     } else if (!maintenanceSchedule.enabled) {
         text = 'Status: NONAKTIF — jadwal otomatis dimatikan.';
-    } else if (selectedDays.length === 0) {
-        text = 'Status: NONAKTIF — tidak ada hari yang dipilih.';
+    } else if (isMaintenanceDaySelected(maintenanceSchedule)) {
+        text = 'Status: AKTIF otomatis (hari aktif sepanjang hari, ' + dayText + ').';
     } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
-        text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB, ' + dayText + ').';
-    } else if (!isMaintenanceDaySelected(maintenanceSchedule)) {
-        text = 'Status: NONAKTIF — hari ini tidak termasuk jadwal (' + dayText + ').';
+        text = 'Status: AKTIF otomatis (di luar hari aktif, dalam jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB).';
     } else {
-        text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (' + dayText + ').';
+        text = 'Status: NONAKTIF — di luar jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (hari aktif: ' + dayText + ').';
     }
     status.textContent = text;
 }
@@ -802,19 +799,19 @@ function isMaintenanceDaySelected(schedule, now) {
     return isDayInSchedule(schedule, wibWeekdayNow(now));
 }
 
-function isWithinMaintenanceSchedule(schedule, now) {
-    if (!schedule || !schedule.enabled) return false;
+function isTimeInMaintenanceRange(schedule, now) {
     const current = wibMinutesNow(now);
     const start = minutesOfHhmm(schedule.start);
     const end = minutesOfHhmm(schedule.end);
     if (start === end) return false;
-    const weekday = wibWeekdayNow(now);
-    if (start < end) {
-        return isDayInSchedule(schedule, weekday) && current >= start && current < end;
-    }
-    if (current >= start) return isDayInSchedule(schedule, weekday);
-    if (current < end) return isDayInSchedule(schedule, (weekday + 6) % 7);
-    return false;
+    if (start < end) return current >= start && current < end;
+    return current >= start || current < end;
+}
+
+function isWithinMaintenanceSchedule(schedule, now) {
+    if (!schedule || !schedule.enabled) return false;
+    if (isMaintenanceDaySelected(schedule, now)) return true;
+    return isTimeInMaintenanceRange(schedule, now);
 }
 
 function setMaintenanceOverride(mode) {

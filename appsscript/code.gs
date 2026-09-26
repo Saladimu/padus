@@ -258,23 +258,20 @@ function isMaintenanceDaySelected(schedule, now) {
   return isDayInSchedule(schedule, wibWeekday(now));
 }
 
-// Cek apakah waktu sekarang (WIB) berada di dalam rentang jadwal harian.
-// Mendukung rentang yang melewati tengah malam (mis. 22:00-05:00).
-// Untuk rentang lintas hari, potongan setelah tengah malam memakai hari kemarin.
-function isWithinMaintenanceSchedule(schedule, now) {
-  if (!schedule || !schedule.enabled) return false;
+function isTimeInMaintenanceRange(schedule, now) {
   const stamp = Utilities.formatDate(now || new Date(), MAINTENANCE_TZ, 'HH:mm');
   const current = minutesOfHhmm(stamp);
   const start = minutesOfHhmm(schedule.start);
   const end = minutesOfHhmm(schedule.end);
   if (start === end) return false;
-  const weekday = wibWeekday(now);
-  if (start < end) {
-    return isDayInSchedule(schedule, weekday) && current >= start && current < end;
-  }
-  if (current >= start) return isDayInSchedule(schedule, weekday);
-  if (current < end) return isDayInSchedule(schedule, (weekday + 6) % 7);
-  return false;
+  if (start < end) return current >= start && current < end;
+  return current >= start || current < end;
+}
+
+function isWithinMaintenanceSchedule(schedule, now) {
+  if (!schedule || !schedule.enabled) return false;
+  if (isMaintenanceDaySelected(schedule, now)) return true;
+  return isTimeInMaintenanceRange(schedule, now);
 }
 
 function getMaintenanceMode() {
