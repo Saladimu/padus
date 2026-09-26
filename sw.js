@@ -1,14 +1,14 @@
 /* Service Worker Absensi Paduan Suara
    Strategi:
-    - Navigation (HTML): network-first, fallback ke cache saat offline.
+    - Navigation (HTML): cache-first, jangan timpa cache sampai Hard Refresh.
    - Aset statis same-origin (CSS, JS, gambar, ikon): cache-first agar akses cepat.
    - Font Google (lintas-origin): stale-while-revalidate agar muat berikutnya instan.
    - Cache diberi versi; saat aktivasi, cache lama dihapus dan varian
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v87';
-var ASSET_VERSION = '20260926e';
+var CACHE_NAME = 'choir-absensi-v90';
+var ASSET_VERSION = '20260926h';
 var CORE_ASSETS = [
   './',
   './index.html',
@@ -25,8 +25,11 @@ var MAX_ENTRIES = 100;
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function (cache) { return cache.addAll(CORE_ASSETS); })
+    caches.open(CACHE_NAME).then(function (cache) {
+      return Promise.all(CORE_ASSETS.map(function (url) {
+        return cache.add(url).catch(function () {});
+      }));
+    })
   );
 });
 
@@ -69,25 +72,25 @@ self.addEventListener('fetch', function (event) {
   var request = event.request;
   if (request.method !== 'GET') return;
   if (/\/sw\.js(?:\?|$)/.test(request.url)) return;
+  if (request.url.indexOf('update-check=') !== -1) return;
   if (request.cache === 'no-store' || request.cache === 'reload') {
-    event.respondWith(fetch(request));
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 
-  // Navigasi halaman: network-first agar rilis terbaru selalu terpakai,
-  // fallback ke cache saat offline.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).then(function (response) {
-        if (response && response.status === 200) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) {
-            cache.put('./index.html', copy);
-          });
-        }
-        return response;
-      }).catch(function () {
-        return caches.match('./index.html');
+      caches.match('./index.html').then(function (cached) {
+        if (cached) return cached;
+        return fetch(request).then(function (response) {
+          if (response && response.status === 200) {
+            var copy = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) {
+              cache.put('./index.html', copy);
+            });
+          }
+          return response;
+        });
       })
     );
     return;

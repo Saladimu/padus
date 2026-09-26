@@ -8,17 +8,21 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926e';
+const APP_ASSET_VERSION = '20260926h';
 let swRegistration = null;
 let hasSwController = false;
 let updateModalShown = false;
 let updateReloadArmed = false;
 
+function pageIsControlled() {
+    return hasSwController || !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+}
+
 function watchWaitingWorker(worker) {
     if (!worker) return;
-    if (worker.state === 'installed' && hasSwController) promptAppUpdate();
+    if (worker.state === 'installed' && pageIsControlled()) promptAppUpdate();
     worker.addEventListener('statechange', function () {
-        if (worker.state === 'installed' && hasSwController) promptAppUpdate();
+        if (worker.state === 'installed' && pageIsControlled()) promptAppUpdate();
     });
 }
 
@@ -32,21 +36,34 @@ function listenForWaitingSw(reg) {
 }
 
 function remoteVersionMismatch(text) {
-    const swMatch = String(text).match(/ASSET_VERSION\s*=\s*['"]([^'"]+)['"]/);
+    const body = String(text);
+    const swMatch = body.match(/ASSET_VERSION\s*=\s*['"]([^'"]+)['"]/);
     if (swMatch && swMatch[1] && swMatch[1] !== APP_ASSET_VERSION) return true;
-    const htmlMatch = String(text).match(/app\.js\?v=([^"'&\s]+)/);
-    return !!(htmlMatch && htmlMatch[1] && htmlMatch[1] !== APP_ASSET_VERSION);
+    const htmlMatch = body.match(/app\.js\?v=([^"'&\s]+)/);
+    if (htmlMatch && htmlMatch[1] && htmlMatch[1] !== APP_ASSET_VERSION) return true;
+    const cacheMatch = body.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+    return !!(cacheMatch && cacheMatch[1] && cacheMatch[1] !== 'choir-absensi-v90');
 }
 
 function checkRemoteAppVersion() {
-    const bust = '_=' + Date.now();
+    const bust = 'update-check=' + Date.now();
     const opts = { cache: 'no-store' };
     Promise.all([
-        fetch('sw.js?' + bust, opts).then(function (res) { return res.text(); }).catch(function () { return ''; }),
-        fetch('index.html?' + bust, opts).then(function (res) { return res.text(); }).catch(function () { return ''; })
+        fetch('sw.js?' + bust, opts).then(function (res) { return res.ok ? res.text() : ''; }).catch(function () { return ''; }),
+        fetch('index.html?' + bust, opts).then(function (res) { return res.ok ? res.text() : ''; }).catch(function () { return ''; })
     ]).then(function (texts) {
         if (texts.some(remoteVersionMismatch)) promptAppUpdate();
     });
+}
+
+function checkForAppUpdate() {
+    if (swRegistration) {
+        if (swRegistration.waiting && pageIsControlled()) promptAppUpdate();
+        swRegistration.update().then(function () {
+            if (swRegistration && swRegistration.waiting && pageIsControlled()) promptAppUpdate();
+        }).catch(function () {});
+    }
+    checkRemoteAppVersion();
 }
 
 if ('serviceWorker' in navigator) {
@@ -55,9 +72,9 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         swRegistration = reg;
         listenForWaitingSw(reg);
-        if (reg.waiting && hasSwController) promptAppUpdate();
+        if (reg.waiting && pageIsControlled()) promptAppUpdate();
         return reg.update().then(function () {
-            if (reg.waiting && hasSwController) promptAppUpdate();
+            if (reg.waiting && pageIsControlled()) promptAppUpdate();
         });
     }).catch(function () {});
 
@@ -69,21 +86,17 @@ if ('serviceWorker' in navigator) {
         if (hasSwController) promptAppUpdate();
         hasSwController = true;
     });
-
-    const checkForAppUpdate = function () {
-        if (swRegistration) swRegistration.update().catch(function () {});
-        checkRemoteAppVersion();
-    };
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') {
-            checkForAppUpdate();
-            if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
-        }
-    });
-    checkForAppUpdate();
-    setTimeout(checkForAppUpdate, 2000);
-    setInterval(checkForAppUpdate, 60 * 1000);
 }
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+        checkForAppUpdate();
+        if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
+    }
+});
+checkForAppUpdate();
+setTimeout(checkForAppUpdate, 1500);
+setInterval(checkForAppUpdate, 30 * 1000);
 
 // ==========================================
 // MODAL PEMBARUAN APLIKASI (HARD REFRESH)
@@ -108,6 +121,7 @@ function ensureUpdateModal() {
 function promptAppUpdate() {
     if (updateModalShown) return;
     if (!document.body) {
+        document.addEventListener('DOMContentLoaded', promptAppUpdate, { once: true });
         setTimeout(promptAppUpdate, 300);
         return;
     }
@@ -115,16 +129,12 @@ function promptAppUpdate() {
     const content = document.getElementById('updateModalContent');
     if (!modal || !content) return;
     updateModalShown = true;
-    modal.classList.remove('hidden');
+    modal.classList.remove('hidden', 'opacity-0');
     modal.classList.add('flex');
-    modal.style.display = 'flex';
-    modal.style.zIndex = '100';
-    setTimeout(function () {
-        modal.classList.remove('opacity-0');
-        content.classList.remove('scale-95');
-        const btn = document.getElementById('btnHardRefresh');
-        if (btn) btn.focus();
-    }, 10);
+    modal.style.cssText = 'display:flex !important;position:fixed;inset:0;z-index:2147483647;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);padding:16px;opacity:1;';
+    content.classList.remove('scale-95');
+    const btn = document.getElementById('btnHardRefresh');
+    if (btn) btn.focus();
 }
 
 function dismissUpdateModal() {
