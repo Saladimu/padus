@@ -147,12 +147,45 @@ function minutesOfHhmm(value) {
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
+function coerceMaintenanceDaysInput(days) {
+  if (days == null || days === '') return null;
+  if (typeof Array.isArray === 'function' && Array.isArray(days)) return days;
+  if (Object.prototype.toString.call(days) === '[object Array]') return days;
+  if (typeof days === 'string') {
+    const t = days.trim();
+    if (!t) return [];
+    if (t.charAt(0) === '[') {
+      try { return coerceMaintenanceDaysInput(JSON.parse(t)); } catch (e) { return []; }
+    }
+    return t.split(/[,\s]+/);
+  }
+  if (typeof days === 'object') {
+    if (typeof days.length === 'number') {
+      const arr = [];
+      for (let i = 0; i < days.length; i++) arr.push(days[i]);
+      return arr;
+    }
+    const keys = [];
+    for (const k in days) {
+      if (Object.prototype.hasOwnProperty.call(days, k) && /^\d+$/.test(k)) keys.push(k);
+    }
+    if (keys.length) {
+      keys.sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+      const mapped = [];
+      for (let i = 0; i < keys.length; i++) mapped.push(days[keys[i]]);
+      return mapped;
+    }
+  }
+  return null;
+}
+
 function normalizeMaintenanceDays(days) {
-  if (!Array.isArray(days)) return DEFAULT_MAINTENANCE_DAYS.slice();
+  const list = coerceMaintenanceDaysInput(days);
+  if (!list) return DEFAULT_MAINTENANCE_DAYS.slice();
   const seen = {};
   const out = [];
-  for (let i = 0; i < days.length; i++) {
-    const n = parseInt(days[i], 10);
+  for (let i = 0; i < list.length; i++) {
+    const n = parseInt(list[i], 10);
     if (n >= 0 && n <= 6 && !seen[n]) {
       seen[n] = true;
       out.push(n);
@@ -185,11 +218,12 @@ function getMaintenanceSchedule() {
 function setMaintenanceSchedule(obj) {
   const incoming = obj && typeof obj === 'object' ? obj : {};
   const current = getMaintenanceSchedule();
+  const incomingDays = coerceMaintenanceDaysInput(incoming.days);
   const schedule = normalizeMaintenanceSchedule({
     enabled: incoming.enabled === undefined ? current.enabled : incoming.enabled,
     start: incoming.start === undefined ? current.start : incoming.start,
     end: incoming.end === undefined ? current.end : incoming.end,
-    days: Array.isArray(incoming.days) ? incoming.days : current.days
+    days: incomingDays !== null ? incomingDays : current.days
   });
   PropertiesService.getScriptProperties()
     .setProperty(MAINTENANCE_SCHEDULE_KEY, JSON.stringify(schedule));
@@ -217,8 +251,7 @@ function wibWeekday(now) {
 }
 
 function isDayInSchedule(schedule, weekday) {
-  const days = schedule && Array.isArray(schedule.days) ? schedule.days : DEFAULT_MAINTENANCE_DAYS;
-  return days.indexOf(weekday) !== -1;
+  return normalizeMaintenanceDays(schedule && schedule.days).indexOf(weekday) !== -1;
 }
 
 function isMaintenanceDaySelected(schedule, now) {

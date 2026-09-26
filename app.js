@@ -8,7 +8,7 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926c';
+const APP_ASSET_VERSION = '20260926d';
 let swRegistration = null;
 let hasSwController = false;
 let updateModalShown = false;
@@ -175,6 +175,7 @@ let maintenanceSyncInFlight = false;
 let maintenancePersistQueued = false;
 let maintenanceDaySaveTimer = null;
 let maintenanceDaysDirty = false;
+let maintenanceDaysSyncing = false;
 let maintenanceOverrideReqId = 0;
 let maintenanceRefreshPromise = null;
 let maintenanceLastCheck = 0;
@@ -629,11 +630,39 @@ function maintenanceApiUrl() {
     return base + sep + '_=' + Date.now();
 }
 
+function coerceMaintenanceDaysInput(days) {
+    if (days == null || days === '') return null;
+    if (Array.isArray(days)) return days;
+    if (Object.prototype.toString.call(days) === '[object Array]') return days;
+    if (typeof days === 'string') {
+        const t = days.trim();
+        if (!t) return [];
+        if (t.charAt(0) === '[') {
+            try { return coerceMaintenanceDaysInput(JSON.parse(t)); } catch (e) { return []; }
+        }
+        return t.split(/[,\s]+/);
+    }
+    if (typeof days === 'object') {
+        if (typeof days.length === 'number') {
+            const arr = [];
+            for (let i = 0; i < days.length; i++) arr.push(days[i]);
+            return arr;
+        }
+        const keys = Object.keys(days);
+        if (keys.length && keys.every(function (k) { return /^\d+$/.test(k); })) {
+            return keys.sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10); })
+                .map(function (k) { return days[k]; });
+        }
+    }
+    return null;
+}
+
 function normalizeMaintenanceDays(days) {
-    if (!Array.isArray(days)) return MAINT_ALL_DAYS.slice();
+    const list = coerceMaintenanceDaysInput(days);
+    if (!list) return MAINT_ALL_DAYS.slice();
     const seen = {};
     const out = [];
-    days.forEach(function (d) {
+    list.forEach(function (d) {
         const n = parseInt(d, 10);
         if (n >= 0 && n <= 6 && !seen[n]) {
             seen[n] = true;
@@ -664,6 +693,23 @@ function collectMaintenanceDays() {
     return normalizeMaintenanceDays(days);
 }
 
+function syncMaintenanceDayCheckboxes(force) {
+    const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
+    if (!dayBoxes.length) return;
+    const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
+    const editingDays = !force && (maintenanceDaysDirty || maintenanceDaysSyncing || Array.prototype.some.call(dayBoxes, function (el) {
+        return document.activeElement === el;
+    }));
+    if (editingDays) return;
+    maintenanceDaysSyncing = true;
+    dayBoxes.forEach(function (el) {
+        const on = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
+        el.checked = on;
+        el.defaultChecked = on;
+    });
+    maintenanceDaysSyncing = false;
+}
+
 function updateMaintenanceStatusText() {
     const status = document.getElementById('maintenanceStatus');
     if (!status) return;
@@ -689,9 +735,14 @@ function updateMaintenanceStatusText() {
 }
 
 function onMaintenanceDayChange() {
+    if (maintenanceDaysSyncing) return;
     maintenanceDaysDirty = true;
     maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
     maintenanceSchedule.days = collectMaintenanceDays();
+    const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
+    dayBoxes.forEach(function (el) {
+        el.defaultChecked = !!el.checked;
+    });
     updateMaintenanceStatusText();
     if (maintenanceDaySaveTimer) clearTimeout(maintenanceDaySaveTimer);
     maintenanceDaySaveTimer = setTimeout(function () {
@@ -744,8 +795,7 @@ function wibWeekdayNow(now) {
 }
 
 function isDayInSchedule(schedule, weekday) {
-    const days = schedule && Array.isArray(schedule.days) ? schedule.days : MAINT_ALL_DAYS;
-    return days.indexOf(weekday) !== -1;
+    return normalizeMaintenanceDays(schedule && schedule.days).indexOf(weekday) !== -1;
 }
 
 function isMaintenanceDaySelected(schedule, now) {
@@ -834,16 +884,33 @@ function flushMaintenancePersistQueue() {
 }
 
 function persistMaintenanceSchedule() {
+    if (maintenanceDaySaveTimer) {
+        clearTimeout(maintenanceDaySaveTimer);
+        maintenanceDaySaveTimer = null;
+    }
+    if (maintenanceDaysDirty) {
+        maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
+        maintenanceSchedule.days = collectMaintenanceDays();
+    }
+    const payloadSchedule = {
+        enabled: !!maintenanceSchedule.enabled,
+        start: maintenanceSchedule.start,
+        end: maintenanceSchedule.end,
+        days: normalizeMaintenanceDays(maintenanceSchedule.days)
+    };
     if (maintenanceSyncInFlight) {
         maintenancePersistQueued = true;
         return;
     }
     maintenanceSyncInFlight = true;
     setMaintenanceScheduleStatus('Menyimpan jadwal...', false);
-    apiPost({ action: 'maintenance', schedule: maintenanceSchedule }, { url: maintenanceApiUrl() })
+    apiPost({ action: 'maintenance', schedule: payloadSchedule }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
-                maintenanceDaysDirty = false;
+                const currentDays = normalizeMaintenanceDays(maintenanceSchedule.days);
+                const sameDays = currentDays.join(',') === payloadSchedule.days.join(',');
+                if (sameDays) maintenanceDaysDirty = false;
+                if (res.schedule && sameDays) res.schedule.days = payloadSchedule.days.slice();
                 applyMaintenanceResult(res);
                 setMaintenanceScheduleStatus('Jadwal tersimpan.', false);
             } else {
@@ -869,11 +936,12 @@ function applyMaintenanceResult(res) {
     maintenanceManual = (res.manual === true || res.manual === false) ? res.manual : null;
     if (res.schedule) {
         const incoming = res.schedule;
-        const prevDays = maintenanceSchedule.days;
+        const prevDays = normalizeMaintenanceDays(maintenanceSchedule.days);
         const next = normalizeMaintenanceSchedule(incoming);
-        if (!Array.isArray(incoming.days) || maintenanceDaysDirty) next.days = prevDays;
+        const incomingDays = coerceMaintenanceDaysInput(incoming.days);
+        if (incomingDays === null || maintenanceDaysDirty) next.days = prevDays;
         maintenanceSchedule = next;
-        if (Array.isArray(incoming.days) && !maintenanceDaysDirty) maintenanceDaysDirty = false;
+        if (incomingDays !== null && !maintenanceDaysDirty) maintenanceDaysDirty = false;
     }
     applyMaintenance(!!res.maintenance);
 }
@@ -909,16 +977,7 @@ function renderMaintenanceControls() {
     if (startEl && document.activeElement !== startEl) startEl.value = maintenanceSchedule.start;
     if (endEl && document.activeElement !== endEl) endEl.value = maintenanceSchedule.end;
 
-    const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
-    const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
-    const editingDays = maintenanceDaysDirty || Array.prototype.some.call(dayBoxes, function (el) {
-        return document.activeElement === el;
-    });
-    if (!editingDays) {
-        dayBoxes.forEach(function (el) {
-            el.checked = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
-        });
-    }
+    syncMaintenanceDayCheckboxes(false);
     updateMaintenanceStatusText();
 }
 
@@ -946,10 +1005,7 @@ function applyCachedMaintenance() {
         const entry = JSON.parse(raw);
         if (entry && typeof entry.value === 'boolean' && (Date.now() - entry.ts) < MAINTENANCE_CACHE_TTL) {
             if (entry.schedule) {
-                const cached = normalizeMaintenanceSchedule(entry.schedule);
-                maintenanceSchedule.enabled = cached.enabled;
-                maintenanceSchedule.start = cached.start;
-                maintenanceSchedule.end = cached.end;
+                maintenanceSchedule = normalizeMaintenanceSchedule(entry.schedule);
             }
             maintenanceManual = (entry.manual === true || entry.manual === false) ? entry.manual : null;
             applyMaintenance(entry.value, false);
@@ -1289,7 +1345,14 @@ function toggleSettingsSection(bodyId, btn) {
         }
     }
     if (willOpen && bodyId === 'backupBody' && !settingsLocked) loadBackupList();
-    if (willOpen && bodyId === 'maintBody' && !settingsLocked) refreshMaintenanceScheduleView();
+    if (bodyId === 'maintBody') {
+        if (willOpen) {
+            syncMaintenanceDayCheckboxes(true);
+            if (!settingsLocked) refreshMaintenanceScheduleView();
+        } else if (maintenanceDaysDirty) {
+            persistMaintenanceSchedule();
+        }
+    }
 }
 
 function collapseSettingsSections() {
@@ -1427,6 +1490,7 @@ function unlockSettings() {
 
 // `auto` true = dipanggil oleh timer idle 5 menit; modal Menu Admin ikut ditutup.
 function lockSettings(auto) {
+    if (maintenanceDaysDirty) persistMaintenanceSchedule();
     settingsLocked = true;
     stopSettingsLockTimer();
     applySecurityState();
@@ -2555,8 +2619,10 @@ function toggleMenuAdminModal() {
         setTimeout(() => modal.classList.remove('opacity-0'), 10);
         const backupBody = document.getElementById('backupBody');
         if (!settingsLocked && backupBody && !backupBody.classList.contains('hidden')) loadBackupList();
+        syncMaintenanceDayCheckboxes(true);
         if (!settingsLocked) refreshMaintenanceScheduleView();
     } else {
+        if (maintenanceDaysDirty) persistMaintenanceSchedule();
         hideMenuAdminModal();
         relockSettingsSilently();
     }
@@ -2578,6 +2644,7 @@ function hideModalEl(modal) {
 // Kunci kembali sesi admin tanpa pesan (dipakai saat Menu Admin ditutup).
 function relockSettingsSilently() {
     if (settingsLocked) return;
+    if (maintenanceDaysDirty) persistMaintenanceSchedule();
     settingsLocked = true;
     stopSettingsLockTimer();
     applySecurityState();
