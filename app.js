@@ -8,21 +8,32 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926h';
+const APP_ASSET_VERSION = '20260926i';
+const APP_CACHE_NAME = 'choir-absensi-v91';
 let swRegistration = null;
-let hasSwController = false;
 let updateModalShown = false;
 let updateReloadArmed = false;
+let updatePromptQueued = false;
+const watchedWorkers = typeof WeakSet === 'function' ? new WeakSet() : null;
 
 function pageIsControlled() {
-    return hasSwController || !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    return !!(navigator.serviceWorker && navigator.serviceWorker.controller);
 }
 
 function watchWaitingWorker(worker) {
     if (!worker) return;
-    if (worker.state === 'installed' && pageIsControlled()) promptAppUpdate();
-    worker.addEventListener('statechange', function () {
-        if (worker.state === 'installed' && pageIsControlled()) promptAppUpdate();
+    if (watchedWorkers) {
+        if (watchedWorkers.has(worker)) return;
+        watchedWorkers.add(worker);
+    }
+    if (worker.state === 'installed') {
+        if (pageIsControlled()) promptAppUpdate();
+        return;
+    }
+    worker.addEventListener('statechange', function onStateChange() {
+        if (worker.state !== 'installed') return;
+        worker.removeEventListener('statechange', onStateChange);
+        if (pageIsControlled()) promptAppUpdate();
     });
 }
 
@@ -30,6 +41,8 @@ function listenForWaitingSw(reg) {
     if (!reg) return;
     watchWaitingWorker(reg.waiting);
     watchWaitingWorker(reg.installing);
+    if (reg.__updateFoundBound) return;
+    reg.__updateFoundBound = true;
     reg.addEventListener('updatefound', function () {
         watchWaitingWorker(reg.installing);
     });
@@ -42,7 +55,7 @@ function remoteVersionMismatch(text) {
     const htmlMatch = body.match(/app\.js\?v=([^"'&\s]+)/);
     if (htmlMatch && htmlMatch[1] && htmlMatch[1] !== APP_ASSET_VERSION) return true;
     const cacheMatch = body.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
-    return !!(cacheMatch && cacheMatch[1] && cacheMatch[1] !== 'choir-absensi-v90');
+    return !!(cacheMatch && cacheMatch[1] && cacheMatch[1] !== APP_CACHE_NAME);
 }
 
 function checkRemoteAppVersion() {
@@ -57,34 +70,21 @@ function checkRemoteAppVersion() {
 }
 
 function checkForAppUpdate() {
-    if (swRegistration) {
-        if (swRegistration.waiting && pageIsControlled()) promptAppUpdate();
-        swRegistration.update().then(function () {
-            if (swRegistration && swRegistration.waiting && pageIsControlled()) promptAppUpdate();
-        }).catch(function () {});
-    }
+    if (swRegistration && swRegistration.waiting && pageIsControlled()) promptAppUpdate();
+    if (swRegistration) swRegistration.update().catch(function () {});
     checkRemoteAppVersion();
 }
 
 if ('serviceWorker' in navigator) {
-    hasSwController = !!navigator.serviceWorker.controller;
-
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         swRegistration = reg;
         listenForWaitingSw(reg);
         if (reg.waiting && pageIsControlled()) promptAppUpdate();
-        return reg.update().then(function () {
-            if (reg.waiting && pageIsControlled()) promptAppUpdate();
-        });
+        return reg.update();
     }).catch(function () {});
 
     navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (updateReloadArmed) {
-            window.location.reload();
-            return;
-        }
-        if (hasSwController) promptAppUpdate();
-        hasSwController = true;
+        if (updateReloadArmed) window.location.reload();
     });
 }
 
@@ -94,9 +94,8 @@ document.addEventListener('visibilitychange', function () {
         if (typeof refreshMaintenance === 'function') refreshMaintenance(true);
     }
 });
-checkForAppUpdate();
-setTimeout(checkForAppUpdate, 1500);
-setInterval(checkForAppUpdate, 30 * 1000);
+setTimeout(checkForAppUpdate, 2000);
+setInterval(checkForAppUpdate, 60 * 1000);
 
 // ==========================================
 // MODAL PEMBARUAN APLIKASI (HARD REFRESH)
@@ -121,8 +120,12 @@ function ensureUpdateModal() {
 function promptAppUpdate() {
     if (updateModalShown) return;
     if (!document.body) {
-        document.addEventListener('DOMContentLoaded', promptAppUpdate, { once: true });
-        setTimeout(promptAppUpdate, 300);
+        if (updatePromptQueued) return;
+        updatePromptQueued = true;
+        document.addEventListener('DOMContentLoaded', function () {
+            updatePromptQueued = false;
+            promptAppUpdate();
+        }, { once: true });
         return;
     }
     const modal = ensureUpdateModal();
