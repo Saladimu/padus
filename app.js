@@ -8,7 +8,7 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926b';
+const APP_ASSET_VERSION = '20260926c';
 let swRegistration = null;
 let hasSwController = false;
 let updateModalShown = false;
@@ -174,6 +174,7 @@ let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
 let maintenancePersistQueued = false;
 let maintenanceDaySaveTimer = null;
+let maintenanceDaysDirty = false;
 let maintenanceOverrideReqId = 0;
 let maintenanceRefreshPromise = null;
 let maintenanceLastCheck = 0;
@@ -663,10 +664,35 @@ function collectMaintenanceDays() {
     return normalizeMaintenanceDays(days);
 }
 
+function updateMaintenanceStatusText() {
+    const status = document.getElementById('maintenanceStatus');
+    if (!status) return;
+    const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
+    const dayText = formatMaintenanceDays(maintenanceSchedule.days);
+    let text;
+    if (maintenanceManual === true) {
+        text = 'Status: AKTIF (dipaksa manual) — jadwal diabaikan.';
+    } else if (maintenanceManual === false) {
+        text = 'Status: NONAKTIF (dipaksa manual) — jadwal diabaikan.';
+    } else if (!maintenanceSchedule.enabled) {
+        text = 'Status: NONAKTIF — jadwal otomatis dimatikan.';
+    } else if (selectedDays.length === 0) {
+        text = 'Status: NONAKTIF — tidak ada hari yang dipilih.';
+    } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
+        text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB, ' + dayText + ').';
+    } else if (!isMaintenanceDaySelected(maintenanceSchedule)) {
+        text = 'Status: NONAKTIF — hari ini tidak termasuk jadwal (' + dayText + ').';
+    } else {
+        text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (' + dayText + ').';
+    }
+    status.textContent = text;
+}
+
 function onMaintenanceDayChange() {
+    maintenanceDaysDirty = true;
     maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
     maintenanceSchedule.days = collectMaintenanceDays();
-    renderMaintenanceControls();
+    updateMaintenanceStatusText();
     if (maintenanceDaySaveTimer) clearTimeout(maintenanceDaySaveTimer);
     maintenanceDaySaveTimer = setTimeout(function () {
         maintenanceDaySaveTimer = null;
@@ -817,6 +843,7 @@ function persistMaintenanceSchedule() {
     apiPost({ action: 'maintenance', schedule: maintenanceSchedule }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
+                maintenanceDaysDirty = false;
                 applyMaintenanceResult(res);
                 setMaintenanceScheduleStatus('Jadwal tersimpan.', false);
             } else {
@@ -840,7 +867,14 @@ function setMaintenanceScheduleStatus(message, isError) {
 function applyMaintenanceResult(res) {
     if (!res || !res.success) return;
     maintenanceManual = (res.manual === true || res.manual === false) ? res.manual : null;
-    if (res.schedule) maintenanceSchedule = normalizeMaintenanceSchedule(res.schedule);
+    if (res.schedule) {
+        const incoming = res.schedule;
+        const prevDays = maintenanceSchedule.days;
+        const next = normalizeMaintenanceSchedule(incoming);
+        if (!Array.isArray(incoming.days) || maintenanceDaysDirty) next.days = prevDays;
+        maintenanceSchedule = next;
+        if (Array.isArray(incoming.days) && !maintenanceDaysDirty) maintenanceDaysDirty = false;
+    }
     applyMaintenance(!!res.maintenance);
 }
 
@@ -877,31 +911,15 @@ function renderMaintenanceControls() {
 
     const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
     const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
-    dayBoxes.forEach(function (el) {
-        el.checked = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
+    const editingDays = maintenanceDaysDirty || Array.prototype.some.call(dayBoxes, function (el) {
+        return document.activeElement === el;
     });
-
-    const status = document.getElementById('maintenanceStatus');
-    if (status) {
-        let text;
-        const dayText = formatMaintenanceDays(maintenanceSchedule.days);
-        if (maintenanceManual === true) {
-            text = 'Status: AKTIF (dipaksa manual) — jadwal diabaikan.';
-        } else if (maintenanceManual === false) {
-            text = 'Status: NONAKTIF (dipaksa manual) — jadwal diabaikan.';
-        } else if (!maintenanceSchedule.enabled) {
-            text = 'Status: NONAKTIF — jadwal otomatis dimatikan.';
-        } else if (selectedDays.length === 0) {
-            text = 'Status: NONAKTIF — tidak ada hari yang dipilih.';
-        } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
-            text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB, ' + dayText + ').';
-        } else if (!isMaintenanceDaySelected(maintenanceSchedule)) {
-            text = 'Status: NONAKTIF — hari ini tidak termasuk jadwal (' + dayText + ').';
-        } else {
-            text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (' + dayText + ').';
-        }
-        status.textContent = text;
+    if (!editingDays) {
+        dayBoxes.forEach(function (el) {
+            el.checked = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
+        });
     }
+    updateMaintenanceStatusText();
 }
 
 function applyMaintenance(on, persist) {
