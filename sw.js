@@ -74,8 +74,8 @@ self.addEventListener('fetch', function (event) {
   if (/\/sw\.js(?:\?|$)/.test(request.url)) return;
   if (request.url.indexOf('update-check=') !== -1) return;
   if (request.cache === 'no-store' || request.cache === 'reload') {
-    var followRequest = new Request(request, { cache: 'no-store', redirect: 'follow' });
-    event.respondWith(fetch(followRequest));
+    var followRequest = new Request(request, { redirect: 'follow' });
+    event.respondWith(fetch(followRequest, { cache: 'no-store' }));
     return;
   }
 
@@ -83,9 +83,17 @@ self.addEventListener('fetch', function (event) {
     event.respondWith(
       caches.match('./index.html').then(function (cached) {
         if (cached) return cached;
-        return fetch(request).then(function (response) {
+        var followNavRequest = new Request(request, { redirect: 'follow' });
+        return fetch(followNavRequest).then(function (response) {
           if (response && response.status === 200) {
             var copy = response.clone();
+            if (response.redirected) {
+              copy = new Response(response.body, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+              });
+            }
             caches.open(CACHE_NAME).then(function (cache) {
               cache.put('./index.html', copy);
             });
