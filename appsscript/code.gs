@@ -135,7 +135,8 @@ function doOptions(e) {
 const MAINTENANCE_MANUAL_KEY = 'choir_maintenance_manual';
 const MAINTENANCE_SCHEDULE_KEY = 'choir_maintenance_schedule';
 const MAINTENANCE_TZ = 'Asia/Jakarta';
-const DEFAULT_MAINTENANCE_SCHEDULE = { enabled: true, start: '09:00', end: '17:00' };
+const DEFAULT_MAINTENANCE_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const DEFAULT_MAINTENANCE_SCHEDULE = { enabled: true, start: '09:00', end: '17:00', days: DEFAULT_MAINTENANCE_DAYS.slice() };
 
 function isValidHhmm(value) {
   return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
@@ -146,22 +147,38 @@ function minutesOfHhmm(value) {
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
+function normalizeMaintenanceDays(days) {
+  if (!Array.isArray(days)) return DEFAULT_MAINTENANCE_DAYS.slice();
+  const seen = {};
+  const out = [];
+  for (let i = 0; i < days.length; i++) {
+    const n = parseInt(days[i], 10);
+    if (n >= 0 && n <= 6 && !seen[n]) {
+      seen[n] = true;
+      out.push(n);
+    }
+  }
+  out.sort(function (a, b) { return a - b; });
+  return out;
+}
+
 function normalizeMaintenanceSchedule(obj) {
   const s = obj && typeof obj === 'object' ? obj : {};
   return {
     enabled: s.enabled === undefined ? DEFAULT_MAINTENANCE_SCHEDULE.enabled : !!s.enabled,
     start: isValidHhmm(s.start) ? s.start : DEFAULT_MAINTENANCE_SCHEDULE.start,
-    end: isValidHhmm(s.end) ? s.end : DEFAULT_MAINTENANCE_SCHEDULE.end
+    end: isValidHhmm(s.end) ? s.end : DEFAULT_MAINTENANCE_SCHEDULE.end,
+    days: normalizeMaintenanceDays(s.days)
   };
 }
 
 function getMaintenanceSchedule() {
   const raw = PropertiesService.getScriptProperties().getProperty(MAINTENANCE_SCHEDULE_KEY);
-  if (!raw) return Object.assign({}, DEFAULT_MAINTENANCE_SCHEDULE);
+  if (!raw) return normalizeMaintenanceSchedule(DEFAULT_MAINTENANCE_SCHEDULE);
   try {
     return normalizeMaintenanceSchedule(JSON.parse(raw));
   } catch (e) {
-    return Object.assign({}, DEFAULT_MAINTENANCE_SCHEDULE);
+    return normalizeMaintenanceSchedule(DEFAULT_MAINTENANCE_SCHEDULE);
   }
 }
 
@@ -186,8 +203,24 @@ function setMaintenanceManual(value) {
   else props.deleteProperty(MAINTENANCE_MANUAL_KEY);
 }
 
+function wibWeekday(now) {
+  const wd = Utilities.formatDate(now || new Date(), MAINTENANCE_TZ, 'u');
+  const n = parseInt(wd, 10);
+  return n === 7 ? 0 : n;
+}
+
+function isDayInSchedule(schedule, weekday) {
+  const days = schedule && Array.isArray(schedule.days) ? schedule.days : DEFAULT_MAINTENANCE_DAYS;
+  return days.indexOf(weekday) !== -1;
+}
+
+function isMaintenanceDaySelected(schedule, now) {
+  return isDayInSchedule(schedule, wibWeekday(now));
+}
+
 // Cek apakah waktu sekarang (WIB) berada di dalam rentang jadwal harian.
 // Mendukung rentang yang melewati tengah malam (mis. 22:00-05:00).
+// Untuk rentang lintas hari, potongan setelah tengah malam memakai hari kemarin.
 function isWithinMaintenanceSchedule(schedule, now) {
   if (!schedule || !schedule.enabled) return false;
   const stamp = Utilities.formatDate(now || new Date(), MAINTENANCE_TZ, 'HH:mm');
@@ -195,8 +228,13 @@ function isWithinMaintenanceSchedule(schedule, now) {
   const start = minutesOfHhmm(schedule.start);
   const end = minutesOfHhmm(schedule.end);
   if (start === end) return false;
-  if (start < end) return current >= start && current < end;
-  return current >= start || current < end;
+  const weekday = wibWeekday(now);
+  if (start < end) {
+    return isDayInSchedule(schedule, weekday) && current >= start && current < end;
+  }
+  if (current >= start) return isDayInSchedule(schedule, weekday);
+  if (current < end) return isDayInSchedule(schedule, (weekday + 6) % 7);
+  return false;
 }
 
 function getMaintenanceMode() {

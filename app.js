@@ -128,7 +128,10 @@ let currentStudentList = [];
 
 let maintenanceMode = false;
 let maintenanceManual = null; // null = ikut jadwal, true = paksa aktif, false = paksa nonaktif
-let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00' };
+const MAINT_ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const MAINT_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const MAINT_DAY_LABELS = { 0: 'Min', 1: 'Sen', 2: 'Sel', 3: 'Rab', 4: 'Kam', 5: 'Jum', 6: 'Sab' };
+let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00', days: MAINT_ALL_DAYS.slice() };
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
@@ -586,14 +589,54 @@ function maintenanceApiUrl() {
     return base + sep + '_=' + Date.now();
 }
 
+function normalizeMaintenanceDays(days) {
+    if (!Array.isArray(days)) return MAINT_ALL_DAYS.slice();
+    const seen = {};
+    const out = [];
+    days.forEach(function (d) {
+        const n = parseInt(d, 10);
+        if (n >= 0 && n <= 6 && !seen[n]) {
+            seen[n] = true;
+            out.push(n);
+        }
+    });
+    out.sort(function (a, b) { return a - b; });
+    return out;
+}
+
 function normalizeMaintenanceSchedule(schedule) {
     const s = schedule && typeof schedule === 'object' ? schedule : {};
     const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
     return {
         enabled: s.enabled === undefined ? true : !!s.enabled,
         start: timeRe.test(s.start) ? s.start : '09:00',
-        end: timeRe.test(s.end) ? s.end : '17:00'
+        end: timeRe.test(s.end) ? s.end : '17:00',
+        days: normalizeMaintenanceDays(s.days)
     };
+}
+
+function collectMaintenanceDays() {
+    const boxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
+    const days = [];
+    boxes.forEach(function (el) {
+        if (el.checked) days.push(parseInt(el.getAttribute('data-day'), 10));
+    });
+    return normalizeMaintenanceDays(days);
+}
+
+function onMaintenanceDayChange() {
+    maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
+    maintenanceSchedule.days = collectMaintenanceDays();
+    renderMaintenanceControls();
+}
+
+function formatMaintenanceDays(days) {
+    const list = normalizeMaintenanceDays(days);
+    if (list.length === 0) return 'tidak ada hari';
+    if (list.length === 7) return 'setiap hari';
+    return MAINT_DAY_ORDER.filter(function (d) { return list.indexOf(d) !== -1; })
+        .map(function (d) { return MAINT_DAY_LABELS[d]; })
+        .join(', ');
 }
 
 // Menit saat ini menurut zona waktu WIB, apa pun zona perangkat.
@@ -619,13 +662,39 @@ function minutesOfHhmm(value) {
     return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
+function wibWeekdayNow(now) {
+    try {
+        const wd = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Jakarta', weekday: 'short'
+        }).format(now || new Date());
+        const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+        if (Object.prototype.hasOwnProperty.call(map, wd)) return map[wd];
+    } catch (e) { /* fallback zona perangkat */ }
+    return (now || new Date()).getDay();
+}
+
+function isDayInSchedule(schedule, weekday) {
+    const days = schedule && Array.isArray(schedule.days) ? schedule.days : MAINT_ALL_DAYS;
+    return days.indexOf(weekday) !== -1;
+}
+
+function isMaintenanceDaySelected(schedule, now) {
+    return isDayInSchedule(schedule, wibWeekdayNow(now));
+}
+
 function isWithinMaintenanceSchedule(schedule, now) {
     if (!schedule || !schedule.enabled) return false;
     const current = wibMinutesNow(now);
     const start = minutesOfHhmm(schedule.start);
     const end = minutesOfHhmm(schedule.end);
     if (start === end) return false;
-    return start < end ? (current >= start && current < end) : (current >= start || current < end);
+    const weekday = wibWeekdayNow(now);
+    if (start < end) {
+        return isDayInSchedule(schedule, weekday) && current >= start && current < end;
+    }
+    if (current >= start) return isDayInSchedule(schedule, weekday);
+    if (current < end) return isDayInSchedule(schedule, (weekday + 6) % 7);
+    return false;
 }
 
 function setMaintenanceOverride(mode) {
@@ -680,7 +749,8 @@ function saveMaintenanceSchedule() {
     maintenanceSchedule = {
         enabled: normalizeMaintenanceSchedule(maintenanceSchedule).enabled,
         start: startEl.value,
-        end: endEl.value
+        end: endEl.value,
+        days: collectMaintenanceDays()
     };
     persistMaintenanceSchedule();
 }
@@ -747,19 +817,31 @@ function renderMaintenanceControls() {
     if (startEl && document.activeElement !== startEl) startEl.value = maintenanceSchedule.start;
     if (endEl && document.activeElement !== endEl) endEl.value = maintenanceSchedule.end;
 
+    const dayBoxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
+    const selectedDays = normalizeMaintenanceDays(maintenanceSchedule.days);
+    dayBoxes.forEach(function (el) {
+        if (document.activeElement === el) return;
+        el.checked = selectedDays.indexOf(parseInt(el.getAttribute('data-day'), 10)) !== -1;
+    });
+
     const status = document.getElementById('maintenanceStatus');
     if (status) {
         let text;
+        const dayText = formatMaintenanceDays(maintenanceSchedule.days);
         if (maintenanceManual === true) {
             text = 'Status: AKTIF (dipaksa manual) — jadwal diabaikan.';
         } else if (maintenanceManual === false) {
             text = 'Status: NONAKTIF (dipaksa manual) — jadwal diabaikan.';
         } else if (!maintenanceSchedule.enabled) {
             text = 'Status: NONAKTIF — jadwal otomatis dimatikan.';
+        } else if (selectedDays.length === 0) {
+            text = 'Status: NONAKTIF — tidak ada hari yang dipilih.';
         } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
-            text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB).';
+            text = 'Status: AKTIF otomatis (dalam jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB, ' + dayText + ').';
+        } else if (!isMaintenanceDaySelected(maintenanceSchedule)) {
+            text = 'Status: NONAKTIF — hari ini tidak termasuk jadwal (' + dayText + ').';
         } else {
-            text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB.';
+            text = 'Status: NONAKTIF — di luar jadwal ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (' + dayText + ').';
         }
         status.textContent = text;
     }

@@ -168,13 +168,15 @@ Buka submenu **Mode maintenance** (setelah Ubah Password). Mode maintenance meno
 - **Aktif** — paksa maintenance **ON** terus (mengabaikan jadwal) sampai diubah kembali.
 - **Nonaktif** — paksa maintenance **OFF** terus (mengabaikan jadwal) sampai diubah kembali.
 
-**Jadwal Otomatis Harian** (bawaan **aktif, 09:00–17:00 WIB**):
+**Jadwal Otomatis Harian** (bawaan **aktif, 09:00–17:00 WIB, setiap hari**):
 
 1. Sakelar **Jadwal Otomatis Harian** untuk menyalakan/mematikan jadwal.
-2. Isi jam **Dari** dan **Sampai** (format 24 jam, zona **WIB/GMT+7**), lalu tekan **Simpan Jadwal**.
-3. Selama berada di dalam rentang jam, maintenance **ON otomatis**; di luar rentang, **OFF** — tanpa perlu menekan apa pun. Rentang yang melewati tengah malam (mis. 22:00–05:00) juga didukung.
+2. Isi jam **Dari** dan **Sampai** (format 24 jam, zona **WIB/GMT+7**).
+3. Centang hari **Sen Sel Rab Kam Jum Sab Min** di bawah jam (bawaan semua dicentang). Hari yang tidak dicentang dilewati.
+4. Tekan **Simpan Jadwal**.
+5. Pada hari yang dicentang dan di dalam rentang jam, maintenance **ON otomatis**; di luar jam atau hari yang tidak dicentang, **OFF**. Rentang yang melewati tengah malam (mis. 22:00–05:00) juga didukung.
 
-Baris **Status** menunjukkan keadaan saat ini: mis. *"AKTIF otomatis (dalam jadwal 09:00-17:00 WIB)"* atau *"NONAKTIF — di luar jadwal 09:00-17:00 WIB"*.
+Baris **Status** menunjukkan keadaan saat ini: mis. *"AKTIF otomatis (dalam jadwal 09:00-17:00 WIB, setiap hari)"* atau *"NONAKTIF — hari ini tidak termasuk jadwal (Sen, Sel, Rab)"*.
 
 Saat maintenance **ON**:
 
