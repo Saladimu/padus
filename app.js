@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926j';
-const APP_CACHE_NAME = 'choir-absensi-v92';
+const APP_ASSET_VERSION = '20260926k';
+const APP_CACHE_NAME = 'choir-absensi-v93';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -1380,7 +1380,7 @@ function toggleSettingsSection(bodyId, btn) {
     body.classList.toggle('hidden', !willOpen);
     if (btn) {
         btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        const icon = btn.querySelector('svg');
+        const icon = btn.querySelector('[data-chevron]') || btn.querySelector('svg');
         if (icon) {
             icon.style.transition = 'transform 0.2s';
             icon.style.transform = willOpen ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -1404,7 +1404,7 @@ function collapseSettingsSections() {
     });
     document.querySelectorAll('#menuAdminModal button[aria-expanded]').forEach(function (btn) {
         btn.setAttribute('aria-expanded', 'false');
-        const icon = btn.querySelector('svg');
+        const icon = btn.querySelector('[data-chevron]') || btn.querySelector('svg');
         if (icon) icon.style.transform = 'rotate(0deg)';
     });
 }
