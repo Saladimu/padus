@@ -75,7 +75,11 @@ self.addEventListener('fetch', function (event) {
   if (request.url.indexOf('update-check=') !== -1) return;
   if (request.cache === 'no-store' || request.cache === 'reload') {
     var followRequest = new Request(request, { redirect: 'follow' });
-    event.respondWith(fetch(followRequest, { cache: 'no-store' }));
+    event.respondWith(
+      fetch(followRequest, { cache: 'no-store' }).catch(function () {
+        return fetch(event.request);
+      })
+    );
     return;
   }
 
@@ -98,8 +102,11 @@ self.addEventListener('fetch', function (event) {
               cache.put('./index.html', copy);
             });
           }
-          return response;
+          if (response) return response;
+          return fetch(event.request);
         });
+      }).catch(function () {
+        return fetch(event.request);
       })
     );
     return;
@@ -150,7 +157,8 @@ self.addEventListener('fetch', function (event) {
       caches.match(request).then(function (cached) {
         if (cached) return cached;
         return fetch(request).then(function (response) {
-          if (response && response.status === 200 && response.type === 'basic') {
+          if (response && response.status === 200 &&
+              (response.type === 'basic' || response.type === 'cors')) {
             var copy = response.clone();
             caches.open(CACHE_NAME).then(function (cache) {
               cache.put(request, copy).then(function () {
@@ -158,10 +166,14 @@ self.addEventListener('fetch', function (event) {
               });
             });
           }
-          return response;
+          if (response) return response;
+          return fetch(event.request);
         });
+      }).catch(function () {
+        return fetch(event.request);
       })
     );
+    return;
   }
 });
 
