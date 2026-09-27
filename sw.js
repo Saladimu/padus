@@ -7,11 +7,10 @@
      aset app.js/styles.css yang tidak lagi dipakai dibersihkan agar
      cache tetap ramping.
 */
-var CACHE_NAME = 'choir-absensi-v94';
-var ASSET_VERSION = '20260926l';
+var CACHE_NAME = 'choir-absensi-v95';
+var ASSET_VERSION = '20260926m';
 var CORE_ASSETS = [
   './',
-  './index.html',
   './app.js?v=' + ASSET_VERSION,
   './config.js?v=' + ASSET_VERSION,
   './styles.css?v=' + ASSET_VERSION,
@@ -23,11 +22,30 @@ var CORE_ASSETS = [
 ];
 var MAX_ENTRIES = 100;
 
+// Cloudflare Pages (dan host statis lain) sering mengalihkan /index.html -> /.
+// Respons hasil redirect TIDAK boleh dipakai untuk navigasi (Chrome menolaknya
+// sebagai "site can't be reached"), jadi kita netralkan flag redirect-nya.
+function cleanResponse(response) {
+  if (!response || !response.redirected) return response;
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
+  });
+}
+
+function precache(cache, url) {
+  return fetch(url, { redirect: 'follow' }).then(function (response) {
+    if (!response || response.status !== 200) return;
+    return cache.put(url, cleanResponse(response));
+  }).catch(function () {});
+}
+
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
       return Promise.all(CORE_ASSETS.map(function (url) {
-        return cache.add(url).catch(function () {});
+        return precache(cache, url);
       }));
     })
   );
@@ -76,7 +94,7 @@ self.addEventListener('fetch', function (event) {
   if (request.cache === 'no-store' || request.cache === 'reload') {
     var followRequest = new Request(request, { redirect: 'follow' });
     event.respondWith(
-      fetch(followRequest, { cache: 'no-store' }).catch(function () {
+      fetch(followRequest, { cache: 'no-store' }).then(cleanResponse).catch(function () {
         return fetch(event.request);
       })
     );
@@ -85,28 +103,24 @@ self.addEventListener('fetch', function (event) {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      caches.match('./index.html').then(function (cached) {
+      caches.match('./').then(function (cached) {
         if (cached) return cached;
         var followNavRequest = new Request(request, { redirect: 'follow' });
         return fetch(followNavRequest).then(function (response) {
-          if (response && response.status === 200) {
-            var copy = response.clone();
-            if (response.redirected) {
-              copy = new Response(response.body, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers
-              });
-            }
+          var clean = cleanResponse(response);
+          if (clean && clean.status === 200) {
+            var copy = clean.clone();
             caches.open(CACHE_NAME).then(function (cache) {
-              cache.put('./index.html', copy);
+              cache.put('./', copy);
             });
           }
-          if (response) return response;
+          if (clean) return clean;
           return fetch(event.request);
+        }).catch(function () {
+          return caches.match('./').then(function (cachedNav) {
+            return cachedNav || fetch(event.request);
+          });
         });
-      }).catch(function () {
-        return fetch(event.request);
       })
     );
     return;
