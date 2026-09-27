@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260926k">
+    <link rel="stylesheet" href="styles.css?v=20260926l">
     <style>div[data-netlify-badge-floating] { display: none !important; }</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +15,8 @@
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="config.js?v=20260926k" defer></script>
-    <script src="app.js?v=20260926k" defer></script>
+    <script src="config.js?v=20260926l" defer></script>
+    <script src="app.js?v=20260926l" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -236,8 +236,13 @@
                 <!-- Koneksi Google Sheets -->
                 <div class="bg-green-50 p-4 rounded-lg border border-green-200" id="connBlock">
                     <button type="button" onclick="toggleSettingsSection('connBody', this)" aria-expanded="false" class="w-full flex items-center justify-between gap-2 text-left">
-                        <h3 class="font-bold text-sm">Koneksi Google Sheets</h3>
-                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <span class="flex items-center gap-2">
+                            <span class="inline-flex w-8 h-8 items-center justify-center rounded-full bg-green-100 text-green-700 shrink-0" aria-hidden="true">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            </span>
+                            <h3 class="font-bold text-sm">Koneksi Google Sheets</h3>
+                        </span>
+                        <svg data-chevron="true" class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     <div id="connBody" class="hidden mt-3">
                     <p class="text-xs text-gray-500 mb-3">Atur URL Aplikasi Web Google Apps Script sebagai backend absensi. Kosongkan untuk memakai URL default dari <code>config.js</code>.</p>
@@ -260,7 +265,12 @@
 
                 <!-- Setup Backend -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 class="font-bold text-sm mb-1">Setup Backend</h3>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="inline-flex w-8 h-8 items-center justify-center rounded-full bg-slate-200 text-slate-700 shrink-0" aria-hidden="true">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        </span>
+                        <h3 class="font-bold text-sm">Setup Backend</h3>
+                    </div>
                     <p class="text-xs text-gray-500 mb-3">Panduan menghubungkan aplikasi ini ke Google Sheets.</p>
                     <button id="btnShowSetup" onclick="toggleAdminModal()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-semibold py-2 rounded-lg transition flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
