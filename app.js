@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260926m';
-const APP_CACHE_NAME = 'choir-absensi-v95';
+const APP_ASSET_VERSION = '20260928a';
+const APP_CACHE_NAME = 'choir-absensi-v97';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -774,6 +774,33 @@ function updateMaintenanceStatusText() {
         text = 'Status: NONAKTIF — dalam jam ' + maintenanceSchedule.start + '-' + maintenanceSchedule.end + ' WIB (hari aktif: ' + dayText + ').';
     }
     status.textContent = text;
+    updateMaintenanceStatusBadge();
+}
+
+function updateMaintenanceStatusBadge() {
+    const badge = document.getElementById('maintenanceStatusBadge');
+    if (!badge) return;
+    const active = maintenanceMode === true;
+    let short;
+    if (maintenanceManual === true) {
+        short = 'AKTIF (manual)';
+    } else if (maintenanceManual === false) {
+        short = 'NONAKTIF (manual)';
+    } else if (!maintenanceSchedule.enabled) {
+        short = 'NONAKTIF (jadwal off)';
+    } else if (isMaintenanceDaySelected(maintenanceSchedule)) {
+        short = 'AKTIF (hari aktif)';
+    } else if (isWithinMaintenanceSchedule(maintenanceSchedule)) {
+        short = 'AKTIF (luar jam)';
+    } else {
+        short = 'NONAKTIF (dalam jam)';
+    }
+    badge.textContent = 'Status: ' + short;
+    badge.classList.remove('bg-gray-200', 'text-gray-600');
+    badge.classList.toggle('bg-red-100', active);
+    badge.classList.toggle('text-red-700', active);
+    badge.classList.toggle('bg-green-100', !active);
+    badge.classList.toggle('text-green-700', !active);
 }
 
 function onMaintenanceDayChange() {
