@@ -113,8 +113,6 @@ function doPost(e) {
       return respond(getStudentHistory(data.id));
     } else if (action === 'maintenance') {
       return respond(handleMaintenance(data));
-    } else if (action === 'debug') {
-      return respond(debugCheck(data.id));
     }
 
     return respond({ success: false, message: 'Action tidak valid.' });
@@ -311,35 +309,6 @@ function maintenanceBlockResponse() {
 function respond(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
-}
-
-// SEMENTARA: hanya untuk diagnosa format data, hapus setelah selesai.
-function debugCheck(studentId) {
-  const sheet = getSheet(SHEET_NAME_ATTENDANCE);
-  if (!sheet) return { success: false, message: 'Sheet ATTENDANCE tidak ditemukan.' };
-  const rows = getAttendanceData(sheet);
-  const now = new Date();
-  const dateString = Utilities.formatDate(now, 'GMT+7', 'yyyy-MM-dd');
-  const target = String(studentId || '').trim().toUpperCase();
-  const matches = [];
-  for (let i = 1; i < rows.length; i++) {
-    const recId = rows[i][2] ? String(rows[i][2]).trim().toUpperCase() : '';
-    if (target && recId !== target) continue;
-    matches.push({
-      col1Raw: rows[i][1],
-      col1IsDate: isDateValue(rows[i][1]),
-      col2: rows[i][2],
-      matchesToday: matchesToday(rows[i][1], dateString)
-    });
-  }
-  return {
-    success: true,
-    todayGMT7: dateString,
-    scriptTimezone: getScriptTimeZone(),
-    targetId: target,
-    rowCount: rows.length - 1,
-    matches: matches
-  };
 }
 
 function getSheet(name) {
