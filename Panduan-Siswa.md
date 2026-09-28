@@ -119,6 +119,7 @@ Jika ada kesalahan pengisian, segera sampaikan kepada **guru pembimbing / ketua 
 | **Riwayat kehadiranmu** | Dari daftar absensi hari ini, tekan tombol **Riwayat** (ikon jam) di baris namamu untuk melihat riwayat kehadiran per bulan |
 | **Muat Ulang** | Tombol **refresh** di header — memuat ulang aplikasi bila layar bermasalah |
 | **QR Paduan Suara** | Ketuk teks footer *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"* — menampilkan kode QR ekskul |
+| **Versi aplikasi** | Teks kecil **Versi v100** di bawah tulisan footer (nama sekolah). Tidak perlu dilakukan apa-apa; berguna bila guru/admin menanyakan versi aplikasi yang kamu pakai |
 | **Panduan ini** | Tersedia juga di menu **Bantuan** aplikasi |
 | **Pengaturan & Setup** | Ikon **roda gigi** di kanan atas (selalu tampil) — berisi **Koneksi Google Sheets** dan panduan **Setup Backend**. Tidak perlu kata sandi dan hanya memengaruhi perangkat ini. Menu pengaturan admin tetap terpisah dan terkunci |
 
@@ -156,7 +157,7 @@ Yang perlu kamu lakukan: **tidak perlu apa-apa** — tunggu pengumuman dari guru
 | Tombol Submit tidak bisa ditekan | Pastikan **jenis latihan dipilih**, **pernyataan dicentang**, dan untuk **Izin** catatan sudah diisi |
 | Layar tidak merespons / data tidak muncul | Tekan tombol **refresh** di header; pastikan koneksi internet aktif |
 | Pesan galat saat submit / verifikasi | Aplikasi sudah **mencoba ulang otomatis** beberapa kali. Bila tetap gagal, periksa koneksi internet lalu tekan tombol yang sama sekali lagi |
-| Muncul "Pembaruan Tersedia" | Tekan **Hard Refresh** untuk memakai versi terbaru aplikasi |
+| Muncul "Pembaruan Tersedia" | Tekan **Hard Refresh** untuk memakai versi terbaru aplikasi; label **Versi** di footer akan menunjukkan nomor terbaru setelahnya |
 | Form terkunci & muncul jendela merah | Sistem sedang **Mode Maintenance** — tunggu pengumuman guru/admin |
 
 ---

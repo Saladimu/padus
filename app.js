@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928c';
-const APP_CACHE_NAME = 'choir-absensi-v99';
+const APP_ASSET_VERSION = '20260928d';
+const APP_CACHE_NAME = 'choir-absensi-v100';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -2843,6 +2843,12 @@ document.addEventListener('visibilitychange', function () {
 // INISIALISASI
 // ==========================================
 document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('id-ID', dateOptions);
+const appVersionEl = document.getElementById('appVersion');
+if (appVersionEl) {
+    const cacheVer = (APP_CACHE_NAME.match(/v(\d+)$/) || [])[1];
+    appVersionEl.textContent = cacheVer ? 'v' + cacheVer : APP_CACHE_NAME;
+    appVersionEl.title = APP_CACHE_NAME + ' \u00b7 ' + APP_ASSET_VERSION;
+}
 document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
