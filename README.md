@@ -32,9 +32,16 @@ appsscript/code.gs    Backend Google Apps Script
 appsscript/readme.md  Panduan deploy backend
 ```
 
+## Hosting & Repositori
+
+- **Repositori sumber (GitHub)**: `https://github.com/Saladimu/padus` (branch `main`). Ini tempat penyimpanan kode yang sebenarnya (source of truth); perubahan di-commit dan di-push ke sini.
+- **Akses publik (Cloudflare)**: situs dilayani publik lewat `https://padus-cog.pages.dev/`. Cloudflare hanya berperan sebagai **lapisan depan** untuk menyembunyikan URL sumber asli dari publik, bukan tempat penyimpanan kode.
+
+Karena itu, setelah mengubah file frontend: **push ke GitHub**, lalu **redeploy di Cloudflare** agar perubahan berlaku bagi pengguna. Backend Google Apps Script dideploy terpisah (lihat `appsscript/readme.md`).
+
 ## Caching (Service Worker)
 
-`sw.js` meng-cache aset statis (CSS, JS, `Absensi.md`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **cache-first** untuk navigasi halaman (HTML cache tidak ditimpa sampai Hard Refresh, agar modal **Pembaruan Tersedia** sempat tampil), **network-first** untuk `config.js` (perubahan URL default oleh admin langsung terpakai di semua perangkat; fallback cache saat offline), **cache-first** untuk aset statis same-origin lainnya (di-bust lewat `?v=`), dan **stale-while-revalidate** untuk font Google lintas-origin. Cache diberi versi (`CACHE_NAME`, kini `choir-absensi-v98`); versi lama otomatis dibersihkan saat aktivasi, varian aset `app.js`/`styles.css`/`config.js` yang sudah tidak dipakai ikut dihapus (cache tetap ramping), dan jumlah entri dibatasi (100).
+`sw.js` meng-cache aset statis (CSS, JS, `Absensi.md`, ikon, logo, halaman utama) agar aplikasi terbuka cepat pada kunjungan berikutnya dan tetap bisa diakses saat offline. Strategi: **cache-first** untuk navigasi halaman (HTML cache tidak ditimpa sampai Hard Refresh, agar modal **Pembaruan Tersedia** sempat tampil), **network-first** untuk `config.js` (perubahan URL default oleh admin langsung terpakai di semua perangkat; fallback cache saat offline), **cache-first** untuk aset statis same-origin lainnya (di-bust lewat `?v=`), dan **stale-while-revalidate** untuk font Google lintas-origin. Cache diberi versi (`CACHE_NAME`, kini `choir-absensi-v99`); versi lama otomatis dibersihkan saat aktivasi, varian aset `app.js`/`styles.css`/`config.js` yang sudah tidak dipakai ikut dihapus (cache tetap ramping), dan jumlah entri dibatasi (100).
 
 Karena aset statis memakai strategi cache-first, setiap rilis memakai **cache-busting berbasis tanggal rilis saat ini** pada `app.js`, `styles.css`, dan `config.js` (contoh `?v=20260928a`) agar browser mengambil file versi terbaru — URL baru = cache miss = unduh ulang, lalu di-cache. Bila ada beberapa deploy dalam satu hari, tambahkan akhiran (contoh `?v=20260928a`, `?v=20260928b`). Jangan pernah memakai tanggal lama lagi (risiko cache basi).
 

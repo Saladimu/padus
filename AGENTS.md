@@ -18,14 +18,14 @@ Keep all of these in sync within the same change:
 
 ## Deployment (manual, user action)
 
-- Frontend is hosted on **Cloudflare Pages** (`https://padus-cog.pages.dev/`). Changes only take effect after the user redeploys.
+- Frontend source lives in the **GitHub repository** `https://github.com/Saladimu/padus` (branch `main`) and is published publicly through **Cloudflare** (`https://padus-cog.pages.dev/`). Cloudflare is only a front layer to hide the origin/source URL from the public, not the source of truth. Changes only take effect after the user pushes to GitHub and redeploys on Cloudflare.
 - Backend is Google Apps Script (`appsscript/code.gs`). Changes only take effect after the user redeploys it in the Apps Script editor.
 - After making changes, tell the user these redeploys are required.
 
 ## Service Worker (`sw.js`)
 
 - Strategy: cache-first for navigation HTML (not overwritten until Hard Refresh so the update modal can show), network-first for `config.js`, cache-first for same-origin static assets, stale-while-revalidate for Google Fonts.
-- Precache `./`, never `./index.html`: Cloudflare Pages 308-redirects `/index.html` to `/`, and returning a redirected response for a navigation makes Chrome show "This site can't be reached". Strip the redirect flag (`cleanResponse`) before caching or returning navigation responses.
+- Precache `./`, never `./index.html`: the Cloudflare front 308-redirects `/index.html` to `/`, and returning a redirected response for a navigation makes Chrome show "This site can't be reached". Strip the redirect flag (`cleanResponse`) before caching or returning navigation responses.
 - Keep `data-chevron="true"` on accordion chevron SVGs. `app.js` targets `[data-chevron]` so newly added header icons are not rotated by the accordion logic.
 
 ## Hard Refresh / Update Prompt
@@ -38,7 +38,7 @@ Keep all of these in sync within the same change:
 
 ## Architecture & Backend Contract
 
-- Frontend is static (`index.html`, `app.js`, `styles.css`, `config.js`, `sw.js`) on Cloudflare Pages; backend is a Google Apps Script Web App (`appsscript/code.gs`). There is no build step.
+- Frontend is static (`index.html`, `app.js`, `styles.css`, `config.js`, `sw.js`), version-controlled in the GitHub repository (`https://github.com/Saladimu/padus`) and published publicly through Cloudflare (a front layer that hides the origin/source URL); backend is a Google Apps Script Web App (`appsscript/code.gs`). There is no build step.
 - All backend calls go through `apiPost(payload, options)` in `app.js`. The backend `doPost(e)` parses the JSON body, dispatches on `data.action`, and returns JSON via `respond()` shaped as `{ success, message?, ... }`. The frontend rejects any response not starting with `{` or `[`.
 - Known actions: `verify`, `submit`, `ping`, `report`, `students`, `backup`, `backuplist`, `history`, `maintenance`. When adding or changing an action, update **both** `app.js` and `appsscript/code.gs`, and keep the frontend tolerant of an older backend that does not yet know the action.
 - Default backend URL lives in `config.js` (`window.PADUS_DEFAULT_API_URL`); admins can override it at runtime via Pengaturan > Koneksi Google Sheets (stored in localStorage `choir_absensi_config`). Do not hardcode the URL in `app.js`.
