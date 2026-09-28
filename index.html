@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260928a">
+    <link rel="stylesheet" href="styles.css?v=20260928b">
     <style>div[data-netlify-badge-floating] { display: none !important; }</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +15,8 @@
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="config.js?v=20260928a" defer></script>
-    <script src="app.js?v=20260928a" defer></script>
+    <script src="config.js?v=20260928b" defer></script>
+    <script src="app.js?v=20260928b" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -470,9 +470,9 @@
                         </div>
                         <div class="mt-3 flex items-center gap-2">
                             <label for="maintenanceStart" class="text-xs text-gray-600 shrink-0">Dari</label>
-                            <input type="time" id="maintenanceStart" value="09:00" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                            <input type="time" id="maintenanceStart" value="09:00" onchange="onMaintenanceTimeChange()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                             <label for="maintenanceEnd" class="text-xs text-gray-600 shrink-0">Sampai</label>
-                            <input type="time" id="maintenanceEnd" value="17:00" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                            <input type="time" id="maintenanceEnd" value="17:00" onchange="onMaintenanceTimeChange()" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
                         </div>
                         <div id="maintenanceDays" class="mt-3">
                             <p class="text-xs text-gray-600 mb-1">Hari aktif</p>
@@ -508,8 +508,7 @@
                                 </label>
                             </div>
                         </div>
-                        <button type="button" id="btnSaveMaintenanceSchedule" onclick="saveMaintenanceSchedule()" class="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition shadow-md text-sm">Simpan Jadwal</button>
-                        <p id="maintenanceScheduleStatus" class="mt-2 text-xs text-gray-500"></p>
+                        <p id="maintenanceScheduleStatus" class="mt-3 text-xs font-medium text-gray-500">Perubahan jadwal tersimpan otomatis.</p>
                     </div>
                     </div>
                 </div>
