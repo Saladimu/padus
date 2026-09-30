@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928d';
-const APP_CACHE_NAME = 'choir-absensi-v100';
+const APP_ASSET_VERSION = '20260928e';
+const APP_CACHE_NAME = 'choir-absensi-v101';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -106,12 +106,12 @@ function ensureUpdateModal() {
     modal = document.createElement('div');
     modal.id = 'updateModal';
     modal.className = 'fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4 opacity-0 transition-opacity duration-300';
-    modal.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300" id="updateModalContent">' +
-        '<h2 class="text-xl font-bold text-gray-800 mb-2">Pembaruan Tersedia</h2>' +
+    modal.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300 border-2 border-red-300" id="updateModalContent">' +
+        '<h2 class="text-xl font-bold text-red-700 mb-2">Pembaruan Tersedia</h2>' +
         '<p class="text-gray-600 mb-6">Aplikasi ada perubahan, perlu hard refresh ulang.</p>' +
         '<div class="flex gap-2">' +
         '<button type="button" onclick="dismissUpdateModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-lg transition">Nanti</button>' +
-        '<button type="button" id="btnHardRefresh" onclick="hardRefreshApp()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition">Hard Refresh</button>' +
+        '<button type="button" id="btnHardRefresh" onclick="hardRefreshApp()" class="flex-1 btn-danger text-white font-semibold py-2.5 rounded-lg transition">Hard Refresh</button>' +
         '</div></div>';
     document.body.appendChild(modal);
     return modal;
