@@ -19,6 +19,7 @@ Keep all of these in sync within the same change:
 ## Deployment (manual, user action)
 
 - Frontend source lives in the **GitHub repository** `https://github.com/Saladimu/padus` (branch `main`) and is published publicly through **Cloudflare** (`https://padus-cog.pages.dev/`). Cloudflare is only a front layer to hide the origin/source URL from the public, not the source of truth. Changes only take effect after the user pushes to GitHub and redeploys on Cloudflare.
+- **The Agent cannot push to this repo.** This environment authenticates to GitHub as the platform bot `monkeycode-global[bot]`, which has no write access to `Saladimu/padus`; `git push` returns `403`. Do not keep retrying: commit locally if asked, then tell the user to **push manually** (they use their own credentials). Never read, print, or commit credentials — the configured `origin` URL may embed a personal access token.
 - Backend is Google Apps Script (`appsscript/code.gs`). Changes only take effect after the user redeploys it in the Apps Script editor.
 - After making changes, tell the user these redeploys are required.
 
