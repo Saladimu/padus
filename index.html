@@ -7,7 +7,7 @@
     <meta name="description" content="Aplikasi absensi ekstrakurikuler Paduan Suara berbasis Google Sheets.">
     <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=20260928e">
+    <link rel="stylesheet" href="styles.css?v=20260928f">
     <style>div[data-netlify-badge-floating] { display: none !important; }</style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,8 +15,8 @@
     <noscript>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     </noscript>
-    <script src="config.js?v=20260928e" defer></script>
-    <script src="app.js?v=20260928e" defer></script>
+    <script src="config.js?v=20260928f" defer></script>
+    <script src="app.js?v=20260928f" defer></script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
 
@@ -54,7 +54,7 @@
                 </picture>
             </div>
             <h1 class="text-xl font-bold tracking-wide">ABSENSI PADUAN SUARA</h1>
-            <p class="text-sm text-blue-200 mt-1 cursor-pointer hover:text-white transition select-none" id="currentDateDisplay" onclick="peekLaporanToday()" title="Lihat laporan absensi hari ini">Memuat tanggal...</p>
+            <p class="text-sm text-blue-100 mt-1 cursor-pointer hover:text-white transition select-none" id="currentDateDisplay" onclick="peekLaporanToday()" title="Lihat laporan absensi hari ini">Memuat tanggal...</p>
         </header>
 
         <div id="mainCallout" class="hidden callout-banner">
@@ -139,7 +139,7 @@
 
                 <div id="remarkBlock">
                     <label for="remark" class="block text-sm font-medium text-gray-700 mb-1">Catatan / Remark
-                        <span id="remarkOptional" class="text-gray-400 font-normal">(Opsional)</span>
+                        <span id="remarkOptional" class="text-gray-500 font-normal">(Opsional)</span>
                         <span id="remarkRequiredLabel" class="text-red-500 font-normal hidden">(Wajib untuk Izin)</span>
                     </label>
                     <textarea id="remark" rows="2" placeholder="Tulis catatan jika ada..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"></textarea>
@@ -169,9 +169,9 @@
     </div>
 
     <!-- Footer -->
-    <footer class="mt-4 text-center text-xs text-gray-400">
-        <p onclick="toggleQrModal()" class="cursor-pointer hover:text-gray-500 transition" title="Tampilkan QR Paduan Suara">Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II</p>
-        <p class="mt-1 text-[11px] text-gray-400">Versi <span id="appVersion" class="font-medium">v-</span></p>
+    <footer class="mt-4 text-center text-xs text-gray-500">
+        <p onclick="toggleQrModal()" class="cursor-pointer hover:text-gray-700 transition" title="Tampilkan QR Paduan Suara">Absensi Ekskul Paduan Suara &middot; SMA Kemurnian II</p>
+        <p class="mt-1 text-[11px] text-gray-500">Versi <span id="appVersion" class="font-medium">v-</span></p>
     </footer>
 
     <!-- Tombol Admin (Setup) - dinonaktifkan -->
@@ -308,7 +308,7 @@
                             Buka Kunci
                         </button>
                         <p id="unlockStatus" class="text-xs mt-2"></p>
-                        <p class="text-xs text-gray-400 mt-2">Submenu Tahun ekskul padus, Laporan Absensi, Daftar Siswa, dan Backup Data dikunci sampai kata sandi yang benar dimasukkan.</p>
+                        <p class="text-xs text-gray-500 mt-2">Submenu Tahun ekskul padus, Laporan Absensi, Daftar Siswa, dan Backup Data dikunci sampai kata sandi yang benar dimasukkan.</p>
                     </div>
 
                     <div id="secUnlocked" class="hidden">
@@ -562,8 +562,8 @@
                     </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI</h2>
-                <p class="text-sm text-blue-200 mt-1" id="reportDateDisplay">-</p>
-                <p class="text-xs text-blue-200 mt-0.5 font-semibold" id="reportCountDisplay">-</p>
+                <p class="text-sm text-blue-100 mt-1" id="reportDateDisplay">-</p>
+                <p class="text-xs text-blue-100 mt-0.5 font-semibold" id="reportCountDisplay">-</p>
             </div>
             <div class="p-4 overflow-y-auto flex-1" id="reportScroll">
                 <div id="reportList" class="space-y-2"></div>
@@ -605,8 +605,8 @@
                     </picture>
                 </div>
                 <h2 class="text-lg font-bold tracking-wide">LAPORAN ABSENSI HARI INI</h2>
-                <p class="text-sm text-blue-200 mt-1" id="peekDateDisplay">-</p>
-                <p class="text-xs text-blue-200 mt-0.5 font-semibold" id="peekCountDisplay">-</p>
+                <p class="text-sm text-blue-100 mt-1" id="peekDateDisplay">-</p>
+                <p class="text-xs text-blue-100 mt-0.5 font-semibold" id="peekCountDisplay">-</p>
             </div>
             <div class="p-4 overflow-y-auto flex-1" id="peekScroll">
                 <div id="peekStatus" class="text-sm mt-1 text-gray-500"></div>

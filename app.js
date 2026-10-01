@@ -8,12 +8,14 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928e';
-const APP_CACHE_NAME = 'choir-absensi-v101';
+const APP_ASSET_VERSION = '20260928f';
+const APP_CACHE_NAME = 'choir-absensi-v102';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
 let updatePromptQueued = false;
+let updateSnoozeUntil = 0;
+const UPDATE_SNOOZE_MS = 30 * 60 * 1000;
 const watchedWorkers = typeof WeakSet === 'function' ? new WeakSet() : null;
 
 function pageIsControlled() {
@@ -106,6 +108,9 @@ function ensureUpdateModal() {
     modal = document.createElement('div');
     modal.id = 'updateModal';
     modal.className = 'fixed inset-0 bg-black/50 hidden items-center justify-center z-[100] p-4 opacity-0 transition-opacity duration-300';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Pembaruan Tersedia');
     modal.innerHTML = '<div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full text-center transform scale-95 transition-transform duration-300 border-2 border-red-300" id="updateModalContent">' +
         '<h2 class="text-xl font-bold text-red-700 mb-2">Pembaruan Tersedia</h2>' +
         '<p class="text-gray-600 mb-6">Aplikasi ada perubahan, perlu hard refresh ulang.</p>' +
@@ -119,6 +124,7 @@ function ensureUpdateModal() {
 
 function promptAppUpdate() {
     if (updateModalShown) return;
+    if (Date.now() < updateSnoozeUntil) return;
     if (!document.body) {
         if (updatePromptQueued) return;
         updatePromptQueued = true;
@@ -141,6 +147,7 @@ function promptAppUpdate() {
 }
 
 function dismissUpdateModal() {
+    updateSnoozeUntil = Date.now() + UPDATE_SNOOZE_MS;
     const modal = document.getElementById('updateModal');
     const content = document.getElementById('updateModalContent');
     if (!modal || !content) return;
@@ -2838,6 +2845,91 @@ bindIdleActivityReset(document);
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') resetIdleTimers();
 });
+
+// ==========================================
+// AKSESIBILITAS MODAL (peran dialog, fokus, Escape)
+// ==========================================
+(function setupModalA11y() {
+    const MODALS = [
+        ['statusModal', 'Status', 'closeStatusModal'],
+        ['confirmModal', 'Konfirmasi', ''],
+        ['updateModal', 'Pembaruan Tersedia', 'dismissUpdateModal'],
+        ['settingsModal', 'Pengaturan & Setup', 'toggleSettingsModal'],
+        ['menuAdminModal', 'Menu Admin', 'toggleMenuAdminModal'],
+        ['qrModal', 'QR Paduan Suara', 'toggleQrModal'],
+        ['helpModal', 'Bantuan', 'toggleHelpModal'],
+        ['reportModal', 'Laporan Absensi', 'closeReportModal'],
+        ['peekModal', 'Laporan Absensi Hari Ini', 'closePeekModal'],
+        ['studentModal', 'Daftar Siswa', 'closeStudentModal'],
+        ['historyModal', 'Riwayat Absensi', 'closeHistoryModal'],
+        ['adminModal', 'Setup Backend', 'toggleAdminModal']
+    ];
+    const registry = {};
+    MODALS.forEach(function (item) {
+        const el = document.getElementById(item[0]);
+        if (!el) return;
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        el.setAttribute('aria-label', item[1]);
+        registry[item[0]] = { el: el, closer: item[2] };
+    });
+
+    const openStack = [];
+    const prevFocus = new WeakMap();
+
+    function focusables(root) {
+        const sel = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        return Array.prototype.slice.call(root.querySelectorAll(sel)).filter(function (n) {
+            return n.offsetWidth > 0 || n.offsetHeight > 0 || n.getClientRects().length;
+        });
+    }
+
+    Object.keys(registry).forEach(function (id) {
+        const el = registry[id].el;
+        new MutationObserver(function () {
+            const isOpen = !el.classList.contains('hidden');
+            const idx = openStack.indexOf(id);
+            if (isOpen && idx === -1) {
+                openStack.push(id);
+                prevFocus.set(el, document.activeElement);
+                setTimeout(function () {
+                    if (el.classList.contains('hidden')) return;
+                    const field = el.querySelector('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+                    const list = focusables(el);
+                    const target = field || list[0];
+                    if (target) target.focus();
+                }, 60);
+            } else if (!isOpen && idx !== -1) {
+                openStack.splice(idx, 1);
+                const back = prevFocus.get(el);
+                if (back && document.contains(back) && typeof back.focus === 'function') back.focus();
+            }
+        }).observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (!openStack.length) return;
+        const top = registry[openStack[openStack.length - 1]];
+        if (!top) return;
+        if (e.key === 'Escape') {
+            if (top.closer && typeof window[top.closer] === 'function') window[top.closer]();
+            return;
+        }
+        if (e.key === 'Tab') {
+            const list = focusables(top.el);
+            if (!list.length) return;
+            const first = list[0];
+            const last = list[list.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    });
+})();
 
 // ==========================================
 // INISIALISASI

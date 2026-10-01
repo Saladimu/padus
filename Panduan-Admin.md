@@ -283,11 +283,11 @@ Catatan keamanan lain (sudah bawaan backend): validasi jenis latihan terhadap da
 Aplikasi memakai service worker + cache. Saat ada **rilis baru**, muncul modal **Pembaruan Tersedia** ("Aplikasi ada perubahan, perlu hard refresh ulang."):
 
 - **Hard Refresh** *(disarankan)* — mencabut service worker, menghapus cache, dan memuat ulang dari jaringan sehingga versi terbaru pasti dipakai.
-- **Nanti** — menunda; pembaruan bisa lewat tombol refresh biasa/refresh browser.
+- **Nanti** — menunda; modal tidak muncul lagi selama **30 menit**, lalu muncul kembali (atau saat halaman dibuka ulang).
 
 Pengecekan pembaruan berjalan otomatis 2 detik setelah halaman dimuat, lalu setiap 60 detik (1 menit), dan saat tab kembali aktif.
 
-Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v101** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v101` -> `v101`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v101 · 20260928e`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
+Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v102** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v102` -> `v102`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v102 · 20260928f`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
 
 ---
 
