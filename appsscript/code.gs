@@ -132,9 +132,11 @@ function doOptions(e) {
 // - Jadwal otomatis harian (default 09:00-17:00 WIB) yang berlaku bila tidak ada override manual.
 const MAINTENANCE_MANUAL_KEY = 'choir_maintenance_manual';
 const MAINTENANCE_SCHEDULE_KEY = 'choir_maintenance_schedule';
+const MAINTENANCE_MESSAGE_KEY = 'choir_maintenance_message';
 const MAINTENANCE_TZ = 'Asia/Jakarta';
 const DEFAULT_MAINTENANCE_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const DEFAULT_MAINTENANCE_SCHEDULE = { enabled: true, start: '09:00', end: '17:00', days: DEFAULT_MAINTENANCE_DAYS.slice() };
+const DEFAULT_MAINTENANCE_MESSAGE = 'Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.';
 
 function isValidHhmm(value) {
   return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
@@ -242,6 +244,21 @@ function setMaintenanceManual(value) {
   else props.deleteProperty(MAINTENANCE_MANUAL_KEY);
 }
 
+function getMaintenanceMessage() {
+  const raw = PropertiesService.getScriptProperties().getProperty(MAINTENANCE_MESSAGE_KEY);
+  if (raw === null) return DEFAULT_MAINTENANCE_MESSAGE;
+  const text = String(raw).trim();
+  return text || DEFAULT_MAINTENANCE_MESSAGE;
+}
+
+function setMaintenanceMessage(value) {
+  const text = value == null ? '' : String(value).trim();
+  const props = PropertiesService.getScriptProperties();
+  if (text) props.setProperty(MAINTENANCE_MESSAGE_KEY, text);
+  else props.deleteProperty(MAINTENANCE_MESSAGE_KEY);
+  return getMaintenanceMessage();
+}
+
 function wibWeekday(now) {
   const wd = Utilities.formatDate(now || new Date(), MAINTENANCE_TZ, 'u');
   const n = parseInt(wd, 10);
@@ -288,11 +305,15 @@ function handleMaintenance(data) {
   if (payload.schedule && typeof payload.schedule === 'object') {
     setMaintenanceSchedule(payload.schedule);
   }
+  if (typeof payload.message === 'string') {
+    setMaintenanceMessage(payload.message);
+  }
   return {
     success: true,
     maintenance: getMaintenanceMode(),
     manual: getMaintenanceManual(),
-    schedule: getMaintenanceSchedule()
+    schedule: getMaintenanceSchedule(),
+    message: getMaintenanceMessage()
   };
 }
 

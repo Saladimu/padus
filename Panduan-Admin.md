@@ -184,6 +184,14 @@ Saat maintenance **ON**:
 - Backend **menolak** `verify`/`submit` (`{ success:false, maintenance:true }`) — halaman lama yang masih terbuka pun tidak bisa menulis data.
 - Status disimpan di server (Script Properties) sehingga **global untuk semua perangkat**.
 
+**Berita/Informasi:**
+
+Di bagian bawah submenu **Mode maintenance** terdapat kolom **Berita/Informasi**. Teks ini tampil pada modal **Laporan Absensi Hari Ini** (ketuk tanggal di header) ketika maintenance sedang **ON** dan belum ada siswa yang absen hari ini. Bawaan:
+
+> Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.
+
+Biarkan kosong untuk memakai teks bawaan. Perubahan tersimpan otomatis dan berlaku global untuk semua perangkat.
+
 **Prioritas:** override manual (**Aktif**/**Nonaktif**) selalu menang atas jadwal. Pilih **Otomatis** agar jadwal berlaku lagi.
 
 Catatan teknis: perangkat yang sudah terbuka mengecek ulang status saat siswa menyentuh form (throttle 60 detik) dan saat tab kembali aktif; cache status lokal berumur maksimal 5 menit. Setelah mematikan maintenance, perangkat siswa akan kembali normal dalam hitungan detik–menit (atau setelah refresh).
@@ -287,7 +295,7 @@ Aplikasi memakai service worker + cache. Saat ada **rilis baru**, muncul modal *
 
 Pengecekan pembaruan berjalan otomatis 2 detik setelah halaman dimuat, lalu setiap 60 detik (1 menit), dan saat tab kembali aktif.
 
-Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v102** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v102` -> `v102`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v102 · 20260928f`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
+Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v103** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v103` -> `v103`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v103 · 20260928g`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
 
 ---
 
@@ -321,7 +329,7 @@ Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurni
 | `students` | Daftar siswa tanpa PIN | Daftar Siswa |
 | `history` | Riwayat absensi per siswa | Tombol Riwayat |
 | `ping` | Tes koneksi (`{ success: true }`) | Test Koneksi |
-| `maintenance` | Baca/simpan mode maintenance (override manual + jadwal otomatis) di Script Properties | Mode & Jadwal Maintenance |
+| `maintenance` | Baca/simpan mode maintenance (override manual + jadwal otomatis + berita/informasi) di Script Properties | Mode & Jadwal Maintenance |
 | `backup` | Duplikat sheet `STUDENTS`/`ATTENDANCE` bertanggal (retensi 6) | Buat Backup Sekarang |
 | `backuplist` | Daftar backup tersimpan | Daftar data backup |
 

@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928f';
-const APP_CACHE_NAME = 'choir-absensi-v102';
+const APP_ASSET_VERSION = '20260928g';
+const APP_CACHE_NAME = 'choir-absensi-v103';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -221,6 +221,9 @@ const MAINT_ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const MAINT_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const MAINT_DAY_LABELS = { 0: 'Min', 1: 'Sen', 2: 'Sel', 3: 'Rab', 4: 'Kam', 5: 'Jum', 6: 'Sab' };
 let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00', days: MAINT_ALL_DAYS.slice() };
+const DEFAULT_MAINTENANCE_MESSAGE = 'Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.';
+let maintenanceMessage = DEFAULT_MAINTENANCE_MESSAGE;
+let maintenanceMessageSaveTimer = null;
 let logoClickCount = 0;
 let logoClickTimer = null;
 let maintenanceSyncInFlight = false;
@@ -244,6 +247,7 @@ let helpLoaded = false;
 const PEEK_CACHE_TTL = 30000;
 const PEEK_CACHE_KEY = 'choir_peek_cache_v1';
 let peekCache = null;
+let peekLastCount = 0;
 
 // Cache status maintenance agar input tidak menunggu jaringan saat muat awal
 const MAINTENANCE_CACHE_KEY = 'choir_maintenance_cache_v1';
@@ -737,6 +741,11 @@ function normalizeMaintenanceSchedule(schedule) {
     };
 }
 
+function normalizeMaintenanceMessage(value) {
+    const text = value == null ? '' : String(value).trim();
+    return text || DEFAULT_MAINTENANCE_MESSAGE;
+}
+
 function collectMaintenanceDays() {
     const boxes = document.querySelectorAll('#maintenanceDays input[type="checkbox"]');
     const days = [];
@@ -1015,9 +1024,55 @@ function setMaintenanceScheduleStatus(message, isError) {
     el.className = 'mt-3 text-xs font-medium ' + (isError ? 'text-red-600' : 'text-gray-500');
 }
 
+function setMaintenanceMessageStatus(message, isError) {
+    const el = document.getElementById('maintenanceMessageStatus');
+    if (!el) return;
+    el.textContent = message;
+    el.className = 'mt-2 text-xs font-medium ' + (isError ? 'text-red-600' : 'text-gray-500');
+}
+
+function renderMaintenanceMessageControls() {
+    const el = document.getElementById('maintenanceMessage');
+    if (!el) return;
+    if (document.activeElement !== el) el.value = maintenanceMessage;
+}
+
+function onMaintenanceMessageChange() {
+    if (settingsLocked) return;
+    const el = document.getElementById('maintenanceMessage');
+    if (!el) return;
+    maintenanceMessage = el.value;
+    if (maintenanceMessageSaveTimer) clearTimeout(maintenanceMessageSaveTimer);
+    setMaintenanceMessageStatus('Menyimpan berita...', false);
+    maintenanceMessageSaveTimer = setTimeout(function () {
+        maintenanceMessageSaveTimer = null;
+        persistMaintenanceMessage();
+    }, 500);
+}
+
+function persistMaintenanceMessage() {
+    if (settingsLocked) return;
+    const el = document.getElementById('maintenanceMessage');
+    const value = el ? el.value : maintenanceMessage;
+    maintenanceMessage = value;
+    setMaintenanceMessageStatus('Menyimpan berita...', false);
+    apiPost({ action: 'maintenance', message: value }, { url: maintenanceApiUrl() })
+        .then(res => {
+            if (res && res.success) {
+                maintenanceMessage = normalizeMaintenanceMessage(res.message !== undefined ? res.message : value);
+                renderMaintenanceMessageControls();
+                setMaintenanceMessageStatus('Tersimpan otomatis.', false);
+            } else {
+                setMaintenanceMessageStatus('Gagal menyimpan berita.', true);
+            }
+        })
+        .catch(() => setMaintenanceMessageStatus('Gagal menyimpan berita (jaringan).', true));
+}
+
 function applyMaintenanceResult(res) {
     if (!res || !res.success) return;
     maintenanceManual = (res.manual === true || res.manual === false) ? res.manual : null;
+    if (res.message !== undefined) maintenanceMessage = normalizeMaintenanceMessage(res.message);
     if (res.schedule) {
         const incoming = res.schedule;
         const prevDays = normalizeMaintenanceDays(maintenanceSchedule.days);
@@ -1062,6 +1117,7 @@ function renderMaintenanceControls() {
     if (endEl && document.activeElement !== endEl) endEl.value = maintenanceSchedule.end;
 
     syncMaintenanceDayCheckboxes(false);
+    renderMaintenanceMessageControls();
     updateMaintenanceStatusText();
 }
 
@@ -1077,7 +1133,7 @@ function applyMaintenance(on, persist) {
     if (persist === false) return;
     try {
         localStorage.setItem(MAINTENANCE_CACHE_KEY, JSON.stringify({
-            value: on, manual: maintenanceManual, schedule: maintenanceSchedule, ts: Date.now()
+            value: on, manual: maintenanceManual, schedule: maintenanceSchedule, message: maintenanceMessage, ts: Date.now()
         }));
     } catch (e) { /* localStorage tidak tersedia */ }
 }
@@ -1091,6 +1147,7 @@ function applyCachedMaintenance() {
             if (entry.schedule) {
                 maintenanceSchedule = normalizeMaintenanceSchedule(entry.schedule);
             }
+            maintenanceMessage = normalizeMaintenanceMessage(entry.message);
             maintenanceManual = (entry.manual === true || entry.manual === false) ? entry.manual : null;
             applyMaintenance(entry.value, false);
             return true;
@@ -2155,8 +2212,10 @@ function closeReportModal() {
 // ==========================================
 function renderPeekRecords(records) {
     const list = records || [];
+    peekLastCount = list.length;
     document.getElementById('peekCountDisplay').textContent = list.length + ' siswa tercatat';
     document.getElementById('peekEmpty').classList.toggle('hidden', list.length > 0);
+    updatePeekMaintenanceInfo(list.length);
     document.getElementById('peekList').innerHTML = list.map((r, i) => {
         const ts = String(r.timestamp || '');
         const time = ts.length >= 16 ? ts.substring(11, 16) : ts;
@@ -2185,6 +2244,14 @@ function renderPeekMessage(msg, isError) {
     const statusEl = document.getElementById('peekStatus');
     statusEl.textContent = msg || '';
     statusEl.className = 'text-sm mt-1 ' + (isError ? 'text-red-500' : 'text-gray-500');
+}
+
+function updatePeekMaintenanceInfo(count) {
+    const el = document.getElementById('peekEmptyInfo');
+    if (!el) return;
+    const show = maintenanceMode === true && (Number(count) || 0) === 0;
+    if (show) el.textContent = normalizeMaintenanceMessage(maintenanceMessage);
+    el.classList.toggle('hidden', !show);
 }
 
 // Banner callout di menu utama: jumlah siswa yang sudah absensi hari ini.
@@ -2273,6 +2340,12 @@ function peekLaporanToday() {
     modal.classList.add('flex');
     document.getElementById('peekScroll').scrollTop = 0;
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
+
+    refreshMaintenance(true).then(function () {
+        if (!document.getElementById('peekModal').classList.contains('hidden')) {
+            updatePeekMaintenanceInfo(peekLastCount);
+        }
+    });
 
     const range = getYearRange();
     if (!dateInRange(date, range)) {
