@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928g';
-const APP_CACHE_NAME = 'choir-absensi-v103';
+const APP_ASSET_VERSION = '20260928h';
+const APP_CACHE_NAME = 'choir-absensi-v104';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -952,7 +952,7 @@ function onMaintenanceTimeChange() {
     if (!startEl || !endEl) return;
     const timeRe = /^([01]\d|2[0-3]):[0-5]\d$/;
     if (!timeRe.test(startEl.value) || !timeRe.test(endEl.value)) {
-        setMaintenanceScheduleStatus('Format jam harus HH:MM.', true);
+        setMaintenanceScheduleStatus('Format jam harus HH:MM.', 'err');
         return;
     }
     maintenanceSchedule = normalizeMaintenanceSchedule(maintenanceSchedule);
@@ -963,7 +963,7 @@ function onMaintenanceTimeChange() {
         maintenanceDaySaveTimer = null;
     }
     if (maintenanceTimeSaveTimer) clearTimeout(maintenanceTimeSaveTimer);
-    setMaintenanceScheduleStatus('Menyimpan jadwal...', false);
+    setMaintenanceScheduleStatus('Menyimpan jadwal...', 'info');
     maintenanceTimeSaveTimer = setTimeout(function () {
         maintenanceTimeSaveTimer = null;
         persistMaintenanceSchedule();
@@ -996,7 +996,7 @@ function persistMaintenanceSchedule() {
         return;
     }
     maintenanceSyncInFlight = true;
-    setMaintenanceScheduleStatus('Menyimpan jadwal...', false);
+    setMaintenanceScheduleStatus('Menyimpan jadwal...', 'info');
     apiPost({ action: 'maintenance', schedule: payloadSchedule }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
@@ -1005,30 +1005,36 @@ function persistMaintenanceSchedule() {
                 if (sameDays) maintenanceDaysDirty = false;
                 if (res.schedule && sameDays) res.schedule.days = payloadSchedule.days.slice();
                 applyMaintenanceResult(res);
-                setMaintenanceScheduleStatus('Jadwal tersimpan otomatis.', false);
+                setMaintenanceScheduleStatus('Jadwal tersimpan otomatis.', 'ok');
             } else {
-                setMaintenanceScheduleStatus('Gagal menyimpan jadwal.', true);
+                setMaintenanceScheduleStatus('Gagal menyimpan jadwal.', 'err');
             }
         })
-        .catch(() => setMaintenanceScheduleStatus('Gagal menyimpan jadwal (jaringan).', true))
+        .catch(() => setMaintenanceScheduleStatus('Gagal menyimpan jadwal (jaringan).', 'err'))
         .finally(() => {
             maintenanceSyncInFlight = false;
             flushMaintenancePersistQueue();
         });
 }
 
-function setMaintenanceScheduleStatus(message, isError) {
+function maintenanceStatusBadgeClass(type) {
+    if (type === 'err') return 'bg-red-100 text-red-700 border border-red-200';
+    if (type === 'ok') return 'bg-green-100 text-green-800 border border-green-200';
+    return 'bg-blue-50 text-blue-700 border border-blue-100';
+}
+
+function setMaintenanceScheduleStatus(message, type) {
     const el = document.getElementById('maintenanceScheduleStatus');
     if (!el) return;
     el.textContent = message;
-    el.className = 'mt-3 text-xs font-medium ' + (isError ? 'text-red-600' : 'text-gray-500');
+    el.className = 'mt-3 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ' + maintenanceStatusBadgeClass(type);
 }
 
-function setMaintenanceMessageStatus(message, isError) {
+function setMaintenanceMessageStatus(message, type) {
     const el = document.getElementById('maintenanceMessageStatus');
     if (!el) return;
     el.textContent = message;
-    el.className = 'mt-2 text-xs font-medium ' + (isError ? 'text-red-600' : 'text-gray-500');
+    el.className = 'mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ' + maintenanceStatusBadgeClass(type);
 }
 
 function renderMaintenanceMessageControls() {
@@ -1043,7 +1049,7 @@ function onMaintenanceMessageChange() {
     if (!el) return;
     maintenanceMessage = el.value;
     if (maintenanceMessageSaveTimer) clearTimeout(maintenanceMessageSaveTimer);
-    setMaintenanceMessageStatus('Menyimpan berita...', false);
+    setMaintenanceMessageStatus('Menyimpan berita...', 'info');
     maintenanceMessageSaveTimer = setTimeout(function () {
         maintenanceMessageSaveTimer = null;
         persistMaintenanceMessage();
@@ -1055,18 +1061,18 @@ function persistMaintenanceMessage() {
     const el = document.getElementById('maintenanceMessage');
     const value = el ? el.value : maintenanceMessage;
     maintenanceMessage = value;
-    setMaintenanceMessageStatus('Menyimpan berita...', false);
+    setMaintenanceMessageStatus('Menyimpan berita...', 'info');
     apiPost({ action: 'maintenance', message: value }, { url: maintenanceApiUrl() })
         .then(res => {
             if (res && res.success) {
                 maintenanceMessage = normalizeMaintenanceMessage(res.message !== undefined ? res.message : value);
                 renderMaintenanceMessageControls();
-                setMaintenanceMessageStatus('Tersimpan otomatis.', false);
+                setMaintenanceMessageStatus('Tersimpan otomatis.', 'ok');
             } else {
-                setMaintenanceMessageStatus('Gagal menyimpan berita.', true);
+                setMaintenanceMessageStatus('Gagal menyimpan berita.', 'err');
             }
         })
-        .catch(() => setMaintenanceMessageStatus('Gagal menyimpan berita (jaringan).', true));
+        .catch(() => setMaintenanceMessageStatus('Gagal menyimpan berita (jaringan).', 'err'));
 }
 
 function applyMaintenanceResult(res) {
@@ -1194,13 +1200,13 @@ function guardMaintenanceInteraction() {
 function refreshMaintenanceScheduleView() {
     maintenanceLastCheck = 0;
     maintenanceRefreshPromise = null;
-    setMaintenanceScheduleStatus('Memuat jadwal...', false);
+    setMaintenanceScheduleStatus('Memuat jadwal...', 'info');
     return fetchMaintenance().then(function () {
         renderMaintenanceControls();
         const el = document.getElementById('maintenanceScheduleStatus');
-        if (el && el.textContent === 'Memuat jadwal...') setMaintenanceScheduleStatus('Perubahan jadwal tersimpan otomatis.', false);
+        if (el && el.textContent === 'Memuat jadwal...') setMaintenanceScheduleStatus('Perubahan jadwal tersimpan otomatis.', 'ok');
     }).catch(function () {
-        setMaintenanceScheduleStatus('Gagal memuat jadwal dari server.', true);
+        setMaintenanceScheduleStatus('Gagal memuat jadwal dari server.', 'err');
         renderMaintenanceControls();
     });
 }
