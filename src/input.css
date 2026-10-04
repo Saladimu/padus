@@ -76,6 +76,14 @@ body {
     from { transform: translateX(-25%); }
     to { transform: translateX(0); }
 }
+/* Petunjuk mengambang: tanggal hari ini dapat diketuk untuk membuka laporan. */
+.peek-hint-pop {
+    animation: peekHintPop 0.35s ease-out;
+}
+@keyframes peekHintPop {
+    0% { opacity: 0; transform: translateY(6px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 .help-content {
     background: linear-gradient(180deg, #eff6ff 0%, #ffffff 60%, #f5f3ff 100%);
     border-radius: 0.75rem;

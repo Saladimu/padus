@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928h';
-const APP_CACHE_NAME = 'choir-absensi-v104';
+const APP_ASSET_VERSION = '20260928j';
+const APP_CACHE_NAME = 'choir-absensi-v106';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -248,6 +248,8 @@ const PEEK_CACHE_TTL = 30000;
 const PEEK_CACHE_KEY = 'choir_peek_cache_v1';
 let peekCache = null;
 let peekLastCount = 0;
+const PEEK_HINT_AUTO_HIDE_MS = 12000;
+let peekHintTimer = null;
 
 // Cache status maintenance agar input tidak menunggu jaringan saat muat awal
 const MAINTENANCE_CACHE_KEY = 'choir_maintenance_cache_v1';
@@ -2255,9 +2257,11 @@ function renderPeekMessage(msg, isError) {
 function updatePeekMaintenanceInfo(count) {
     const el = document.getElementById('peekEmptyInfo');
     if (!el) return;
+    const def = document.getElementById('peekEmptyDefault');
     const show = maintenanceMode === true && (Number(count) || 0) === 0;
     if (show) el.textContent = normalizeMaintenanceMessage(maintenanceMessage);
     el.classList.toggle('hidden', !show);
+    if (def) def.classList.toggle('hidden', show);
 }
 
 // Banner callout di menu utama: jumlah siswa yang sudah absensi hari ini.
@@ -2332,6 +2336,7 @@ function schedulePeekPrefetch() {
 }
 
 function peekLaporanToday() {
+    hidePeekHint();
     const modal = document.getElementById('peekModal');
     const date = todayISO();
     const dateText = new Date().toLocaleDateString('id-ID', dateOptions);
@@ -2423,6 +2428,38 @@ function closePeekModal() {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }, 300);
+}
+
+function positionPeekHint() {
+    const el = document.getElementById('peekHint');
+    if (!el || el.classList.contains('hidden')) return;
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const w = el.offsetWidth || 210;
+    const h = el.offsetHeight || 44;
+    const margin = 12;
+    const maxLeft = Math.max(margin, vw - w - margin);
+    const minTop = Math.max(margin, Math.round(vh * 0.34));
+    const maxTop = Math.max(minTop, vh - h - margin - 56);
+    el.style.left = Math.round(margin + Math.random() * (maxLeft - margin)) + 'px';
+    el.style.top = Math.round(minTop + Math.random() * (maxTop - minTop)) + 'px';
+}
+
+function showPeekHint() {
+    const el = document.getElementById('peekHint');
+    if (!el || !hasApiUrl()) return;
+    el.classList.remove('hidden');
+    positionPeekHint();
+    el.classList.add('peek-hint-pop');
+    setTimeout(function () { el.classList.remove('peek-hint-pop'); }, 420);
+    if (peekHintTimer) clearTimeout(peekHintTimer);
+    peekHintTimer = setTimeout(hidePeekHint, PEEK_HINT_AUTO_HIDE_MS);
+}
+
+function hidePeekHint() {
+    if (peekHintTimer) { clearTimeout(peekHintTimer); peekHintTimer = null; }
+    const el = document.getElementById('peekHint');
+    if (el) el.classList.add('hidden');
 }
 
 // ==========================================
@@ -3024,6 +3061,10 @@ document.getElementById('reportDate').value = todayISO();
 initMaintenance();
 applySecurityState();
 initCalloutMarquee();
+
+// Tampilkan petunjuk mengambang (posisi acak) setelah halaman siap.
+setTimeout(showPeekHint, 2500);
+window.addEventListener('resize', positionPeekHint);
 
 // Panaskan cache peek laporan hari ini agar klik pertama terasa instan
 loadPersistedPeekCache();
