@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928j';
-const APP_CACHE_NAME = 'choir-absensi-v106';
+const APP_ASSET_VERSION = '20260928k';
+const APP_CACHE_NAME = 'choir-absensi-v107';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -221,6 +221,7 @@ const MAINT_ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const MAINT_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const MAINT_DAY_LABELS = { 0: 'Min', 1: 'Sen', 2: 'Sel', 3: 'Rab', 4: 'Kam', 5: 'Jum', 6: 'Sab' };
 let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00', days: MAINT_ALL_DAYS.slice() };
+const MAINTENANCE_MESSAGE_MAX = 400;
 const DEFAULT_MAINTENANCE_MESSAGE = 'Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.';
 let maintenanceMessage = DEFAULT_MAINTENANCE_MESSAGE;
 let maintenanceMessageSaveTimer = null;
@@ -744,7 +745,8 @@ function normalizeMaintenanceSchedule(schedule) {
 }
 
 function normalizeMaintenanceMessage(value) {
-    const text = value == null ? '' : String(value).trim();
+    let text = value == null ? '' : String(value).trim();
+    if (text.length > MAINTENANCE_MESSAGE_MAX) text = text.slice(0, MAINTENANCE_MESSAGE_MAX);
     return text || DEFAULT_MAINTENANCE_MESSAGE;
 }
 
@@ -1039,17 +1041,28 @@ function setMaintenanceMessageStatus(message, type) {
     el.className = 'mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ' + maintenanceStatusBadgeClass(type);
 }
 
+function updateMaintenanceMessageCount() {
+    const el = document.getElementById('maintenanceMessage');
+    const counter = document.getElementById('maintenanceMessageCount');
+    if (!counter) return;
+    const len = el ? el.value.length : maintenanceMessage.length;
+    counter.textContent = len + '/' + MAINTENANCE_MESSAGE_MAX;
+}
+
 function renderMaintenanceMessageControls() {
     const el = document.getElementById('maintenanceMessage');
     if (!el) return;
     if (document.activeElement !== el) el.value = maintenanceMessage;
+    updateMaintenanceMessageCount();
 }
 
 function onMaintenanceMessageChange() {
     if (settingsLocked) return;
     const el = document.getElementById('maintenanceMessage');
     if (!el) return;
+    if (el.value.length > MAINTENANCE_MESSAGE_MAX) el.value = el.value.slice(0, MAINTENANCE_MESSAGE_MAX);
     maintenanceMessage = el.value;
+    updateMaintenanceMessageCount();
     if (maintenanceMessageSaveTimer) clearTimeout(maintenanceMessageSaveTimer);
     setMaintenanceMessageStatus('Menyimpan berita...', 'info');
     maintenanceMessageSaveTimer = setTimeout(function () {
