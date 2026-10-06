@@ -190,7 +190,7 @@ Di bagian bawah submenu **Mode maintenance** terdapat kolom **Berita/Informasi**
 
 > Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.
 
-Biarkan kosong untuk memakai teks bawaan. Isi maksimal **400 karakter** (ada penghitung di samping status). Perubahan tersimpan otomatis dan berlaku global untuk semua perangkat.
+Biarkan kosong untuk memakai teks bawaan. Isi maksimal **300 karakter** (ada penghitung di samping status). Perubahan tersimpan otomatis dan berlaku global untuk semua perangkat.
 
 **Prioritas:** override manual (**Aktif**/**Nonaktif**) selalu menang atas jadwal. Pilih **Otomatis** agar jadwal berlaku lagi.
 
@@ -295,7 +295,7 @@ Aplikasi memakai service worker + cache. Saat ada **rilis baru**, muncul modal *
 
 Pengecekan pembaruan berjalan otomatis 2 detik setelah halaman dimuat, lalu setiap 60 detik (1 menit), dan saat tab kembali aktif.
 
-Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v107** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v107` -> `v107`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v107 · 20260928k`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
+Di footer halaman (di bawah tagline *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"*) tertera label kecil **Versi v108** yang angkanya mengikuti nomor `CACHE_NAME` (mis. `choir-absensi-v108` -> `v108`). Setelah **Hard Refresh**, pastikan nomor tersebut sudah berubah ke versi terbaru; tahan/arahkan kursor ke label untuk melihat nama cache lengkap beserta tanggal rilis (mis. `choir-absensi-v108 · 20260928l`). Nomor ini berguna saat melaporkan masalah agar versi yang dipakai dapat dipastikan.
 
 ---
 

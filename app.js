@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928k';
-const APP_CACHE_NAME = 'choir-absensi-v107';
+const APP_ASSET_VERSION = '20260928l';
+const APP_CACHE_NAME = 'choir-absensi-v108';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;
@@ -221,7 +221,7 @@ const MAINT_ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const MAINT_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const MAINT_DAY_LABELS = { 0: 'Min', 1: 'Sen', 2: 'Sel', 3: 'Rab', 4: 'Kam', 5: 'Jum', 6: 'Sab' };
 let maintenanceSchedule = { enabled: true, start: '09:00', end: '17:00', days: MAINT_ALL_DAYS.slice() };
-const MAINTENANCE_MESSAGE_MAX = 400;
+const MAINTENANCE_MESSAGE_MAX = 300;
 const DEFAULT_MAINTENANCE_MESSAGE = 'Kemungkinan bukan jadwal latihan hari ini, atau belum waktunya siswa untuk absen. Harap menghubungi guru pembimbing/ketua padus untuk informasi lebih lanjut.';
 let maintenanceMessage = DEFAULT_MAINTENANCE_MESSAGE;
 let maintenanceMessageSaveTimer = null;

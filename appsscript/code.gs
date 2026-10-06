@@ -133,7 +133,7 @@ function doOptions(e) {
 const MAINTENANCE_MANUAL_KEY = 'choir_maintenance_manual';
 const MAINTENANCE_SCHEDULE_KEY = 'choir_maintenance_schedule';
 const MAINTENANCE_MESSAGE_KEY = 'choir_maintenance_message';
-const MAINTENANCE_MESSAGE_MAX = 400;
+const MAINTENANCE_MESSAGE_MAX = 300;
 const MAINTENANCE_TZ = 'Asia/Jakarta';
 const DEFAULT_MAINTENANCE_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const DEFAULT_MAINTENANCE_SCHEDULE = { enabled: true, start: '09:00', end: '17:00', days: DEFAULT_MAINTENANCE_DAYS.slice() };
