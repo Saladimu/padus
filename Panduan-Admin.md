@@ -6,6 +6,33 @@ Panduan ini untuk **guru pembimbing / operator / pengurus** yang mengelola aplik
 
 ---
 
+## Ringkasan Alur
+
+Diagram singkat akses menu dan alur kerja admin untuk tinjauan cepat:
+
+```mermaid
+flowchart TD
+    A["Buka aplikasi"] --> B{"Pilih akses"}
+    B -- "Ikon roda gigi" --> C["Pengaturan dan Setup (tanpa kata sandi)"]
+    C --> C1["Koneksi Google Sheets: isi URL dan Test Koneksi"]
+    C --> C2["Setup Backend: panduan deploy Apps Script"]
+    B -- "Ketuk logo 5 kali" --> D["Menu Admin (perlu kata sandi)"]
+    D --> E{"Kata sandi benar?"}
+    E -- "Salah 3 kali" --> F["Terkunci 5 menit"]
+    E -- "Ya" --> G["Menu Admin terbuka (auto-lock 5 menit)"]
+    G --> H1["Laporan Absensi: rekap per tanggal dan daftar tidak hadir"]
+    G --> H2["Daftar Siswa: data sheet STUDENTS"]
+    G --> H3["Riwayat Absensi Siswa per bulan"]
+    G --> H4["Backup Data: salinan sheet bertanggal"]
+    G --> H5["Ubah Password admin"]
+    G --> H6["Mode maintenance"]
+    H6 --> I["Pilih mode: Otomatis, Aktif, atau Nonaktif"]
+    H6 --> J["Jadwal Otomatis Harian: jam 09:00-17:00 WIB dan hari aktif"]
+    H6 --> K["Berita/Informasi: maksimal 300 karakter, tampil di laporan saat maintenance ON"]
+```
+
+---
+
 ## 1. Ringkasan Sistem
 
 | Komponen | Keterangan |

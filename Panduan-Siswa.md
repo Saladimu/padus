@@ -6,6 +6,40 @@ Panduan ini menjelaskan cara menggunakan aplikasi absensi mandiri Paduan Suara: 
 
 ---
 
+## Ringkasan Alur
+
+Diagram singkat alur absensi siswa untuk tinjauan cepat:
+
+```mermaid
+flowchart TD
+    A["Buka aplikasi absensi"] --> B["Isi Student ID atau Nama dan PIN"]
+    B --> C["Tekan Verifikasi Data"]
+    C --> D{"Data valid?"}
+    D -- "Tidak" --> E["Pesan galat, coba lagi (5 kali salah = diblokir sementara)"]
+    E --> B
+    D -- "Ya" --> F{"Mode maintenance aktif?"}
+    F -- "Ya" --> G["Form terkunci dan jendela 'We're Getting Things Ready' muncul"]
+    G --> H["Tunggu admin menonaktifkan maintenance"]
+    H --> A
+    F -- "Tidak" --> I["Periksa kartu identitas (Nama, ID, Kelas)"]
+    I --> J{"Data sudah benar?"}
+    J -- "Tidak" --> K["Tekan Kembali lalu ulangi"]
+    K --> B
+    J -- "Ya" --> L["Pilih jenis latihan atau Izin"]
+    L --> M{"Jenis Izin?"}
+    M -- "Ya" --> N["Isi catatan atau alasan izin (wajib)"]
+    M -- "Tidak" --> O["Isi catatan bila perlu (opsional)"]
+    N --> P["Centang pernyataan"]
+    O --> P
+    P --> Q["Tekan Submit Absensi atau Submit Izin"]
+    Q --> R{"Berhasil?"}
+    R -- "Ya" --> S["Notifikasi berhasil, absensi tercatat"]
+    R -- "Tidak" --> T["Pesan galat, periksa koneksi lalu coba lagi"]
+    T --> Q
+```
+
+---
+
 ## 1. Ringkasan Cepat
 
 | Langkah | Yang Dilakukan |
