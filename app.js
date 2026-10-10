@@ -8,8 +8,8 @@
 // cache aset tersedia sesegera mungkin.
 // Sekaligus deteksi bila ada versi baru terpasang agar pengguna
 // dapat diminta melakukan hard refresh.
-const APP_ASSET_VERSION = '20260928l';
-const APP_CACHE_NAME = 'choir-absensi-v108';
+const APP_ASSET_VERSION = '20260928m';
+const APP_CACHE_NAME = 'choir-absensi-v109';
 let swRegistration = null;
 let updateModalShown = false;
 let updateReloadArmed = false;

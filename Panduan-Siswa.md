@@ -153,7 +153,7 @@ Jika ada kesalahan pengisian, segera sampaikan kepada **guru pembimbing / ketua 
 | **Riwayat kehadiranmu** | Dari daftar absensi hari ini, tekan tombol **Riwayat** (ikon jam) di baris namamu untuk melihat riwayat kehadiran per bulan |
 | **Muat Ulang** | Tombol **refresh** di header — memuat ulang aplikasi bila layar bermasalah |
 | **QR Paduan Suara** | Ketuk teks footer *"Absensi Ekskul Paduan Suara · SMA Kemurnian II"* — menampilkan kode QR ekskul |
-| **Versi aplikasi** | Teks kecil **Versi v108** di bawah tulisan footer (nama sekolah). Tidak perlu dilakukan apa-apa; berguna bila guru/admin menanyakan versi aplikasi yang kamu pakai |
+| **Versi aplikasi** | Teks kecil **Versi v109** di bawah tulisan footer (nama sekolah). Tidak perlu dilakukan apa-apa; berguna bila guru/admin menanyakan versi aplikasi yang kamu pakai |
 | **Panduan ini** | Tersedia juga di menu **Bantuan** aplikasi |
 | **Pengaturan & Setup** | Ikon **roda gigi** di kanan atas (selalu tampil) — berisi **Koneksi Google Sheets** dan panduan **Setup Backend**. Tidak perlu kata sandi dan hanya memengaruhi perangkat ini. Menu pengaturan admin tetap terpisah dan terkunci |
 
